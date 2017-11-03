@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="bucCmmn+">
+
+    <typeAlias  alias="egovMap"   type="egovframework.rte.psl.dataaccess.util.EgovMap"  />
+    <typeAlias  alias="bucCmmnVO"  type="egovframework.com.sdtic.bucrs.service.BucCmmnVO" />
+	
+	<!-- 비즈니스 공통 sms 쿼리 -->
+    <select id="bucSmsDAO.bucCmmnSmssndngdbAjax" parameterClass="bucCmmnVO" resultClass="bucCmmnVO">
+	   SELECT 
+	    	   B.SYSTM_CD
+		       ,SUM(CASE B.RESULT WHEN 'Y' THEN 1 ELSE 0 END) + SUM(CASE B.RESULT WHEN '2' THEN 1 ELSE 0 END)  AS SUCCESS
+		       ,SUM(CASE B.RESULT WHEN 'N' THEN 1 ELSE 0 END) + SUM(CASE B.RESULT WHEN '4' THEN 1 ELSE 0 END)  AS FAILURE
+		FROM SUREData_Log B
+		WHERE B.USERCODE = 'roadcombine'
+		  AND B.SYSTM_CD IN('DSG', 'CON', 'UKP', 'FCL','COM')
+		  AND date_format(SUBSTRING(B.INTIME,1,8),'%Y%m%d') = date_format(now(),'%Y%m%d')
+		GROUP BY B.SYSTM_CD
+		UNION ALL /*데이터확인후 제거*/
+		SELECT 'DSG'
+		       ,0  AS SUCCESS
+		       ,0  AS FAILURE
+		UNION ALL
+		SELECT 'CON'
+		       ,0  AS SUCCESS
+		       ,0  AS FAILURE
+		UNION ALL
+		SELECT 'UKP'
+		       ,0  AS SUCCESS
+		       ,0  AS FAILURE
+		UNION ALL
+		SELECT 'FCL'
+		       ,0  AS SUCCESS
+		       ,0  AS FAILURE
+		UNION ALL
+		SELECT 'COM'
+		       ,0  AS SUCCESS
+		       ,0  AS FAILURE 
+	
+	</select>
+</sqlMap>

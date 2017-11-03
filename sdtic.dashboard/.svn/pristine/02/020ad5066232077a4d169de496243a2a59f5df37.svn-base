@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="bucFercility">
+
+    <typeAlias  alias="egovMap"   type="egovframework.rte.psl.dataaccess.util.EgovMap"  />
+    <typeAlias  alias="bucMainVO"  type="egovframework.com.sdtic.bucrs.service.bucMainVO" />
+    <typeAlias  alias="bucFcltsVO"  type="egovframework.com.sdtic.bucrs.service.BucFcltsVO" />
+	
+	<!-- 비즈니스 시설물 전력량 추이, 한전전기료 쿼리 -->
+    <select id="bucFercilityDAO.bucMainElctyUsedbAjax" parameterClass="bucMainVO" resultClass="bucMainVO">
+		/* bucMainElctyUsedbAjax 조회 */
+		select (select INTG_DPTCD
+		            from V_CNKC_INTG_DPRT01C1
+		            where INTG_DPTCD = C.IMDT_HGRN_DPTCD) as INTG_DPTCD <!--본부코드-->
+		        ,(select KOR_DPTNM
+		            from V_CNKC_INTG_DPRT01C1
+		            where INTG_DPTCD = C.IMDT_HGRN_DPTCD) as INTG_DPTNM <!--본부명-->
+		       ,A.ELPW_COST_MSRM_YYMM AS SEPT_MONTH <!--일자-->
+		       ,substr(A.ELPW_COST_MSRM_YYMM, 1,4) AS SEPT_YEAR <!--년도구분-->
+		       ,sum(A.MNTH_ELPW_USMN) AS USED_AMOUNT <!--금년월도 사용량-->
+		       ,sum(A.KEPCO_ELPW_FARE) AS USED_COST <!--금년도월 전기사용금액-->
+		from T_AFMB_MNTH_ELPW01M1 A
+		     ,T_AFMB_METR01M1 B
+		     ,V_CNKC_INTG_DPRT01C1 C  
+		where A.RCVEL_EQPMT_CD = B.RCVEL_EQPMT_CD
+		       and A.METR_CD = B.METR_CD
+		       and B.DPTCD   = C.INTG_DPTCD
+		       and A.ELPW_COST_MSRM_YYMM between to_char(sysdate,'YYYY')-1 || '01' and to_char(to_char(sysdate,'YYYYMM')-1)
+		       and C.INST_CLSFC_CD = '4'
+		       and C.PRAF_USE_YN = 'Y'
+		group by C.IMDT_HGRN_DPTCD,A.ELPW_COST_MSRM_YYMM
+		order by 3
+    </select>
+    
+     <select id="bucFercilityDAO.bucFcltsPollutedWaterdbAjax" parameterClass="bucFcltsVO" resultClass="bucFcltsVO">
+    	 /*bucFcltsPollutedWaterdbAjax조회*/
+	     SELECT 
+	     	SVAR_NM, FLOW_TYPE, T01, T02,T03,T04,T05,T06,T07,T08,T09,T10,T11,T12
+	      FROM (
+	            SELECT 
+	                  SVAR_NM
+	                 , DECODE(IO_MODE_VAL, 'I', '유입', '방출') AS FLOW_TYPE
+	                 , SUM(T01) AS T01
+	                 , SUM(T02) AS T02
+	                 , SUM(T03) AS T03
+	                 , SUM(T04) AS T04
+	                 , SUM(T05) AS T05
+	                 , SUM(T06) AS T06
+	                 , SUM(T07) AS T07
+	                 , SUM(T08) AS T08
+	                 , SUM(T09) AS T09
+	                 , SUM(T10) AS T10
+	                 , SUM(T11) AS T11
+	                  , SUM(T12) AS T12
+	              FROM (
+	                    SELECT DEV_TIME
+	                         , TB2.INTERVAL
+	                         , DEPT_CODE
+	                         , (SELECT KOR_DPTNM FROM V_CNKC_INTG_DPRT01C1 WHERE INTG_DPTCD = TO_CHAR(TB2.DEPT_CODE)) AS SVAR_NM
+	                         , IO_MODE_VAL
+	                         , DECODE(TB2.INTERVAL, '01', DECODE(IO_MODE_VAL, 'I', INPUT_FLOW, 'O', OUTPUT_FLOW), 0) AS T01
+	                         , DECODE(TB2.INTERVAL, '02', DECODE(IO_MODE_VAL, 'I', INPUT_FLOW, 'O', OUTPUT_FLOW), 0) AS T02
+	                         , DECODE(TB2.INTERVAL, '03', DECODE(IO_MODE_VAL, 'I', INPUT_FLOW, 'O', OUTPUT_FLOW), 0) AS T03
+	                         , DECODE(TB2.INTERVAL, '04', DECODE(IO_MODE_VAL, 'I', INPUT_FLOW, 'O', OUTPUT_FLOW), 0) AS T04
+	                         , DECODE(TB2.INTERVAL, '05', DECODE(IO_MODE_VAL, 'I', INPUT_FLOW, 'O', OUTPUT_FLOW), 0) AS T05
+	                         , DECODE(TB2.INTERVAL, '06', DECODE(IO_MODE_VAL, 'I', INPUT_FLOW, 'O', OUTPUT_FLOW), 0) AS T06
+	                         , DECODE(TB2.INTERVAL, '07', DECODE(IO_MODE_VAL, 'I', INPUT_FLOW, 'O', OUTPUT_FLOW), 0) AS T07
+	                         , DECODE(TB2.INTERVAL, '08', DECODE(IO_MODE_VAL, 'I', INPUT_FLOW, 'O', OUTPUT_FLOW), 0) AS T08
+	                         , DECODE(TB2.INTERVAL, '09', DECODE(IO_MODE_VAL, 'I', INPUT_FLOW, 'O', OUTPUT_FLOW), 0) AS T09
+	                         , DECODE(TB2.INTERVAL, '10', DECODE(IO_MODE_VAL, 'I', INPUT_FLOW, 'O', OUTPUT_FLOW), 0) AS T10
+	                         , DECODE(TB2.INTERVAL, '11', DECODE(IO_MODE_VAL, 'I', INPUT_FLOW, 'O', OUTPUT_FLOW), 0) AS T11
+	                         , DECODE(TB2.INTERVAL, '12', DECODE(IO_MODE_VAL, 'I', INPUT_FLOW, 'O', OUTPUT_FLOW), 0) AS T12
+	                      FROM (     
+	                              SELECT TO_CHAR(ADD_MONTHS(TO_DATE('201101', 'YYYYMM') , LEVEL-1), 'MM') AS INTERVAL
+	                                FROM   DUAL
+	                               CONNECT BY LEVEL <![CDATA[ <= ]]> 12
+	                          ) TB1
+	                           LEFT OUTER JOIN
+	                           (         
+	                            SELECT DEV_TIME
+	                                 , TO_CHAR(TO_DATE(TO_CHAR(DEV_TIME, 'YYYYMM'), 'YYYYMM'), 'MM') AS INTERVAL
+	                                 , DEPT_CODE
+	                                 , IO_MODE_VAL
+	                                 , SUM(INPUT_FLOW) AS INPUT_FLOW
+	                                 , SUM(OUTPUT_FLOW) AS OUTPUT_FLOW
+	                              FROM (     
+	                                    SELECT TO_DATE(TO_CHAR(A.DEV_TIME, 'YYYYMM'), 'YYYYMM') AS DEV_TIME
+	                                         , A.OFFICE_CODE
+	                                         , B.IO_MODE_VAL
+	                                         , round(SUM(DECODE(B.IO_MODE_VAL, 'I', A.DAY_FLOW, 0)),0) AS INPUT_FLOW
+	                                         , round(SUM(DECODE(B.IO_MODE_VAL, 'O', A.DAY_FLOW, 0)),0) AS OUTPUT_FLOW
+	                                         , D.IMDT_HGRN_DPTCD DEPT_CODE
+	                                      FROM TB_DEVICEDAY_LOG_FLOW A, T_AFMA_DWRM_INSR01M1 B, T_AFMA_SVAR01I1 C , V_CNKC_INTG_DPRT01C1 D
+	                                     WHERE A.OFFICE_CODE = B.SVAR_CD
+	                                       AND B.SVAR_CD = C.SVAR_CD
+	                                       AND A.EQUIP_CODE = B.DWRM_EQPMT_CD
+	                                       AND A.DEVICE_CODE = B.DWRM_INSR_ID
+	                                       AND C.HGRN_DPTCD = D.INTG_DPTCD     
+	                                       AND B.IO_MODE_VAL IN ('I', 'O') 
+	                                       /* 날짜 위치에 금년도조회 가능하도록 처리 */   
+	                                       AND TO_CHAR(DEV_TIME,'YYYYMM') BETWEEN TO_CHAR( SYSDATE, 'yyyy')|| '01' AND TO_CHAR( SYSDATE, 'yyyy')|| '12'
+	                                      GROUP BY TO_DATE(TO_CHAR(A.DEV_TIME, 'YYYYMM'), 'YYYYMM'), A.OFFICE_CODE, B.IO_MODE_VAL , D.IMDT_HGRN_DPTCD
+	                                   )
+	                             GROUP BY DEV_TIME, DEPT_CODE, IO_MODE_VAL
+	                           ) TB2
+	                           ON TB1.INTERVAL = TB2.INTERVAL
+	                   )
+	             WHERE DEPT_CODE IS NOT NULL
+	             GROUP BY   SVAR_NM, IO_MODE_VAL
+	             ORDER BY SVAR_NM , FLOW_TYPE DESC
+	             )
+     </select>
+</sqlMap>

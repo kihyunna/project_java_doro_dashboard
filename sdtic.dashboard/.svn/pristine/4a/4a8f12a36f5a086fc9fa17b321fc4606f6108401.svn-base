@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="bucCmmn">
+
+    <typeAlias  alias="egovMap"   type="egovframework.rte.psl.dataaccess.util.EgovMap"  />
+    <typeAlias  alias="bucCmmnVO"  type="egovframework.com.sdtic.bucrs.service.BucCmmnVO" />
+    <typeAlias  alias="bucTrackingVO"  type="egovframework.com.sdtic.bucrs.service.BucTrackingVO" />
+
+    <select id="bucCmmnDAO.bucCmmnMainAjax" parameterClass="bucCmmnVO" resultClass="bucCmmnVO">
+        /* bucCmmnMainAjax 조회 */
+        SELECT
+             TEMP1     /* 템프1        */
+            ,TEMP2     /* 템프2        */
+            ,TEMP3     /* 템프3        */
+            ,TEMP4     /* 템프4        */
+        FROM TEMPTABLE
+    </select>
+
+    <select id="bucCmmnDAO.bucCmmnSmssndngAjax" parameterClass="bucCmmnVO" resultClass="bucCmmnVO">
+        /* bucCmmnSmssndngAjax 조회 */
+        SELECT SMS_BUSINESS_CODE, SMS_BUSINESS_CODE_NAME , COUNT(SMS_BUSINESS_CODE) AS SMS_BUSINESS_CODE_CNT
+        FROM SDTIC.SMS_DATA_TABLE
+        GROUP BY SMS_BUSINESS_CODE , SMS_BUSINESS_CODE_NAME
+        ORDER BY SMS_BUSINESS_CODE ASC
+    </select>
+
+    <select id="bucCmmnDAO.bucCmmnHelpdeskAjax" parameterClass="bucCmmnVO" resultClass="bucCmmnVO">
+        /* bucCmmnHelpdeskAjax 조회 */
+        SELECT HELPDESK_CODE ,HELPDESK_CODE_NAME, SUM(SUCCESS_CNT) AS SUCCESS_CNT, SUM(FAIL_CNT) AS FAIL_CNT, SUM(WAIT_CNT) AS WAIT_CNT
+        FROM (
+        SELECT HELPDESK_CODE ,HELPDESK_CODE_NAME,DECODE(HELPDESK_SUCCESS, 'Y', 1, 0) AS SUCCESS_CNT, DECODE(HELPDESK_FAIL, 'Y', 1, 0) AS FAIL_CNT, DECODE(HELPDESK_WAIT, 'Y', 1, 0) AS WAIT_CNT FROM
+        SDTIC.HELPDESK_DATA_TABLE
+        )
+        GROUP BY HELPDESK_CODE, HELPDESK_CODE_NAME
+
+    </select>
+
+    <select id="bucCmmnDAO.bucCmmnSimplctysanctnAjax" parameterClass="bucCmmnVO" resultClass="bucCmmnVO">
+        /* bucCmmnSimplctysanctnAjax 조회 */
+        SELECT SIMPLCTYSANCTN_CODE ,SIMPLCTYSANCTN_CODE_NAME, SUM(SUCCESS_CNT) AS SUCCESS_CNT, SUM(FAIL_CNT) AS FAIL_CNT, SUM(WAIT_CNT) AS WAIT_CNT
+        FROM (
+        SELECT SIMPLCTYSANCTN_CODE ,SIMPLCTYSANCTN_CODE_NAME,DECODE(SIMPLCTYSANCTN_SUCCESS, 'Y', 1, 0) AS SUCCESS_CNT, DECODE(SIMPLCTYSANCTN_FAIL, 'Y', 1, 0) AS FAIL_CNT, DECODE(SIMPLCTYSANCTN_WAIT, 'Y', 1, 0) AS WAIT_CNT FROM
+        SDTIC.SIMPLCTYSANCTN_DATA_TABLE
+        )
+        GROUP BY SIMPLCTYSANCTN_CODE, SIMPLCTYSANCTN_CODE_NAME
+    </select>
+
+    <select id="bucCmmnDAO.bucCmmnExtrnlcntcAjax" parameterClass="bucCmmnVO" resultClass="bucCmmnVO">
+        /* bucCmmnExtrnlcntcAjax 조회 */
+        SELECT
+             TEMP1     /* 템프1        */
+            ,TEMP2     /* 템프2        */
+            ,TEMP3     /* 템프3        */
+            ,TEMP4     /* 템프4        */
+        FROM TEMPTABLE
+    </select>
+
+    <select id="bucCmmnDAO.bucCmmnDataicrrtAjax" parameterClass="bucCmmnVO" resultClass="bucCmmnVO">
+        /* bucCmmnDataicrrtAjax 조회 */
+        SELECT
+             TEMP1     /* 템프1        */
+            ,TEMP2     /* 템프2        */
+            ,TEMP3     /* 템프3        */
+            ,TEMP4     /* 템프4        */
+        FROM TEMPTABLE
+    </select>
+
+    <select id="bucCmmnDAO.bucCmmnDatatrnsferAjax" parameterClass="bucCmmnVO" resultClass="bucCmmnVO">
+        /* bucCmmnDatatrnsferAjax 조회 */
+        SELECT
+             TEMP1     /* 템프1        */
+            ,TEMP2     /* 템프2        */
+            ,TEMP3     /* 템프3        */
+            ,TEMP4     /* 템프4        */
+        FROM TEMPTABLE
+    </select>
+
+    <select id="bucCmmnDAO.bucCmmnInfotrnsfertrkgAjax" parameterClass="bucTrackingVO" resultClass="bucTrackingVO">
+        /* bucCmmnInfotrnsfertrkgAjax 조회 */
+       SELECT
+            DEADLINE     /* 템프2        */
+            ,SEND     /* 템프3        */
+            ,PROCESS     /* 템프4        */
+            ,N_PROCESS
+            ,BUZGROUP
+        FROM BUC_TRAKINGPROCESS
+    </select>
+
+</sqlMap>

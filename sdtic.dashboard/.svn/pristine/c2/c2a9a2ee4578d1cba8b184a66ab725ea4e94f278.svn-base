@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="bucCmmn">
+
+    <typeAlias  alias="egovMap"   type="egovframework.rte.psl.dataaccess.util.EgovMap"  />
+    <typeAlias  alias="bucCmmnVO"  type="egovframework.com.sdtic.bucrs.service.BucCmmnVO" />
+
+    <!-- 비즈니스 공통 기술자문 처리실적 쿼리 -->
+   	<select id="bucResearchinfoDAO.bucCmmnTechAdvPrcssdbAjax" parameterClass="bucCmmnVO" resultClass="bucCmmnVO">
+   		/*
+		     01. 교통 realm_01_cnt
+		     02. 구조 realm_02_cnt
+		     03. 지반 realm_03_cnt
+		     04. 사면 realm_04_cnt
+		     05. 재료환경 realm_05_cnt
+		     06. 포장 realm_06_cnt
+		     07. 기타 realm_07_cnt
+		     08. 경영 realm_08_cnt
+		     00. 수행중 realm_00_cnt 
+		*/    
+		SELECT 
+		      COUNT(CASE WHEN CNSUT_REALM = '01' AND PROCESS_STTUS = '05' THEN  1 END) AS REALM_01_CNT
+		    , COUNT(CASE WHEN CNSUT_REALM = '01' THEN  1 END) AS REALM_01_CNT2
+		    , COUNT(CASE WHEN CNSUT_REALM = '02' AND PROCESS_STTUS = '05' THEN  1 END) AS REALM_02_CNT
+		    , COUNT(CASE WHEN CNSUT_REALM = '02'  THEN  1 END) AS REALM_02_CNT2
+		    , COUNT(CASE WHEN CNSUT_REALM = '03' AND PROCESS_STTUS = '05' THEN  1 END) AS REALM_03_CNT
+		    , COUNT(CASE WHEN CNSUT_REALM = '03' THEN  1 END) AS REALM_03_CNT2
+		    , COUNT(CASE WHEN CNSUT_REALM = '04' AND PROCESS_STTUS = '05' THEN  1 END) AS REALM_04_CNT
+		    , COUNT(CASE WHEN CNSUT_REALM = '04' THEN  1 END) AS REALM_04_CNT2
+		    , COUNT(CASE WHEN CNSUT_REALM = '05' AND PROCESS_STTUS = '05' THEN  1 END) AS REALM_05_CNT
+		    , COUNT(CASE WHEN CNSUT_REALM = '05'  THEN  1 END) AS REALM_05_CNT2
+		    , COUNT(CASE WHEN CNSUT_REALM = '06' AND PROCESS_STTUS = '05' THEN  1 END) AS REALM_06_CNT
+		    , COUNT(CASE WHEN CNSUT_REALM = '06' THEN  1 END) AS REALM_06_CNT2
+		    , COUNT(CASE WHEN CNSUT_REALM = '07' AND PROCESS_STTUS = '05' THEN  1 END) AS REALM_07_CNT
+		    , COUNT(CASE WHEN CNSUT_REALM = '07' THEN  1 END) AS REALM_07_CNT2
+		    , COUNT(CASE WHEN CNSUT_REALM = '08' AND PROCESS_STTUS = '05' THEN  1 END) AS REALM_08_CNT
+		    , COUNT(CASE WHEN CNSUT_REALM = '08' THEN  1 END) AS REALM_08_CNT2
+		    , COUNT(CASE WHEN PROCESS_STTUS = '03' OR PROCESS_STTUS = '04' THEN  1 END) AS REALM_00_CNT
+		    , COUNT(1) AS TOT_CNT
+		    FROM(
+		    SELECT TECH_CNSUT_CODE,
+		           ACMSLT_ID,
+		           TECH_CNSUT_NM,
+		           EXC_SE,
+		           ISE_EXTRL_SE,
+		           CNSUT_NO,
+		           REQEST_OFFIC,
+		           REQEST_OFFIC_NM,
+		           REQEST_OFLDC_NO,
+		           REQEST_DE,
+		           PROCESS_STTUS,
+		           PCHRG_AT,
+		           (SELECT CODE_NM
+		              FROM CYL_CMM_0002_TC
+		             WHERE CODE_ID = 'CYLCNSL002'
+		               AND CODE = PROCESS_STTUS) STATUS,
+		           CRTE_USER_ID,
+		           CRTE_DTTM,
+		           CNSUT_BGNDE,
+		           CNSUT_ENDDE,
+		           PROCESS_COMPT_DE,
+		           CNSUT_REALM
+		      FROM CYL_PMS_1602_TN --기술자문
+		     WHERE PROCESS_STTUS IN ('03', '04', '05')
+		       AND REQEST_DE between '20170101' and '20171231'
+		       AND EXC_SE = 'TC'
+		    ) A		   		
+    </select>
+</sqlMap>

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="ifcSms">
+
+    <typeAlias  alias="egovMap"   type="egovframework.rte.psl.dataaccess.util.EgovMap"  />
+    <typeAlias  alias="ifcSmsVO"  type="egovframework.com.sdtic.ifcrs.service.IfcSmsVO" />
+
+    <select id="ifcSmsDAO.ifcSmsColctAjax" parameterClass="ifcSmsVO" resultClass="ifcSmsVO">
+	    SELECT A.obj_uniquekey as hostname,
+		       B.cpu,
+			   C.mem,
+			   D.disk,
+			   E.netio,
+			   F.neterr,
+			   D.max_disk_name etc1,
+			   '' etc2,
+			   '' etc3,
+			   date_format(B.check_datetime, '%Y%m%d%H%i%s') as inst_date
+		  FROM
+		(
+		SELECT o1.obj_uniquekey
+		  FROM obj o1
+		 WHERE o1.obj_uniquekey in ($real_hostname$)
+		) A left outer join
+		(
+		SELECT o1.obj_uniquekey, round(o3.resultvalue_double) cpu, o3.check_datetime 
+		  FROM obj o1
+		 INNER JOIN obj_rsc_key o2 ON o2.obj_id=o1.obj_id
+		 INNER JOIN obj_rsc_rslt o3 ON o3.hashkey_id=o2.hashkey_id
+		 WHERE o1.obj_uniquekey in ($real_hostname$)
+		   AND o2.rsctype_id='CPU' 
+		   AND o2.rsc_id='TOTAL_USERATE' 
+		   AND o2.rsc_key_name='_Total'
+		) B on A.obj_uniquekey = B.obj_uniquekey left outer join
+		( 
+		SELECT o1.obj_uniquekey, round(o3.resultvalue_double) mem
+		  FROM obj o1
+		 INNER JOIN obj_rsc_key o2 ON o2.obj_id=o1.obj_id
+		 INNER JOIN obj_rsc_rslt o3 ON o3.hashkey_id=o2.hashkey_id
+		 WHERE o1.obj_uniquekey in ($real_hostname$)
+		   AND o2.rsctype_id='MEM_PHY' 
+			AND o2.rsc_id='USERATE' 
+			AND o2.rsc_key_name='_Total'
+		) C on A.obj_uniquekey = C.obj_uniquekey left outer join
+		(	
+		SELECT aa.obj_uniquekey, round(max(aa.disk)) disk, aa.max_disk_name
+		FROM (
+			SELECT o1.obj_uniquekey, max(o3.resultvalue_double) disk, o2.rsc_key_name max_disk_name
+			  FROM obj o1
+			 INNER JOIN obj_rsc_key o2 ON o2.obj_id=o1.obj_id
+			 INNER JOIN obj_rsc_rslt o3 ON o3.hashkey_id=o2.hashkey_id
+			 WHERE o1.obj_uniquekey in ($real_hostname$)
+			  AND o2.rsctype_id='DISK' 
+			  AND o2.rsc_id='DISK_USERATE'
+			GROUP BY o1.obj_uniquekey, o2.rsc_key_name
+			ORDER BY disk DESC
+		) aa
+		GROUP BY aa.obj_uniquekey
+		) D on A.obj_uniquekey = D.obj_uniquekey left outer join
+		(
+		SELECT o1.obj_uniquekey, CEIL(SUM(o3.resultvalue_double)) netio
+		  FROM obj o1
+		 INNER JOIN obj_rsc_key o2 ON o2.obj_id=o1.obj_id
+		 INNER JOIN obj_rsc_rslt o3 ON o3.hashkey_id=o2.hashkey_id
+		 WHERE o1.obj_uniquekey in ($real_hostname$)
+		   AND rsctype_id='NETIO'
+		 GROUP BY o1.obj_uniquekey
+		) E on A.obj_uniquekey = E.obj_uniquekey left outer join
+		(
+		SELECT o1.obj_uniquekey, REPLACE(o3.resultvalue_integer,'-1','Y') neterr
+		  FROM obj o1
+		 INNER JOIN obj_rsc_key o2 ON o2.obj_id=o1.obj_id
+		 INNER JOIN obj_rsc_rslt o3 ON o3.hashkey_id=o2.hashkey_id
+		 WHERE o1.obj_uniquekey in ($real_hostname$)
+		   AND o1.obj_define_id='NETDEVICE'
+		   AND o2.rsc_id='RESPONSETIME_ICMP'
+		 GROUP BY o1.obj_uniquekey
+		) F on A.obj_uniquekey = F.obj_uniquekey
+    </select>
+
+</sqlMap>

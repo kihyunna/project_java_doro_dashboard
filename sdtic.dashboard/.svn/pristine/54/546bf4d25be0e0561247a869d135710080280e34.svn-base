@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="ifcTrobl">
+
+    <typeAlias  alias="egovMap"   type="egovframework.rte.psl.dataaccess.util.EgovMap"  />
+    <typeAlias  alias="ifcTroblVO"  type="egovframework.com.sdtic.ifcrs.service.IfcTroblVO" />
+
+    <insert id="ifcTroblDAO.ifcAddTroblAjax" parameterClass="ifcTroblVO">
+    	<selectKey resultClass="java.lang.String" keyProperty="trobl_seq">
+            SELECT TROBLSEQ.NEXTVAL AS TROBL_SEQ FROM DUAL
+        </selectKey>
+      	<![CDATA[
+        /* ifcAddColctAjax 입력 */
+        INSERT INTO IOC_SDTIC_TROBL_COLCT_DATA
+        (
+        	TROBLSEQ,
+  			JOBSE,
+		  	TROBLCOLCTSE,
+		  	DETAILCLSE,
+		  	REAL_HOSTNAME,
+		  	TROBLGRADSE,
+		  	TROBLPROCESSSTTUS,
+		  	TROBLCN,
+		  	RM,
+		  	INST_DATE,
+		  	CRE_DATE
+        )
+        VALUES
+        (
+            #trobl_seq#,
+            #jobse#,
+		  	#troblcolctse#,
+		  	#detailclse#,
+		  	#real_hostname#,
+		  	#troblgradse#,
+		  	#troblprocesssttus#,
+		  	#troblcn#,
+		  	#rm#,
+		  	#inst_date#,
+            TO_CHAR(sysdate, 'YYYYMMDDhh24miss')
+        )
+       ]]>
+     </insert>
+     
+     <update id="ifcTroblDAO.ifcModTroblAjax" parameterClass="ifcTroblVO">
+        /* ifcModTroblAjax */
+        UPDATE IOC_SDTIC_TROBL_COLCT_DATA SET
+        	   TROBLCN = #troblcn#,
+        	   TROBLPROCESSSTTUS = #troblprocesssttus#,
+        	   CRE_DATE = TO_CHAR(sysdate, 'YYYYMMDDhh24miss')
+         WHERE TROBLSEQ = #troblseq#
+     </update>
+     
+     <insert id="ifcTroblDAO.ifcAddTroblLogAjax" parameterClass="ifcTroblVO">
+      	<![CDATA[
+        /* ifcAddTroblLogAjax 입력 */
+        INSERT INTO IOC_SDTIC_TROBL_COLCT_LOG
+        (
+        	TROBLSEQ,
+  			TROBLPROCESSSTTUS,
+  			ACTIONCN,
+ 			RM,
+  			INST_DATE,
+  			CRE_DATE
+        )
+        VALUES
+        (
+            #troblseq#,
+  			#troblprocesssttus#,
+  			#actioncn#,
+  			#rm#,
+  			#inst_date#,
+            TO_CHAR(sysdate, 'YYYYMMDDhh24miss')
+        )
+       ]]>
+     </insert>
+     
+     <select id="ifcTroblDAO.ifcTroblDiskAjax" parameterClass="ifcTroblVO" resultClass="ifcTroblVO">
+    	<![CDATA[
+        /* ifcTroblDiskAjax */
+        SELECT 'IFC' JOBSE,
+		       #troblcolctse# TROBLCOLCTSE,
+		       #detailclse# DETAILCLSE,
+		       C.REAL_HOSTNAME,
+		       #troblgradse# TROBLGRADSE,
+		       '0' TROBLPROCESSSTTUS,
+		       #detailclse# || ' ' || #thrhld# || '% 초과' TROBLCN,
+		       '' RM,
+		       MAX(A.INST_DATE) INST_DATE,
+		       MAX(C.HOSTNAME) HOSTNAME,
+		       MAX(A.DISK) DISK
+		  FROM (SELECT REAL_HOSTNAME,
+		               DISK,
+		               INST_DATE
+		          FROM IOC_SDTIC_IFC_COLCT_DATA) A,
+		       (SELECT REAL_HOSTNAME, MAX(INST_DATE) MAX_INST_DATE
+		          FROM IOC_SDTIC_IFC_COLCT_DATA
+		         GROUP BY (REAL_HOSTNAME)) B,
+		       IOC_SDTIC_IFC_HOSTNAME_COLCT C
+		 WHERE A.REAL_HOSTNAME = B.REAL_HOSTNAME
+		   AND A.INST_DATE = B.MAX_INST_DATE
+		   AND A.REAL_HOSTNAME = C.REAL_HOSTNAME
+		   AND A.DISK >= TO_NUMBER(#thrhld#)
+		 GROUP BY C.REAL_HOSTNAME
+		]]>
+    </select>
+    
+    <select id="ifcTroblDAO.ifcTroblNetioAjax" parameterClass="ifcTroblVO" resultClass="ifcTroblVO">
+    	<![CDATA[
+        /* ifcTroblNetioAjax */
+        SELECT 'IFC' JOBSE,
+		       #troblcolctse# TROBLCOLCTSE,
+		       #detailclse# DETAILCLSE,
+		       C.REAL_HOSTNAME,
+		       #troblgradse# TROBLGRADSE,
+		       '0' TROBLPROCESSSTTUS,
+		       'NET IO 장애 발생' TROBLCN,
+		       '' RM,
+		       MAX(A.INST_DATE) INST_DATE,
+		       MAX(C.HOSTNAME) HOSTNAME,
+		       MAX(A.NETERR) NETERR
+		  FROM (SELECT REAL_HOSTNAME,
+		               NETERR,
+		               INST_DATE
+		          FROM IOC_SDTIC_IFC_COLCT_DATA) A,
+		       (SELECT REAL_HOSTNAME, MAX(INST_DATE) MAX_INST_DATE
+		          FROM IOC_SDTIC_IFC_COLCT_DATA
+		         GROUP BY (REAL_HOSTNAME)) B,
+		       IOC_SDTIC_IFC_HOSTNAME_COLCT C
+		 WHERE A.REAL_HOSTNAME = B.REAL_HOSTNAME
+		   AND A.INST_DATE = B.MAX_INST_DATE
+		   AND A.REAL_HOSTNAME = C.REAL_HOSTNAME
+		   AND A.NETERR = 'Y'
+		 GROUP BY C.REAL_HOSTNAME
+		]]>
+    </select>
+    
+    <select id="ifcTroblDAO.ifcTroblConlogAjax" parameterClass="ifcTroblVO" resultClass="ifcTroblVO">
+    	<![CDATA[
+        /* ifcTroblConlogAjax */
+        SELECT 'IFC' JOBSE,
+		       #troblcolctse# TROBLCOLCTSE,
+		       #detailclse# DETAILCLSE,
+		       C.REAL_HOSTNAME,
+		       #troblgradse# TROBLGRADSE,
+		       '0' TROBLPROCESSSTTUS,
+		       '컨테이너 로그 장애 발생' TROBLCN,
+		       '' RM,
+		       MAX(A.INST_DATE) INST_DATE,
+		       MAX(A.HOSTNAME) HOSTNAME,
+		       MAX(A.ERR_LOG_CNT) ERR_LOG_CNT
+		  FROM (SELECT HOSTNAME,
+		               ERR_LOG_CNT,
+		               INST_DATE
+		          FROM IOC_SDTIC_IFC_CON_COLCT_DATA) A,
+		       (SELECT HOSTNAME, MAX(INST_DATE) MAX_INST_DATE
+		          FROM IOC_SDTIC_IFC_CON_COLCT_DATA
+		         GROUP BY (HOSTNAME)) B,
+		       IOC_SDTIC_IFC_HOSTNAME_COLCT C
+		 WHERE A.HOSTNAME = B.HOSTNAME
+		   AND A.INST_DATE = B.MAX_INST_DATE
+		   AND A.HOSTNAME = C.HOSTNAME
+		   AND A.ERR_LOG_CNT >= TO_NUMBER(#thrhld#)
+		   AND A.INST_DATE BETWEEN TO_CHAR(SYSDATE - (1 / 24), 'YYYYMMDDhh24miss') AND TO_CHAR(SYSDATE, 'YYYYMMDDhh24miss')
+		 GROUP BY C.REAL_HOSTNAME
+		]]>
+    </select>
+    
+    <select id="ifcTroblDAO.ifcTroblServerGubunAjax" parameterClass="ifcTroblVO" resultClass="ifcTroblVO">
+    	<![CDATA[
+        /* ifcTroblServerGubunAjax */
+        SELECT HOSTNAME, 
+        	   MAX(GUBUN) GUBUN, 
+        	   MAX(GROUP1) GROUP1, 
+        	   MAX(GROUP2) GROUP2
+          FROM IOC_SDTIC_IFC_HOSTNAME
+	     WHERE HOSTNAME = #hostname#
+		 GROUP BY HOSTNAME
+		]]>
+    </select>
+
+</sqlMap>

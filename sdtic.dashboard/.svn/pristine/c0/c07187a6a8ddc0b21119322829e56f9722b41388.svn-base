@@ -1,0 +1,31 @@
+package egovframework.com.sdtic.main.service;
+
+import java.util.HashMap;
+import java.util.List;
+
+/**
+ * @Class Name :  MainFecService.java
+ * @Description : MainFecService Class
+ * @Modification Information
+ * @
+ * @ 수정일          수정자                       수정내용
+ * @ -----------   ---------   -------------------------------
+ * @ 2017. 06. 01    jkheo                       최초생성
+ *
+ * @author
+ * @since
+ * @version 1.0
+ * @see
+ *
+ */
+
+public interface MainFecService {
+	public List<HashMap<String, String>> getHdqrTextWithHdqrCd(String Param) throws Exception;
+	
+	public List<HashMap<String, String>> getMtnofTextWithHdqrCd(String Param) throws Exception;
+	
+	public List<HashMap<String, String>> getHdqrTextWithMtnofCd(String Param) throws Exception;
+	
+	public List<HashMap<String, String>> getMtnofTextWithMtnofCd(String Param) throws Exception;
+
+}

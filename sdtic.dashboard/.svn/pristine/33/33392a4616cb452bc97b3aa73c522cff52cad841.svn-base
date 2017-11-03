@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="bucBnsty">
+
+    <typeAlias  alias="egovMap"   type="egovframework.rte.psl.dataaccess.util.EgovMap"  />
+    <typeAlias  alias="bucBnstyVO"  type="egovframework.com.sdtic.bucrs.service.BucBnstyVO" />
+
+    <select id="bucBnstyDAO.bucBnstyAccmltConectrAjax" parameterClass="bucBnstyVO" resultClass="bucBnstyVO">
+        /* bucBnstyAccmltConectrAjax 조회 */
+        SELECT
+             TEMP1     /* 템프1        */
+            ,TEMP2     /* 템프2        */
+            ,TEMP3     /* 템프3        */
+            ,TEMP4     /* 템프4        */
+        FROM TEMPTABLE
+    </select>
+    
+    <select id="bucBnstyDAO.bucBnstyRtAjax" parameterClass="bucBnstyVO" resultClass="bucBnstyVO">
+         /* bucBnstyRtAjax 조회 */
+        select 
+	       BUC_BNSTY
+        from BUC_ACCMLT_CONECTR
+    </select>
+
+	 <select id="bucBnstyDAO.bucBnstyAccmltConectrdbAjax" parameterClass="bucBnstyVO" resultClass="bucBnstyVO">
+		 /* bucBnstyAccmltConectrdbAjax 조회 */
+		select count(*) as cnt         
+		from T_CNKC_USER_CNNC_LOG01H1 A,
+		     T_CNKC_BSWR_SYSTM01M1 B
+		where to_char(lsttm_logn_dttm, 'yyyymmdd') = to_char(sysdate, 'yyyymmdd')
+		  and A.SYSTM_CD = B.SYSTM_CD 
+		  and B.HGRN_SYSTM_CD = 'CON'
+    </select>
+    
+    <!-- 비즈니스 건설 상단 위젯 공정율 쿼리 -->
+    <select id="bucBnstyDAO.bucBnstyRtdbAjax" parameterClass="bucBnstyVO" resultClass="bucBnstyVO">
+       /* bucBnstyRtdbAjax 조회 */
+       SELECT DISTINCT
+                 TO_NUMBER(WHOL_CTRS_PRCRT) AS WHOL_CTRS_PRCRT  /*전체공정율*/
+            FROM (  SELECT 
+                           TP.CONT_TOT_PER  AS CONT_TOT_PER ,
+                           TP.PRYR_RATE  AS PRYR_RATE ,
+                           TP.THYY_CNTRT_RATE  AS THYY_CNTRT_RATE ,
+                           TP.THYY_CNTRT_CMTL_RATE  AS THYY_CNTRT_CMTL_RATE ,
+                           TP.THYY_PLAN_RATE  AS THYY_PLAN_RATE ,
+                           TP.THYY_EFCN_RATE  AS THYY_EFCN_RATE ,
+                           TP.THYY_CTRS_RATE  AS THYY_CTRS_RATE ,
+                           TP.WHOL_PLAN_RATE  AS WHOL_PLAN_RATE ,
+                           TP.WHOL_EFCN_RATE  AS WHOL_EFCN_RATE ,
+                           TP.WHOL_CTRS_PRCRT  AS WHOL_CTRS_PRCRT ,
+                           TP.ANNL_ESTN_RATE  AS ANNL_ESTN_RATE ,
+                           TP.WHOL_ESTN_RATE  AS WHOL_ESTN_RATE ,
+                           O.STEP_CLSS_CD
+                      FROM V_CPMB_SECT_INST01M1 O ,
+                            (
+                /*사업단*/
+			         SELECT
+			         100 AS CONT_TOT_PER ,
+			         O.PRYR_RATE ,
+			         O.THYY_CNTRT_RATE ,
+			         O.THYY_CNTRT_CMTL_RATE ,
+			         O.THYY_PLAN_RATE ,
+			         O.THYY_EFCN_RATE ,
+			         O.THYY_CTRS_RATE ,
+			         O.WHOL_PLAN_RATE ,
+			         O.WHOL_EFCN_RATE ,
+			         O.WHOL_CTRS_PRCRT ,
+			         O.ANNL_ESTN_RATE ,
+			         O. WHOL_ESTN_RATE
+			                             FROM
+			                              (
+			                               SELECT
+			                                   100 AS CONT_TOT_PER ,
+			                                   NVL (ROUND (CNCST_PRYR_CNTRT_AMT / DECODE (SBCT_CNTRT_AMT, 0, NULL, SBCT_CNTRT_AMT)  * 100, 0) , 0)
+			                                      AS PRYR_RATE ,
+			                                   NVL (ROUND (THYY_CNTRT_AMT / DECODE (SBCT_CNTRT_AMT, 0, NULL, SBCT_CNTRT_AMT)  * 100, 0) , 0)
+			                                      AS THYY_CNTRT_RATE ,
+			                                   NVL  (
+			                                      ROUND (THYY_CNTRT_CMTL_AMT / DECODE (SBCT_CNTRT_AMT, 0, NULL, SBCT_CNTRT_AMT)  * 100, 0)  ,
+			                                      0)
+			                                      AS THYY_CNTRT_CMTL_RATE ,
+			                                   NVL (ROUND (THYY_PLAN_AMT / DECODE (THYY_CNTRT_AMT, 0, NULL, THYY_CNTRT_AMT)  * 100, 0)  ,
+			                                        0)
+			                                      AS THYY_PLAN_RATE ,
+			                                   NVL (ROUND (THYY_EFCN_AMT / DECODE (THYY_CNTRT_AMT, 0, NULL, THYY_CNTRT_AMT)  * 100, 0)  ,
+			                                        0)
+			                                      AS THYY_EFCN_RATE ,
+			                                   NVL (ROUND (THYY_EFCN_AMT / DECODE (THYY_PLAN_AMT, 0, NULL, THYY_PLAN_AMT)  * 100, 0)  ,
+			                                        0)
+			                                      AS THYY_CTRS_RATE ,
+			                                   TO_CHAR(NVL (ROUND (WHOL_PLAN_AMT / DECODE (SBCT_CNTRT_AMT, 0, NULL, SBCT_CNTRT_AMT)  * 100, 0) , 0))
+			                                      AS WHOL_PLAN_RATE ,
+			                                   NVL (ROUND (WHOL_EFCN_AMT / DECODE (SBCT_CNTRT_AMT, 0, NULL, SBCT_CNTRT_AMT)  * 100, 0) , 0)
+			                                      AS WHOL_EFCN_RATE ,
+			                                   NVL (ROUND (WHOL_EFCN_AMT / DECODE (WHOL_PLAN_AMT, 0, NULL, WHOL_PLAN_AMT)  * 100, 0) , 0)
+			                                      AS WHOL_CTRS_PRCRT ,
+			                                   NVL (ROUND (ANNL_ESTN_AMT / DECODE (THYY_CNTRT_AMT, 0, NULL, THYY_CNTRT_AMT)  * 100, 0)  ,
+			                                        0)
+			                                      AS ANNL_ESTN_RATE ,
+			                                   NVL (ROUND (WHOL_ESTN_AMT / DECODE (SBCT_CNTRT_AMT, 0, NULL, SBCT_CNTRT_AMT)  * 100, 0) , 0)
+			                                      AS WHOL_ESTN_RATE
+			                              FROM (  SELECT 
+			                                             SUM (TP.SBCT_CNTRT_AMT)  AS SBCT_CNTRT_AMT ,
+			                                             SUM (TP.CNCST_PRYR_CNTRT_AMT)  AS CNCST_PRYR_CNTRT_AMT ,
+			                                             SUM (TP.THYY_CNTRT_AMT)  AS THYY_CNTRT_AMT ,
+			                                             SUM (TP.THYY_CNTRT_CMTL_AMT)  AS THYY_CNTRT_CMTL_AMT ,
+			                                             SUM (TP.THYY_PLAN_AMT)  AS THYY_PLAN_AMT ,
+			                                             SUM (TP.THYY_EFCN_AMT)  AS THYY_EFCN_AMT ,
+			                                             SUM (TP.WHOL_PLAN_AMT)  AS WHOL_PLAN_AMT ,
+			                                             SUM (TP.WHOL_EFCN_AMT)  AS WHOL_EFCN_AMT ,
+			                                             SUM (TP.ANNL_ESTN_AMT)  AS ANNL_ESTN_AMT ,
+			                                             SUM (TP.WHOL_ESTN_AMT)  AS WHOL_ESTN_AMT
+			                                        FROM V_CPMB_SECT_INST01M1 O, T_CPMB_PRCSS_PROCS01M1 TP
+			                                       WHERE     STEP_CLSS_CD = '4'
+			                                             AND O.BIZ_PRGS_STAT_CD = 'C02'
+			                                             AND O.CSTR_STEP_CD = 'S'
+			                                             AND O.BIZ_LOCT_SEQ = TP.BIZ_LOCT_SEQ
+			                                             AND TP.RGST_DTTM = (SELECT MAX (RGST_DTTM)  FROM T_CPMB_PRCSS_PROCS01M1)
+			          )
+			         )  O ,
+			                    (
+			                     SELECT BIZ_LOCT_SEQ,BLNG_DPTCD,SORT_SEQ FROM V_CPMB_SECT_INST01M1 O
+			                      WHERE O.BIZ_PRGS_STAT_CD = 'C02'
+			                        AND O.CSTR_STEP_CD = 'S'
+			                        AND STEP_CLSS_CD=1
+			                   ORDER BY SORT_SEQ
+			                   )  V
+			              )  TP
+			            )
+            WHERE STEP_CLSS_CD =  1 /*사업단만 나오게*/
+    </select>
+    
+    <!-- 비즈니스 건설현장 쿼리 -->
+	 <select id="bucBnstyDAO.bucBnstyPlacedbAjax" parameterClass="bucBnstyVO" resultClass="bucBnstyVO">
+    	/*bucBnstyPlacedbAjax조회*/
+    	select 
+    			CNSTN_DLLG_DATES
+    			,KOR_DPTNM
+    			,EQPM
+    			,MTRI
+    			,worker
+    			,EQPM_Y
+    			,MTRI_Y
+    			,worker_y
+    			,EQPM_CAL
+    			,MTRI_CAL
+    			,worker_cal
+			  From (
+			select CNSTN_DLLG_DATES, KOR_DPTNM
+			       , EQPM, MTRI, MNPW as worker       
+			       ,LAG(EQPM, 1) over (order by KOR_DPTNM, current_date) AS EQPM_Y
+			       ,LAG(MTRI, 1) over (order by KOR_DPTNM, current_date) AS MTRI_Y
+			       ,LAG(MNPW, 1) over (order by KOR_DPTNM, current_date) AS worker_y
+			       ,LAG(EQPM, 1) over (order by KOR_DPTNM, current_date) - EQPM AS EQPM_CAL
+			       ,LAG(MTRI, 1) over (order by KOR_DPTNM, current_date) - MTRI AS MTRI_CAL
+			       ,LAG(MNPW, 1) over (order by KOR_DPTNM, current_date) - MNPW AS worker_cal
+			       ,abs(LAG(EQPM, 1) over (order by KOR_DPTNM, current_date) - EQPM)
+			       ,DECODE(CNSTN_DLLG_DATES, TO_CHAR(SYSDATE-54, 'YYYYMMDD'), 'T', 'Y') as gubun_date
+			  from (
+			        SELECT 
+			                A.CNSTN_DLLG_DATES as CNSTN_DLLG_DATES
+			               ,E.KOR_DPTNM
+			               ,NVL(SUM(B.WKSC_PUT_MNPW_CNT),0) as EQPM
+			               ,NVL(SUM(C.WKSC_PUT_MNPW_CNT),0) as MTRI
+			               ,NVL(SUM(D.WKSC_PUT_MNPW_CNT),0) as MNPW
+			        FROM T_CPMB_CNSTN_DLLG01M1 A /* 일지마스터 */
+			             ,T_CPMB_CNSTN_DLLG_EQPM01M1 B /* 장비투입 */
+			             ,T_CPMB_CNSTN_DLLG_MTRI01M1 C /* 자재투입 */
+			             ,T_CPMB_WKSC_PUT_MNPW01M1 D /* 인력투입 */
+			             ,V_CPMB_SECT_INST01M1 E /* 본부/지사/사업단 구분 */
+			        WHERE A.CNSTN_DLLG_SEQ = B.CNSTN_DLLG_SEQ(+)
+			          AND A.CNSTN_DLLG_SEQ = C.CNSTN_DLLG_SEQ(+)
+			          AND A.CNSTN_DLLG_SEQ = D.CNSTN_DLLG_SEQ(+)
+			          AND B.BIZ_LOCT_SEQ = E.BIZ_LOCT_SEQ
+			          AND A.CNSTN_DLLG_DATES BETWEEN '20170801' AND '20170802'
+			          AND E.BIZ_PRGS_STAT_CD = 'C02'
+			          AND E.CSTR_STEP_CD = 'S' 
+			        GROUP BY A.CNSTN_DLLG_DATES,E.KOR_DPTNM
+			        ORDER BY E.KOR_DPTNM, A.CNSTN_DLLG_DATES
+			        )
+			     )
+		where gubun_date = 'T'
+		</select>
+</sqlMap>

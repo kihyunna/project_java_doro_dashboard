@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="fecTotlInsrTotDAO">
+	<typeAlias  alias="fecSlpVO"  type="egovframework.com.sdtic.fecrs.service.fecSlpVO" />
+	<typeAlias  alias="fecCctvVO"  type="egovframework.com.sdtic.fecrs.service.fecCctvVO" />
+	<typeAlias  alias="fecEventVO"  type="egovframework.com.sdtic.fecrs.service.fecEventVO" />
+    <typeAlias  alias="FecSearchVO"  type="egovframework.com.sdtic.fecrs.service.FecSearchVO" />
+    <typeAlias  alias="FecSptMapVO"  type="egovframework.com.sdtic.fecrs.service.FecSptMapVO" />
+    <typeAlias  alias="FecMDTOperVO"  type="egovframework.com.sdtic.fecrs.service.FecMDTOperVO" />
+    
+    <select id="fecTotlInsrTotDAO.fecGetSlp" resultClass="fecSlpVO">  
+	    SELECT a.msis_gtwy_id,
+	    	   a.fclts_intg_id,
+		       b.msis_snsr_id,
+		       a.pbus_jrsd_hdqr_cd hdqr_cd,
+		       a.hdqr_nm,
+		       a.pbus_jrsd_mtnof_cd mtnof_cd,
+		       a.mtnof_nm,
+		       a.pbus_route_cd,
+		       a.use_rotnm,
+		       a.regin_nm,
+		       a.pbus_stpnt_dstnc,
+		       a.drve_drnm,
+		       a.pbus_drve_drct_cd,
+		       a.ggtm_xcord,
+		       a.ggtm_ycord
+		  FROM T_EXMF_MSIS_MGMT01M1 a, T_EXMF_SNSR_MGMT01M1 b
+		 WHERE a.MSIS_GTWY_ID = b.MSIS_GTWY_ID AND a.USE_YN = 'Y'
+    </select> 
+    
+    <select id="fecTotlInsrTotDAO.fecGetTroblSlp" resultClass="fecSlpVO">  
+		SELECT msis_gtwy_id,
+		       msis_snsr_id,
+		       trobl_type,
+		       use_yn,
+		       to_char (fsttm_rgst_dttm, 'yyyymmddhh24miss') fsttm_rgst_dttm,
+		       to_char (lsttm_altr_dttm, 'yyyymmddhh24miss') lsttm_altr_dttm
+		  FROM (  SELECT MSIS_GTWY_ID,
+		                 MSIS_SNSR_ID,
+		                 '1' AS trobl_type,
+		                 use_yn,
+		                 FSTTM_RGST_DTTM,
+		                 MAX (LSTTM_ALTR_DTTM) LSTTM_ALTR_DTTM
+		            FROM T_EXMF_SNSR_SHCK_AMNT01M1
+		           WHERE     1 = 1
+		                 AND MSIS_ALRM_ID  <![CDATA[  <>  ]]>  '0'
+		                 AND LSTTM_ALTR_DTTM >=
+		                        TO_DATE (to_char(sysdate, 'yyyymmdd')||'000000', 'yyyymmddhh24miss')
+		        GROUP BY MSIS_GTWY_ID,
+		                 MSIS_SNSR_ID,
+		                 use_yn,
+		                 FSTTM_RGST_DTTM
+		        UNION ALL
+		          SELECT MSIS_GTWY_ID,
+		                 MSIS_SNSR_ID,
+		                 '2' AS trobl_type,
+		                 use_yn,
+		                 FSTTM_RGST_DTTM,
+		                 MAX (LSTTM_ALTR_DTTM) LSTTM_ALTR_DTTM
+		            FROM T_EXMF_SNSR_BTRY_STAT01M1
+		           WHERE     1 = 1
+		                 AND MSIS_ALRM_ID <![CDATA[  <>  ]]> '0'
+		                 AND LSTTM_ALTR_DTTM >=
+		                        TO_DATE (to_char(sysdate, 'yyyymmdd')||'000000', 'yyyymmddhh24miss')
+		        GROUP BY MSIS_GTWY_ID,
+		                 MSIS_SNSR_ID,
+		                 use_yn,
+		                 FSTTM_RGST_DTTM)
+    </select>  
+    
+    <select id="fecTotlInsrTotDAO.fecGetEventSlp" parameterClass="String" resultClass="fecSlpVO">  
+				SELECT msis_idx_seq,
+				       msis_gtwy_id,
+				       msis_snsr_id,
+				       msis_ntfc_kind_cd,
+				       to_char (fsttm_rgst_dttm, 'yyyymmddhh24miss') fsttm_rgst_dttm,
+		       		   to_char (lsttm_altr_dttm, 'yyyymmddhh24miss') lsttm_altr_dttm,
+				       use_yn
+				  FROM T_EXMF_SNSR_ALRM01M1
+				 WHERE     LSTTM_ALTR_DTTM <![CDATA[  >=  ]]> TO_DATE (to_char(sysdate, 'yyyymmdd')||'000000', 'yyyymmddhh24miss')
+				       AND MSIS_IDX_SEQ <![CDATA[  >  ]]> #msis_idx_seq#
+    </select> 
+    
+    <select id="fecTotlInsrTotDAO.checkCCTV" parameterClass="String" resultClass="fecCctvVO">  
+				select spin_intg_id,spin_intg_nm,data_id,hdqr_cd,mtnof_cd,route_cd,route_drct_cd,insl_dstnc,ggtm_xcord,ggtm_ycord
+				from V_EXMD_SPIN_HIWAY_CCTV01L1
+				where hdqr_cd = #hdqr_cd#
+				order by HDQR_CD,MTNOF_CD
+    </select> 
+    
+    <select id="fecTotlInsrTotDAO.fecGetEventMdtAjax" parameterClass="FecSearchVO" resultClass="fecEventVO">  
+		select  d.HDQR_NM hdqr_nm, e.MTNOF_NM mtnof_nm, b.MGMT_DPTCD mtnof_cd,  a.GRS80_XCORD as xcord, a.GRS80_YCORD as ycord , 3 coord_type, 2 recover, b.MDT_INSR_MODL_CD||' '|| b.INSR_MODL_NM||' 수신율 '|| c.grade as content,
+	        decode(b.RGST_SEQ,'-', a.OPND_NO ,b.RGST_SEQ) as fclts_name,  to_char(sysdate, 'yyyy-mm-dd hh24:mi:ss') event_time , nvl(c.grade,0) as grade
+	        from T_EXMB_VHCL_CRDN01L1 a,
+	        T_EXMB_TRMLT01I1 b,
+	        (select OPND_NO, MDT_SIGL_OCRN_DATES, MDT_SIGL_RCPTN_RT as grade from
+	        T_EXMB_VHCL_RUNG_BRIF01L1
+	        where MDT_SIGL_OCRN_DATES <![CDATA[ > ]]>  to_date(to_char(sysdate,'yyyymmdd')||'000000','yyymmddhh24miss')
+	        ) c,
+	        (select INTG_DPTCD hdqr_cd, kor_dptnm hdqr_nm from  V_CNKC_INTG_HDQR_MTNOF01C1
+			where inst_clsfc_cd = 'B') d,
+	        (select INTG_DPTCD mtnof_cd, kor_dptnm mtnof_nm, HGRN_DPTCD HDQR_CD from  V_CNKC_INTG_HDQR_MTNOF01C1
+			where inst_clsfc_cd = 'J') e
+	        where 1=1
+	        and e.MTNOF_CD = b.MGMT_DPTCD
+	        and e.HDQR_CD = d.HDQR_CD
+	        and a.OPND_NO = b.OPND_NO
+	        and a.OPND_NO = c.OPND_NO(+)
+	        /*조건문 수정*/
+	        and a.LSTTM_ALTR_DTTM <![CDATA[  >=  ]]> (sysdate - 12/24/60/60)	        
+	        /*조건문 수정*/
+	        and b.MGMT_DPTCD = #deptCode# 
+    </select>    
+    
+    <select id="fecTotlInsrTotDAO.mainSptSensorMdt" resultClass="java.util.HashMap">  
+		select 'mdt' as name, max(troblCnt) as troblCnt , max(totalCnt) as totalCnt
+		from( 
+			select sum(1) as troblCnt, 0 as totalCnt from T_EXMB_TRMLT01I1 a, T_EXMB_VHCL_CRDN01L1 b
+			where a.USE_YN = 'Y'
+			and b.USE_YN = 'Y'
+			and a.HGRN_DPTCD in ('N01795','N01796','N02723','N01797','N01798','N01799','N01800','N01801')
+			and a.opnd_no = b.opnd_no
+			/*조건문 변경*/
+			and a.LSTTM_ALTR_DTTM  <![CDATA[  >   ]]>   (sysdate - 12/60)
+			/*조건문 변경*/
+			union all
+			select 0 as troblCnt, sum(1) as totalCnt from T_EXMB_TRMLT01I1
+			where USE_YN = 'Y'
+			and HGRN_DPTCD in ('N01795','N01796','N02723','N01797','N01798','N01799','N01800','N01801')
+		)
+    </select>
+    
+    <select id="fecTotlInsrTotDAO.fecSptMapMdtAjax" parameterClass="FecSearchVO" resultClass="FecSptMapVO">  
+			select 'mdt' as name, HGRN_DPTCD as deptCode, count(*) as CNT from T_EXMB_TRMLT01I1
+			where USE_YN = 'Y'
+			and HGRN_DPTCD = #deptCode#
+			group by HGRN_DPTCD
+    </select>
+    
+    <select id="fecTotlInsrTotDAO.fecMdtoperLv1Ajax" parameterClass="FecSearchVO" resultClass="FecMDTOperVO">  
+	    select 
+			    sum(nrmltToday) as nrmltToday,
+			    sum(warnToday) as warnToday,
+			    sum(troblToday) as troblToday,
+			    sum(nrmltBfrt) as nrmltBfrt,
+			    sum(warnBfrt) as warnBfrt,
+			    sum(troblBfrt) as troblBfrt
+			from
+			(
+			SELECT CASE WHEN TO_CHAR(SYSDATE, 'yyyymmdd') = MDT_SIGL_OCRN_DATES 
+			       and MDT_SIGL_RCPTN_RT <![CDATA[ >= ]]> 95 THEN 1 ELSE 0 END nrmltToday,/*금일 95%*/
+			       CASE WHEN TO_CHAR(SYSDATE, 'yyyymmdd') = MDT_SIGL_OCRN_DATES 
+			       and MDT_SIGL_RCPTN_RT <![CDATA[ < ]]> 95 and MDT_SIGL_RCPTN_RT <![CDATA[ >= ]]> 85 THEN 1  ELSE 0 END warnToday,/*금일 85~95%*/            
+			        CASE WHEN TO_CHAR(SYSDATE, 'yyyymmdd') = MDT_SIGL_OCRN_DATES 
+			       and MDT_SIGL_RCPTN_RT <![CDATA[ < ]]> 85 THEN 1  ELSE 0 END troblToday,/*금일 85~95%*/      
+			       CASE WHEN TO_CHAR(SYSDATE-1, 'yyyymmdd') = MDT_SIGL_OCRN_DATES 
+			       and MDT_SIGL_RCPTN_RT <![CDATA[ >= ]]> 95 THEN 1 ELSE 0 END nrmltBfrt,/*전일 95%*/
+			       CASE WHEN TO_CHAR(SYSDATE-1, 'yyyymmdd') = MDT_SIGL_OCRN_DATES 
+			       and MDT_SIGL_RCPTN_RT <![CDATA[ < ]]> 95 and MDT_SIGL_RCPTN_RT <![CDATA[ >= ]]> 85 THEN 1  ELSE 0 END warnBfrt,/*전일 85~95%*/            
+			        CASE WHEN TO_CHAR(SYSDATE-1, 'yyyymmdd') = MDT_SIGL_OCRN_DATES 
+			       and MDT_SIGL_RCPTN_RT <![CDATA[ < ]]> 85 THEN 1  ELSE 0 END troblBfrt/*전일 85~95%*/ 
+			     
+			from
+			(select  a.OPND_NO, a.MDT_SIGL_OCRN_DATES, avg(a.MDT_SIGL_RCPTN_RT) MDT_SIGL_RCPTN_RT
+			from T_EXMB_VHCL_RUNG_BRIF01L1 a,
+			T_EXMB_TRMLT01I1 b
+			where (a.MDT_SIGL_OCRN_DATES = to_char(sysdate-1,'yyyymmdd')
+			    or a.MDT_SIGL_OCRN_DATES = to_char(sysdate,'yyyymmdd'))
+			and a.OPND_NO = b.OPND_NO
+			and b.HGRN_DPTCD = #deptCode#
+			group by a.OPND_NO, a.MDT_SIGL_OCRN_DATES)
+			)      
+    </select>  
+    
+    <select id="fecTotlInsrTotDAO.fecMdttroblLv1Ajax" parameterClass="FecSearchVO" resultClass="FecMDTOperVO">  
+	    select a.opnd_no opnd_no, b.rgst_seq rgst_seq, c.mtnof_nm mtnof_nm, b.insr_modl_nm insr_modl_nm
+			from
+			(select  OPND_NO, avg(MDT_SIGL_RCPTN_RT) MDT_SIGL_RCPTN_RT
+			from T_EXMB_VHCL_RUNG_BRIF01L1 
+			where MDT_SIGL_OCRN_DATES = to_char(sysdate,'yyyymmdd')
+			group by OPND_NO) a,
+			T_EXMB_TRMLT01I1 b,
+			(select INTG_DPTCD mtnof_cd, kor_dptnm mtnof_nm, HGRN_DPTCD HDQR_CD from  V_CNKC_INTG_HDQR_MTNOF01C1
+			where inst_clsfc_cd = 'J') c
+			where a.OPND_NO = b.OPND_NO
+			and a.MDT_SIGL_RCPTN_RT <![CDATA[ <  ]]>  85
+			and b.MGMT_DPTCD = c.MTNOF_CD
+			and b.HGRN_DPTCD = #deptCode#
+			order by b.MGMT_DPTCD   
+    </select> 
+    
+    <select id="fecTotlInsrTotDAO.fecMdtmapLv1Ajax" parameterClass="FecSearchVO" resultClass="FecMDTOperVO">  
+	    select  b.RGST_SEQ , a.GRS80_XCORD as xcord, a.GRS80_YCORD as ycord, d.HDQR_NM hdqr_nm, f.GRS80_XCORD as hdqr_xcord, f.GRS80_YCORD as hdqr_ycord, 
+			nvl(c.grade,0) as recptnRatio
+			        from T_EXMB_VHCL_CRDN01L1 a,
+			        T_EXMB_TRMLT01I1 b,
+			        (select OPND_NO, MDT_SIGL_OCRN_DATES, MDT_SIGL_RCPTN_RT as grade from
+			        T_EXMB_VHCL_RUNG_BRIF01L1
+			        where MDT_SIGL_OCRN_DATES <![CDATA[  >  ]]>  to_date(to_char(sysdate,'yyyymmdd')||'000000','yyymmddhh24miss')
+			        ) c,
+			        (select INTG_DPTCD hdqr_cd, kor_dptnm hdqr_nm from  V_CNKC_INTG_HDQR_MTNOF01C1
+					where inst_clsfc_cd = 'B') d,
+			        (select INTG_DPTCD mtnof_cd, kor_dptnm mtnof_nm, HGRN_DPTCD HDQR_CD from  V_CNKC_INTG_HDQR_MTNOF01C1
+					where inst_clsfc_cd = 'J') e,
+			        T_EXMG_MGMT_DPRT_LOCT01M1 f
+			        where 1=1
+			        and e.MTNOF_CD = b.MGMT_DPTCD
+			        and e.HDQR_CD = d.HDQR_CD
+			        and a.OPND_NO = b.OPND_NO
+			        and a.OPND_NO = c.OPND_NO(+)
+			        and e.HDQR_CD = f.MGMT_DPTCD
+			        /*조건문 수정*/
+			        and a.LSTTM_ALTR_DTTM <![CDATA[  >=  ]]> (sysdate - 12/24/60/60)			        
+			        /*조건문 수정*/
+			        and e.HDQR_CD = #deptCode#      
+    </select> 
+    
+    
+</sqlMap>

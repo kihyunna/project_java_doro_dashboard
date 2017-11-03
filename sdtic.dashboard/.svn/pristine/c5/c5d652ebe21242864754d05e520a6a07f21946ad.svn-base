@@ -1,0 +1,106 @@
+package egovframework.com.sdtic.ifcrs.service;
+
+/**
+ * @Class Name :  IfcEsmVO.java
+ * @Description : IfcEsmVO Class
+ * @Modification Information
+ * @
+ * @ 수정일          수정자                       수정내용
+ * @ -----------   ---------   -------------------------------
+ * @ 2017. 06. 01    jkheo                       최초생성
+ *
+ * @author
+ * @since
+ * @version 1.0
+ * @see
+ *
+ */
+@SuppressWarnings("serial")
+public class IfcEsmVO extends IfcDefaultSearchVO {
+
+	private String gubun;
+	private String hostname;
+	private String real_hostname;
+	private String cpu;
+	private String mem;
+	private String disk;
+	private String netio;
+	private String neterr;
+	private String inst_date;
+    private String yyyymmdd;
+    private String yyyymmddhh24missBefore;
+    private String yyyymmddhh24miss;
+	
+	public String getGubun() {
+		return gubun;
+	}
+	public void setGubun(String gubun) {
+		this.gubun = gubun;
+	}
+	public String getHostname() {
+		return hostname;
+	}
+	public void setHostname(String hostname) {
+		this.hostname = hostname;
+	}
+	public String getReal_hostname() {
+		return real_hostname;
+	}
+	public void setReal_hostname(String real_hostname) {
+		this.real_hostname = real_hostname;
+	}
+	public String getCpu() {
+		return cpu;
+	}
+	public void setCpu(String cpu) {
+		this.cpu = cpu;
+	}
+	public String getMem() {
+		return mem;
+	}
+	public void setMem(String mem) {
+		this.mem = mem;
+	}
+	public String getDisk() {
+		return disk;
+	}
+	public void setDisk(String disk) {
+		this.disk = disk;
+	}
+	public String getNetio() {
+		return netio;
+	}
+	public void setNetio(String netio) {
+		this.netio = netio;
+	}
+	public String getNeterr() {
+		return neterr;
+	}
+	public void setNeterr(String neterr) {
+		this.neterr = neterr;
+	}
+	public String getInst_date() {
+		return inst_date;
+	}
+	public void setInst_date(String inst_date) {
+		this.inst_date = inst_date;
+	}
+	public String getYyyymmdd() {
+		return yyyymmdd;
+	}
+	public void setYyyymmdd(String yyyymmdd) {
+		this.yyyymmdd = yyyymmdd;
+	}
+	public String getYyyymmddhh24missBefore() {
+		return yyyymmddhh24missBefore;
+	}
+	public void setYyyymmddhh24missBefore(String yyyymmddhh24missBefore) {
+		this.yyyymmddhh24missBefore = yyyymmddhh24missBefore;
+	}
+	public String getYyyymmddhh24miss() {
+		return yyyymmddhh24miss;
+	}
+	public void setYyyymmddhh24miss(String yyyymmddhh24miss) {
+		this.yyyymmddhh24miss = yyyymmddhh24miss;
+	}
+}

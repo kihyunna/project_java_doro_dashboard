@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="ifcEsm246">
+
+    <typeAlias  alias="egovMap"   type="egovframework.rte.psl.dataaccess.util.EgovMap"  />
+    <typeAlias  alias="ifcEsmVO"  type="egovframework.com.sdtic.ifcrs.service.IfcEsmVO" />
+
+    <select id="ifcEsm246DAO.ifcEsm246ColctAjax" parameterClass="ifcEsmVO" resultClass="ifcEsmVO">
+	    <![CDATA[
+	    SELECT AA.AGENT_IP HOSTNAME,
+		       CEIL (MAX(BB.V2)) CPU,
+		       CEIL (MAX(BB.V5)) MEM,
+		       CEIL (MAX(CC.V4)) DISK,
+		       CEIL (NVL (MAX(DD.V3), 0) + NVL (MAX(DD.V5), 0)) NETIO,
+		       DECODE (MAX(AA.ALIVE), '0', 'Y', 'N') NETERR,
+		       TO_CHAR (MAX(BB.EVENT_TIME), 'YYYYMMDDhh24miss') INST_DATE
+		  FROM (SELECT AGENT_IP, ALIVE
+		          FROM AGENT_INFO_LIST
+		         WHERE AGENT_IP IN ($real_hostname$)
+		       ) AA,
+		       (SELECT A.ORIGIN,
+		               A.V2,
+		               A.V5,
+		               A.EVENT_TIME
+		          FROM R_$yyyymmdd$ A
+		         WHERE     EVENT_TIME BETWEEN TO_DATE (#yyyymmddhh24missBefore#,
+		                                               'YYYYMMDDhh24miss')
+		                                  AND TO_DATE (#yyyymmddhh24miss#,
+		                                               'YYYYMMDDhh24miss')
+		               AND CATEGORY = 'R001') BB,
+		       (  SELECT A.ORIGIN, MAX (A.V4) V4, MAX (A.EVENT_TIME) EVENT_TIME
+		            FROM (SELECT ORIGIN, V4, EVENT_TIME
+		                    FROM R_$yyyymmdd$
+		                   WHERE     EVENT_TIME BETWEEN TO_DATE (#yyyymmddhh24missBefore#,
+		                                                         'YYYYMMDDhh24miss')
+		                                            AND TO_DATE (#yyyymmddhh24miss#,
+		                                                         'YYYYMMDDhh24miss')
+		                         AND CATEGORY = 'R002') A
+		        GROUP BY A.ORIGIN) CC,
+		       (  SELECT A.ORIGIN,
+		                 SUM (A.V3) V3,
+		                 SUM (A.V5) V5,
+		                 MAX (A.EVENT_TIME) EVENT_TIME
+		            FROM (SELECT ORIGIN,
+		                         V3,
+		                         V5,
+		                         EVENT_TIME
+		                    FROM R_$yyyymmdd$
+		                   WHERE     EVENT_TIME BETWEEN TO_DATE (#yyyymmddhh24missBefore#,
+		                                                         'YYYYMMDDhh24miss')
+		                                            AND TO_DATE (#yyyymmddhh24miss#,
+		                                                         'YYYYMMDDhh24miss')
+		                         AND CATEGORY = 'R004') A
+		        GROUP BY A.ORIGIN) DD
+		 WHERE     AA.AGENT_IP = BB.ORIGIN
+		       AND AA.AGENT_IP = CC.ORIGIN
+		       AND AA.AGENT_IP = DD.ORIGIN
+		 GROUP BY AA.AGENT_IP
+		]]>
+    </select>
+
+</sqlMap>

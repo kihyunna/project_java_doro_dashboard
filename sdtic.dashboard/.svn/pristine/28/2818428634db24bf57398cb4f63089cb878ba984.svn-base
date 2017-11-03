@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="fecMainMySql">
+
+    <typeAlias  alias="egovMap"   type="egovframework.rte.psl.dataaccess.util.EgovMap"  />
+    <typeAlias  alias="fecMainVO"  type="egovframework.com.sdtic.fecrs.service.fecMainVO" />
+    <typeAlias  alias="FecSearchVO"  type="egovframework.com.sdtic.fecrs.service.FecSearchVO" />
+    <typeAlias  alias="FecPwrerUsgqtyVO"  type="egovframework.com.sdtic.fecrs.service.FecPwrerUsgqtyVO" />
+    <typeAlias  alias="FecBrineVO"  type="egovframework.com.sdtic.fecrs.service.FecBrineVO" />
+    <typeAlias  alias="mainSptIOTVO"  type="egovframework.com.sdtic.fecrs.service.mainSptIOTVO" />
+
+	    
+    <select id="FecPwrerUsgqtyDAO.fecPwrerUsgqtyLv1Ajax" parameterClass="FecSearchVO" resultClass="FecPwrerUsgqtyVO">  
+	     select 
+		  replace((if (IFNULL(a.jisaNm,'0') = '0', c.MTNOF_NM,a.jisaNm) ),'지사','') as jisaNm,
+  		  if (IFNULL(a.actsv_Val,'0') = '0', 0,a.actsv_Val) as actsv_Val,
+  		  if (IFNULL(a.pre_Date_Val,'0') = '0', 0,a.pre_Date_Val) as pre_Date_Val,
+  		  if (IFNULL(a.pre_Month_Val,'0') = '0', 0,a.pre_Month_Val) as pre_Month_Val,
+  		  if (IFNULL(a.pre_Year_Month_Val,'0') = '0', 0,a.pre_Year_Month_Val) as pre_Year_Month_Val
+
+	     from
+			T_CNKC_MTNOF01M1 c
+	  		   LEFT OUTER JOIN (
+		  SELECT  N.HDQR_CD            AS hdqr_cd
+		     ,N.HDQR_NM            AS hdqr_Nm
+		     ,M.MTNOF_NM				AS jisaNm
+			, A.MTNOF_CD as MTNOF_CD
+		              /* 당일 */
+		     ,SUM(CASE WHEN A.SOP_DATES = C.CUR_DATE THEN A.ACTSV_VAL ELSE 0 END) AS actsv_Val
+		               /* 전일 */
+		     ,SUM(CASE WHEN A.SOP_DATES = C.PRE_DATE THEN A.ACTSV_VAL ELSE 0 END) AS pre_Date_Val 
+		               /* 전월 */
+		     ,SUM(CASE WHEN A.SOP_DATES = C.PRE_MONTH THEN A.ACTSV_VAL ELSE 0 END) AS pre_Month_Val
+		               /* 전년동월 */
+		     ,SUM(CASE WHEN A.SOP_DATES = C.PRE_YEAR_MONTH THEN A.ACTSV_VAL ELSE 0 END) AS pre_Year_Month_Val
+		   FROM T_CNKF_RLTM_ELPW_USE A  /* 실시간_전력사용 */
+		         INNER JOIN
+		          ( SELECT now() AS SOP_DATES FROM DUAL UNION ALL
+		            SELECT DATE_FORMAT(DATE_ADD(CAST(now() AS DATE), INTERVAL -1 DAY)  ,'%Y%m%d') AS SOP_DATES  FROM DUAL UNION ALL
+		            SELECT DATE_FORMAT(DATE_ADD(CAST(now() AS DATE), INTERVAL -1 MONTH),'%Y%m') AS SOP_DATES  FROM DUAL UNION ALL
+		            SELECT DATE_FORMAT(DATE_ADD(CAST(now() AS DATE), INTERVAL -1 YEAR) ,'%Y%m') AS SOP_DATES  FROM DUAL ) B
+		        ON A.SOP_DATES = B.SOP_DATES
+		         CROSS JOIN
+		          ( SELECT now()                                                                 AS CUR_DATE  /* 금일   */
+		                  ,DATE_FORMAT(DATE_ADD(CAST(now() AS DATE), INTERVAL -1 DAY)  ,'%Y%m%d') AS PRE_DATE  /* 전일  */
+		                  ,DATE_FORMAT(DATE_ADD(CAST(now() AS DATE), INTERVAL -1 MONTH),'%Y%m') AS PRE_MONTH /* 전월  */
+		                  ,DATE_FORMAT(DATE_ADD(CAST(now() AS DATE), INTERVAL -1 YEAR) ,'%Y%m') AS PRE_YEAR_MONTH /* 전년동월 */
+		          ) C
+		         
+			    inner JOIN
+			    T_CNKC_MTNOF01M1 M
+		    ON A.MTNOF_CD = M.MTNOF_CD
+		    INNER JOIN 
+			    T_CNKC_HDQR01M1 N
+		    ON  M.HDQR_CD = N.HDQR_CD   		    
+		   GROUP BY  N.HDQR_CD
+			     ,N.HDQR_NM 
+				     ,M.MTNOF_NM
+		   ORDER BY N.HDQR_CD      
+		   ) a		   
+			on
+			c.MTNOF_CD = a.MTNOF_CD
+			where c.HDQR_CD = #deptCode#
+    </select>
+
+    <select id="FecBrineDAO.fecBrineLv2Ajax" parameterClass="FecSearchVO" resultClass="FecBrineVO">  
+   select * from
+     (
+      select a.ROUTE_CD as routeCd, 
+				 a.LOCT_ID as loctId, 
+				 a.MTNOF_CD,
+				 if (IFNULL(b.JET_STRT_HHMM,'0') = '0', '0',b.JET_STRT_HHMM) as jetShhmm,
+				 if (IFNULL(b.JET_END_HHMM,'0') = '0', '0',b.JET_END_HHMM) as jetEhhmm,
+				 if (IFNULL(b.JET_HHMM,'0') = '0', '0',b.JET_HHMM) as jetHhmm
+		from T_CNKF_SLWT_EQPM_PRSS a
+		left join 
+				(select INSR_CD, 
+				JET_STRT_HHMM, 
+				JET_END_HHMM, 
+				FCLT_CD, 
+				JET_HHMM, 
+				MTNOF_CD,
+				max(JOB_DTTM)
+		from T_CNKF_SLWT_JET_PRSS
+		where JOB_DTTM >= date_format(NOW() - 1,'%Y-%m-%d %H:%i:%S')
+		group by INSR_CD, 
+				JET_STRT_HHMM, 
+				JET_END_HHMM,
+		 		FCLT_CD, 
+		 		JET_HHMM,
+				 MTNOF_CD )b
+		 on (a.EQPM_NO = b.INSR_CD)
+		order by b.JET_HHMM
+		) a
+		where	MTNOF_CD = #deptCode#
+    </select>
+    
+    <select id="mainSptIOTDAO.mainSptIOTAjax" parameterClass="FecSearchVO" resultClass="mainSptIOTVO">  
+		SELECT     Q.JOB_DTTM                AS jobDttm
+		          ,Q.TM            AS tm
+		          ,Q.RNUM                    AS rnum
+		          ,IFNULL(A.SUM_TR_AMNT,0) AS tTrAmnt
+		          ,IFNULL(B.SUM_TR_AMNT,0) AS yTrAmnt
+		    FROM (
+		          SELECT  Q.ROWNUM RNUM
+		            ,DATE_FORMAT(DATE_ADD(@CUR_TIME, INTERVAL (0 - Q.ROWNUM) MINUTE), '%Y%m%d %H:%i') AS JOB_DTTM
+		            ,DATE_FORMAT(DATE_ADD(@CUR_TIME, INTERVAL (0 - Q.ROWNUM) MINUTE), '%H:%i')        AS TM
+		       FROM  T_ROWNUM  Q
+		          CROSS JOIN 
+		          (SELECT <![CDATA[@CUR_TIME := NOW()  ) R 
+		        WHERE Q.ROWNUM  < ]]>  61
+		         ) Q
+		       LEFT OUTER JOIN
+		         (
+		       SELECT DATE_FORMAT(A.JOB_DTTM, '%Y%m%d %H:%i')   AS JOB_DTTM
+		               ,AVG(TR_AMNT) AS SUM_TR_AMNT
+		        ,DATE_FORMAT(A.JOB_DTTM, '%H:%i') AS TM                         
+		       FROM T_CNKF_RLTM_TR_AMNT  A   /* 실시간_트랜잭션량 */   
+		      WHERE A.JOB_DTTM <![CDATA[ >= ]]> DATE_ADD(NOW(), INTERVAL - 60 MINUTE)            
+		     GROUP BY DATE_FORMAT(A.JOB_DTTM, '%Y%m%d %H:%i')     
+		       ) A     
+		       ON Q.TM = A.TM
+		       LEFT OUTER JOIN
+		         (
+		          SELECT DATE_FORMAT(A.JOB_DTTM, '%Y%m%d %H:%i') AS JOB_DTTM
+		         ,AVG(TR_AMNT) AS SUM_TR_AMNT
+		         ,DATE_FORMAT(A.JOB_DTTM, '%H:%i') AS TM 
+		     FROM T_CNKF_RLTM_TR_AMNT A /* 실시간_트랜잭션량 */
+		     WHERE A.JOB_DTTM <![CDATA[ >= ]]>  DATE_ADD(DATE_ADD(NOW(), INTERVAL - 1 DAY), INTERVAL - 60 MINUTE)
+		     AND A.JOB_DTTM <![CDATA[ <= ]]>  DATE_ADD(NOW(), INTERVAL - 1 DAY)         
+		     GROUP BY DATE_FORMAT(A.JOB_DTTM, '%Y%m%d %H:%i')
+		    ) B
+		  ON Q.TM = B.TM
+		    ORDER BY Q.RNUM  DESC 
+    </select>
+
+    
+</sqlMap>

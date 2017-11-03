@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="ifcTofac">
+
+    <typeAlias  alias="egovMap"   type="egovframework.rte.psl.dataaccess.util.EgovMap"  />
+    <typeAlias  alias="ifcTofacVO"  type="egovframework.com.sdtic.ifcrs.service.IfcTofacVO" />
+
+    <select id="ifcTofacDAO.ifcMainExtrlcntcTofacAjax" parameterClass="ifcTofacVO" resultClass="ifcTofacVO">
+        /* ifcMainExtrlcntcAjax 조회 */
+        SELECT AA.CMMN_CD,
+               AA.CMMN_CD_NM,
+               AA.INQY_TORD,
+               AA.CRE_DTTM,
+               AA.TRST_STAT_CNT,
+               CASE WHEN TRST_STAT_CNT > 0 
+                    THEN 'Y' 
+                    ELSE 'N' 
+               END IS_ERROR
+          FROM (  SELECT A.CMMN_CD,
+                         MAX (A.CMMN_CD_NM) CMMN_CD_NM,
+                         MAX (A.INQY_TORD) INQY_TORD,
+                         MAX (C.CRE_DTTM) CRE_DTTM,
+                         SUM (DECODE (C.TRST_STAT, 'E', 1, 0)) TRST_STAT_CNT
+                    FROM T_CNKC_CMMN_CD01C1 A, 
+                         T_ESIA001_M01 B, 
+                         T_ESIA004_D01 C
+                   WHERE A.CMMN_CD = B.SND_STM(+)
+                     AND A.CMMN_CD = 'MP'
+                     AND B.IF_ID = C.IF_ID(+) 
+                     AND C.CRE_DTTM(+) BETWEEN SYSDATE - 1 / (24 * 60) AND SYSDATE
+                   GROUP BY CMMN_CD) AA
+         ORDER BY INQY_TORD
+    </select>
+    
+    <select id="ifcTofacDAO.ifcConErrLogColctAjax" parameterClass="ifcTofacVO" resultClass="ifcTofacVO">
+        /* ifcConErrLogColctAjax 조회 */
+        SELECT SRVR_ID HOSTNAME,
+		       SRVR_ID || '.' || WAS_CTNR_ID CON,
+		       COUNT (*) ERR_LOG_CNT,
+		       TO_CHAR (MAX (LSTTM_ALTR_DTTM), 'YYYYMMDDhh24miss') INST_DATE
+		  FROM T_CNKC_SYSTM_ERR_LOG01L1
+		 WHERE LSTTM_ALTR_DTTM BETWEEN SYSDATE - (1 / 24) AND SYSDATE
+		 GROUP BY SRVR_ID, WAS_CTNR_ID
+    </select>
+
+</sqlMap>

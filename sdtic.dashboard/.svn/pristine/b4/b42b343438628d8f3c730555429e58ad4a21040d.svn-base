@@ -1,0 +1,27 @@
+package egovframework.application;
+
+import java.sql.SQLException;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import egovframework.com.sdtic.fecrs.service.impl.fecTotlInsrDAO;
+import egovframework.com.sdtic.fecrs.service.impl.fecTotlInsrFcltDAO;
+import egovframework.com.sdtic.fecrs.service.impl.fecTotlInsrTotDAO;
+
+@Component
+	public class Test { 	
+	
+		@Autowired
+		private fecTotlInsrDAO fecTotlInsr;
+		@Autowired
+		private fecTotlInsrFcltDAO fecTotlInsrFclt;
+		@Autowired
+		private fecTotlInsrTotDAO fecTotlInsrTot;
+		
+		@SuppressWarnings("deprecation")
+		public void Excute() throws SQLException {
+//			fecTotlInsr.getSqlMapClient().startTransaction();
+			System.out.println ("task 테스트");
+	    }
+}

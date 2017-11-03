@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="ifcSptColct">
+
+    <typeAlias  alias="egovMap"   type="egovframework.rte.psl.dataaccess.util.EgovMap"  />
+    <typeAlias  alias="ifcSptColctVO"  type="egovframework.com.sdtic.ifcrs.service.IfcSptColctVO" />
+    
+    <select id="IfcSptColctDAO.ifcSptTnlServerAjax" parameterClass="ifcSptColctVO" resultClass="ifcSptColctVO">
+        /* ifcSptTnlServerAjax 조회 */
+        SELECT GUBUN,
+               GROUP1,
+               GROUP2,
+               GROUP1_NAME,
+               GROUP2_NAME,
+               CPU,
+               MEMORY,
+               DISK,
+               PROCESS,
+               INST_DATE
+          FROM (  SELECT 'TNL' GUBUN,
+                         CC.IMDT_HGRN_DPTCD GROUP1,
+                         CC.INTG_DPTCD GROUP2,
+                         (SELECT KOR_DPTNM FROM V_CNKC_INTG_DPRT01C1 WHERE INTG_DPTCD = CC.IMDT_HGRN_DPTCD) GROUP1_NAME,
+                         (SELECT KOR_DPTNM FROM V_CNKC_INTG_DPRT01C1 WHERE INTG_DPTCD = CC.INTG_DPTCD) GROUP2_NAME,
+                         MAX (AA.CPU_USE_RATE) CPU,
+                         MAX (AA.MEM_USE_RATE) MEMORY,
+                         MAX (AA.DISK_USE_RATE) DISK,
+                         MAX (AA.CC_PROCESS_STATUS) PROCESS,
+                         MAX (TO_CHAR(AA.COLLECT_TIME,'YYYYMMDDhh24miss')) INST_DATE
+                    FROM (SELECT A.DEVICE_INFO_SEQ,
+                                 A.CPU_USE_RATE,
+                                 A.MEM_USE_RATE,
+                                 A.DISK_USE_RATE,
+                                 A.CC_PROCESS_STATUS,
+                                 A.COLLECT_TIME
+                            FROM (SELECT DEVICE_INFO_SEQ,
+                                         CPU_USE_RATE,
+                                         MEM_USE_RATE,
+                                         DISK_USE_RATE,
+                                         CC_PROCESS_STATUS,
+                                         COLLECT_TIME
+                                    FROM DTB_AGENT_HW_LOG) A,
+                                 (  SELECT DEVICE_INFO_SEQ, 
+                                           MAX (COLLECT_TIME) MAX_COLLECT_TIME
+                                      FROM DTB_AGENT_HW_LOG
+                                  GROUP BY DEVICE_INFO_SEQ) B
+                           WHERE A.DEVICE_INFO_SEQ = B.DEVICE_INFO_SEQ 
+                             AND A.COLLECT_TIME = B.MAX_COLLECT_TIME) AA,
+                         DTB_DEVICE_INFO BB,
+                         V_CNKC_INTG_DPRT01C1 CC
+                   WHERE AA.DEVICE_INFO_SEQ = BB.DEVICE_INFO_SEQ 
+                     AND BB.JSCODE = CC.INTG_DPTCD 
+                     AND CC.INST_CLSFC_CD = '4'
+                GROUP BY (CC.IMDT_HGRN_DPTCD, CC.INTG_DPTCD)
+                ORDER BY GROUP1, GROUP2)
+    </select>
+
+</sqlMap>

@@ -1,0 +1,1485 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="bucCmmn">
+
+    <typeAlias  alias="egovMap"   type="egovframework.rte.psl.dataaccess.util.EgovMap"  />
+    <typeAlias  alias="bucCmmnVO"  type="egovframework.com.sdtic.bucrs.service.BucCmmnVO" />
+    <typeAlias  alias="mainCmmnVO"  type="egovframework.com.sdtic.main.service.MainCmmnVO" />
+    <typeAlias  alias="bucTrackingVO"  type="egovframework.com.sdtic.bucrs.service.BucTrackingVO" />
+
+    <select id="bucCmmnDAO.bucCmmnMainAjax" parameterClass="bucCmmnVO" resultClass="bucCmmnVO">
+        /* bucCmmnMainAjax 조회 */
+        SELECT
+             TEMP1     /* 템프1        */
+            ,TEMP2     /* 템프2        */
+            ,TEMP3     /* 템프3        */
+            ,TEMP4     /* 템프4        */
+        FROM TEMPTABLE
+    </select>
+
+    <select id="bucCmmnDAO.bucCmmnSmssndngAjax" parameterClass="bucCmmnVO" resultClass="bucCmmnVO">
+        /* bucCmmnSmssndngAjax 조회 */
+        SELECT SMS_BUSINESS_CODE, SMS_BUSINESS_CODE_NAME , COUNT(SMS_BUSINESS_CODE) AS SMS_BUSINESS_CODE_CNT
+        FROM SDTIC.SMS_DATA_TABLE
+        GROUP BY SMS_BUSINESS_CODE , SMS_BUSINESS_CODE_NAME
+        ORDER BY SMS_BUSINESS_CODE ASC
+    </select>
+
+    <select id="bucCmmnDAO.bucCmmnSimplctysanctnAjax" parameterClass="bucCmmnVO" resultClass="bucCmmnVO">
+        /* bucCmmnSimplctysanctnAjax 조회 */
+        SELECT SIMPLCTYSANCTN_CODE ,SIMPLCTYSANCTN_CODE_NAME, SUM(SUCCESS_CNT) AS SUCCESS_CNT, SUM(FAIL_CNT) AS FAIL_CNT, SUM(WAIT_CNT) AS WAIT_CNT
+        FROM (
+        SELECT SIMPLCTYSANCTN_CODE ,SIMPLCTYSANCTN_CODE_NAME,DECODE(SIMPLCTYSANCTN_SUCCESS, 'Y', 1, 0) AS SUCCESS_CNT, DECODE(SIMPLCTYSANCTN_FAIL, 'Y', 1, 0) AS FAIL_CNT, DECODE(SIMPLCTYSANCTN_WAIT, 'Y', 1, 0) AS WAIT_CNT FROM
+        SDTIC.SIMPLCTYSANCTN_DATA_TABLE
+        )
+        GROUP BY SIMPLCTYSANCTN_CODE, SIMPLCTYSANCTN_CODE_NAME
+    </select>
+
+    <select id="bucCmmnDAO.bucCmmnExtrnlcntcAjax" parameterClass="bucCmmnVO" resultClass="bucCmmnVO">
+        /* bucCmmnExtrnlcntcAjax 조회 */
+	        select EXTRNLCNTC1L,
+		       EXTRNLCNTC2L,
+		       EXTRNLCNTC3L,
+		       EXTRNLCNTC4L,
+		       EXTRNLCNTC1R,
+		       EXTRNLCNTC2R,
+		       EXTRNLCNTC3R,
+		       EXTRNLCNTC4R
+           from BUC_EXTRNLCNTC
+    </select>
+
+    <select id="bucCmmnDAO.bucCmmnDataicrrtAjax" parameterClass="bucCmmnVO" resultClass="bucCmmnVO">
+        /* bucCmmnDataicrrtAjax 조회 */
+        SELECT
+             TEMP1     /* 템프1        */
+            ,TEMP2     /* 템프2        */
+            ,TEMP3     /* 템프3        */
+            ,TEMP4     /* 템프4        */
+        FROM TEMPTABLE
+    </select>
+
+    <select id="bucCmmnDAO.bucCmmnDatatrnsferAjax" parameterClass="bucCmmnVO" resultClass="bucCmmnVO">
+        /* bucCmmnDatatrnsferAjax 조회 */
+        SELECT
+             TEMP1     /* 템프1        */
+            ,TEMP2     /* 템프2        */
+            ,TEMP3     /* 템프3        */
+            ,TEMP4     /* 템프4        */
+        FROM TEMPTABLE
+    </select>
+
+    <select id="bucCmmnDAO.bucCmmnInfotrnsfertrkgAjax" parameterClass="bucTrackingVO" resultClass="bucTrackingVO">
+        /* bucCmmnInfotrnsfertrkgAjax 조회 */
+       SELECT
+            DEADLINE     /* 템프2        */
+            ,SEND     /* 템프3        */
+            ,PROCESS     /* 템프4        */
+            ,N_PROCESS
+            ,BUZGROUP
+        FROM BUC_TRAKINGPROCESS
+    </select>
+    
+    <!-- 비즈니스 공통 메뉴 탑5 파이차트 쿼리 -->	
+    <select id="bucCmmnDAO.bucCmmnLoadinfomenudbAjax" parameterClass="bucCmmnVO" resultClass="bucCmmnVO">
+    	SELECT HGRN_SYSTM_CD
+		       ,DECODE(A.HGRN_SYSTM_CD, 'ETC', '기타', (SELECT USE_SYSTM_NM FROM T_CNKC_BSWR_SYSTM01M1 WHERE A.HGRN_SYSTM_CD = SYSTM_CD)) AS SYSTM_NM
+		       ,CNT
+		  FROM (       
+		        SELECT DECODE(B.HGRN_SYSTM_CD, NULL, A.HGRN_SYSTM_CD, B.HGRN_SYSTM_CD) HGRN_SYSTM_CD
+		               ,SUM(CNT) CNT
+		          FROM (
+		                   SELECT DECODE(B.HGRN_SYSTM_CD, NULL, 'ETC' , B.HGRN_SYSTM_CD)  HGRN_SYSTM_CD  
+		                          ,COUNT(*) CNT
+		                   FROM T_CNKC_USER_CNNC_LOG01H1 A,
+		                        T_CNKC_BSWR_SYSTM01M1 B
+		                   WHERE TO_CHAR(LSTTM_LOGN_DTTM, 'yyyymmdd') = TO_CHAR (SYSDATE, 'yyyymmdd')
+		                     AND A.SYSTM_CD = B.SYSTM_CD
+		                   GROUP BY B.HGRN_SYSTM_CD
+		                 ) A,
+		                T_CNKC_BSWR_SYSTM01M1 B
+		        WHERE A.HGRN_SYSTM_CD = B.SYSTM_CD(+)
+		          AND A.HGRN_SYSTM_CD <![CDATA[ <> ]]> 'MAI'  
+		        GROUP BY DECODE(B.HGRN_SYSTM_CD, NULL, A.HGRN_SYSTM_CD, B.HGRN_SYSTM_CD)      
+		        ) A
+    </select>
+    
+    <!-- 비즈니스 공통 메뉴 탑5 그리드 쿼리 -->
+    <select id="bucCmmnDAO.bucCmmnLoadinfomenudbgridAjax" parameterClass="bucCmmnVO" resultClass="bucCmmnVO">
+    	/* bucCmmnLoadinfomenudbAjax 조회 */
+    	SELECT main.RANK,
+		       main.HGRN_SYSTM_CD,
+		       main.up_systm_nm,
+		       main.menu_nm,
+		       main.cnt,
+		       sub.y_rank
+		  FROM (SELECT ROWNUM AS RANK, aa.*
+		          FROM (  SELECT b.USE_SYSTM_NM up_systm_nm,
+		                         b.use_systm_nm,
+		                         c.menu_nm,
+		                         b.HGRN_SYSTM_CD,
+		                         COUNT (*) cnt
+		                    FROM T_CNKC_USER_CNNC_LOG01H1 A,
+		                         T_CNKC_BSWR_SYSTM01M1 B,
+		                         T_CNKC_INTG_MENU01M1 C
+		                   WHERE     TO_CHAR (lsttm_logn_dttm, 'yyyymmdd') =
+		                                TO_CHAR (SYSDATE, 'yyyymmdd')
+		                         AND A.systm_cd = B.systm_cd
+		                         AND A.MENU_CD = C.menu_cd
+		                         AND B.HGRN_SYSTM_CD = 'DSG'
+		                GROUP BY b.HGRN_SYSTM_CD,
+		                         b.USE_SYSTM_NM,
+		                         b.use_systm_nm,
+		                         c.menu_nm
+		                ORDER BY 5 DESC) aa
+		         WHERE ROWNUM <![CDATA[ < ]]>6) main,
+		       (SELECT ROWNUM AS y_RANK, aa.*
+		          FROM (  SELECT b.USE_SYSTM_NM up_systm_nm,
+		                         b.use_systm_nm,
+		                         c.menu_nm,
+		                         b.HGRN_SYSTM_CD,
+		                         COUNT (*)
+		                    FROM T_CNKC_USER_CNNC_LOG01H1 A,
+		                         T_CNKC_BSWR_SYSTM01M1 B,
+		                         T_CNKC_INTG_MENU01M1 C
+		                   WHERE     TO_CHAR (lsttm_logn_dttm, 'yyyymmdd') =
+		                                TO_CHAR (SYSDATE - 1, 'yyyymmdd')
+		                         AND A.systm_cd = B.systm_cd
+		                         AND A.MENU_CD = C.menu_cd
+		                         AND B.HGRN_SYSTM_CD = 'DSG'
+		                GROUP BY b.HGRN_SYSTM_CD,
+		                         b.USE_SYSTM_NM,
+		                         b.use_systm_nm,
+		                         c.menu_nm
+		                ORDER BY 5 DESC) aa) Sub
+		 WHERE     main.up_systm_nm = sub.up_systm_nm(+)
+		       AND main.use_systm_nm = sub.use_systm_nm(+)
+		       AND main.menu_nm = sub.menu_nm(+)
+		UNION ALL
+		SELECT main.RANK,
+		       main.HGRN_SYSTM_CD,
+		       main.up_systm_nm,
+		       main.menu_nm,
+		       main.cnt,
+		       sub.y_rank
+		  FROM (SELECT ROWNUM AS RANK, aa.*
+		          FROM (  SELECT b.USE_SYSTM_NM up_systm_nm,
+		                         b.use_systm_nm,
+		                         c.menu_nm,
+		                         b.HGRN_SYSTM_CD,
+		                         COUNT (*) cnt
+		                    FROM T_CNKC_USER_CNNC_LOG01H1 A,
+		                         T_CNKC_BSWR_SYSTM01M1 B,
+		                         T_CNKC_INTG_MENU01M1 C
+		                   WHERE     TO_CHAR (lsttm_logn_dttm, 'yyyymmdd') =
+		                                TO_CHAR (SYSDATE, 'yyyymmdd')
+		                         AND A.systm_cd = B.systm_cd
+		                         AND A.MENU_CD = C.menu_cd
+		                         AND B.HGRN_SYSTM_CD = 'FCL'
+		                GROUP BY b.HGRN_SYSTM_CD,
+		                         b.USE_SYSTM_NM,
+		                         b.use_systm_nm,
+		                         c.menu_nm
+		                ORDER BY 5 DESC) aa
+		         WHERE ROWNUM <![CDATA[ < ]]> 6) main,
+		       (SELECT ROWNUM AS y_RANK, aa.*
+		          FROM (  SELECT b.USE_SYSTM_NM up_systm_nm,
+		                         b.use_systm_nm,
+		                         c.menu_nm,
+		                         b.HGRN_SYSTM_CD,
+		                         COUNT (*)
+		                    FROM T_CNKC_USER_CNNC_LOG01H1 A,
+		                         T_CNKC_BSWR_SYSTM01M1 B,
+		                         T_CNKC_INTG_MENU01M1 C
+		                   WHERE     TO_CHAR (lsttm_logn_dttm, 'yyyymmdd') =
+		                                TO_CHAR (SYSDATE - 1, 'yyyymmdd')
+		                         AND A.systm_cd = B.systm_cd
+		                         AND A.MENU_CD = C.menu_cd
+		                         AND B.HGRN_SYSTM_CD = 'FCL'
+		                GROUP BY b.HGRN_SYSTM_CD,
+		                         b.USE_SYSTM_NM,
+		                         b.use_systm_nm,
+		                         c.menu_nm
+		                ORDER BY 5 DESC) aa) Sub
+		 WHERE     main.up_systm_nm = sub.up_systm_nm(+)
+		       AND main.use_systm_nm = sub.use_systm_nm(+)
+		       AND main.menu_nm = sub.menu_nm(+)
+		UNION ALL
+		SELECT main.RANK,
+		       main.HGRN_SYSTM_CD,
+		       main.up_systm_nm,
+		       main.menu_nm,
+		       main.cnt,
+		       sub.y_rank
+		  FROM (SELECT ROWNUM AS RANK, aa.*
+		          FROM (  SELECT b.USE_SYSTM_NM up_systm_nm,
+		                         b.use_systm_nm,
+		                         c.menu_nm,
+		                         b.HGRN_SYSTM_CD,
+		                         COUNT (*) cnt
+		                    FROM T_CNKC_USER_CNNC_LOG01H1 A,
+		                         T_CNKC_BSWR_SYSTM01M1 B,
+		                         T_CNKC_INTG_MENU01M1 C
+		                   WHERE     TO_CHAR (lsttm_logn_dttm, 'yyyymmdd') =
+		                                TO_CHAR (SYSDATE, 'yyyymmdd')
+		                         AND A.systm_cd = B.systm_cd
+		                         AND A.MENU_CD = C.menu_cd
+		                         AND B.HGRN_SYSTM_CD = 'UKP'
+		                GROUP BY b.HGRN_SYSTM_CD,
+		                         b.USE_SYSTM_NM,
+		                         b.use_systm_nm,
+		                         c.menu_nm
+		                ORDER BY 5 DESC) aa
+		         WHERE ROWNUM <![CDATA[ < ]]> 6) main,
+		       (SELECT ROWNUM AS y_RANK, aa.*
+		          FROM (  SELECT b.USE_SYSTM_NM up_systm_nm,
+		                         b.use_systm_nm,
+		                         c.menu_nm,
+		                         b.HGRN_SYSTM_CD,
+		                         COUNT (*)
+		                    FROM T_CNKC_USER_CNNC_LOG01H1 A,
+		                         T_CNKC_BSWR_SYSTM01M1 B,
+		                         T_CNKC_INTG_MENU01M1 C
+		                   WHERE     TO_CHAR (lsttm_logn_dttm, 'yyyymmdd') =
+		                                TO_CHAR (SYSDATE - 1, 'yyyymmdd')
+		                         AND A.systm_cd = B.systm_cd
+		                         AND A.MENU_CD = C.menu_cd
+		                         AND B.HGRN_SYSTM_CD = 'UKP'
+		                GROUP BY b.HGRN_SYSTM_CD,
+		                         b.USE_SYSTM_NM,
+		                         b.use_systm_nm,
+		                         c.menu_nm
+		                ORDER BY 5 DESC) aa) Sub
+		 WHERE     main.up_systm_nm = sub.up_systm_nm(+)
+		       AND main.use_systm_nm = sub.use_systm_nm(+)
+		       AND main.menu_nm = sub.menu_nm(+)
+		UNION ALL
+		SELECT main.RANK,
+		       main.HGRN_SYSTM_CD,
+		       main.up_systm_nm,
+		       main.menu_nm,
+		       main.cnt,
+		       sub.y_rank
+		  FROM (SELECT ROWNUM AS RANK, aa.*
+		          FROM (  SELECT b.USE_SYSTM_NM up_systm_nm,
+		                         b.use_systm_nm,
+		                         c.menu_nm,
+		                         b.HGRN_SYSTM_CD,
+		                         COUNT (*) cnt
+		                    FROM T_CNKC_USER_CNNC_LOG01H1 A,
+		                         T_CNKC_BSWR_SYSTM01M1 B,
+		                         T_CNKC_INTG_MENU01M1 C
+		                   WHERE     TO_CHAR (lsttm_logn_dttm, 'yyyymmdd') =
+		                                TO_CHAR (SYSDATE, 'yyyymmdd')
+		                         AND A.systm_cd = B.systm_cd
+		                         AND A.MENU_CD = C.menu_cd
+		                         AND B.HGRN_SYSTM_CD = 'CON'
+		                GROUP BY b.HGRN_SYSTM_CD,
+		                         b.USE_SYSTM_NM,
+		                         b.use_systm_nm,
+		                         c.menu_nm
+		                ORDER BY 5 DESC) aa
+		         WHERE ROWNUM <![CDATA[ < ]]> 6) main,
+		       (SELECT ROWNUM AS y_RANK, aa.*
+		          FROM (  SELECT b.USE_SYSTM_NM up_systm_nm,
+		                         b.use_systm_nm,
+		                         c.menu_nm,
+		                         b.HGRN_SYSTM_CD,
+		                         COUNT (*)
+		                    FROM T_CNKC_USER_CNNC_LOG01H1 A,
+		                         T_CNKC_BSWR_SYSTM01M1 B,
+		                         T_CNKC_INTG_MENU01M1 C
+		                   WHERE     TO_CHAR (lsttm_logn_dttm, 'yyyymmdd') =
+		                                TO_CHAR (SYSDATE - 1, 'yyyymmdd')
+		                         AND A.systm_cd = B.systm_cd
+		                         AND A.MENU_CD = C.menu_cd
+		                         AND B.HGRN_SYSTM_CD = 'CON'
+		                GROUP BY b.HGRN_SYSTM_CD,
+		                         b.USE_SYSTM_NM,
+		                         b.use_systm_nm,
+		                         c.menu_nm
+		                ORDER BY 5 DESC) aa) Sub
+		 WHERE     main.up_systm_nm = sub.up_systm_nm(+)
+		       AND main.use_systm_nm = sub.use_systm_nm(+)
+		       AND main.menu_nm = sub.menu_nm(+)
+		UNION ALL
+		SELECT main.RANK,
+		       'ETC' HGRN_SYSTM_CD ,
+		       '기타' up_systm_nm,
+		       main.menu_nm,
+		       main.cnt,
+		       sub.y_rank
+		  FROM (SELECT ROWNUM AS RANK, aa.*
+		          FROM (  SELECT b.USE_SYSTM_NM up_systm_nm,
+		                         b.use_systm_nm,
+		                         c.menu_nm,
+		                         b.HGRN_SYSTM_CD,
+		                         COUNT (*) cnt
+		                    FROM T_CNKC_USER_CNNC_LOG01H1 A,
+		                         T_CNKC_BSWR_SYSTM01M1 B,
+		                         T_CNKC_INTG_MENU01M1 C
+		                   WHERE     TO_CHAR (lsttm_logn_dttm, 'yyyymmdd') =
+		                                TO_CHAR (SYSDATE, 'yyyymmdd')
+		                         AND A.systm_cd = B.systm_cd
+		                         AND A.MENU_CD = C.menu_cd
+		                         AND B.HGRN_SYSTM_CD IS NULL
+		                GROUP BY b.HGRN_SYSTM_CD,
+		                         b.USE_SYSTM_NM,
+		                         b.use_systm_nm,
+		                         c.menu_nm
+		                ORDER BY 5 DESC) aa
+		         WHERE ROWNUM <![CDATA[ < ]]> 6) main,
+		       (SELECT ROWNUM AS y_RANK, aa.*
+		          FROM (  SELECT b.USE_SYSTM_NM up_systm_nm,
+		                         b.use_systm_nm,
+		                         c.menu_nm,
+		                         b.HGRN_SYSTM_CD,
+		                         COUNT (*)
+		                    FROM T_CNKC_USER_CNNC_LOG01H1 A,
+		                         T_CNKC_BSWR_SYSTM01M1 B,
+		                         T_CNKC_INTG_MENU01M1 C
+		                   WHERE     TO_CHAR (lsttm_logn_dttm, 'yyyymmdd') =
+		                                TO_CHAR (SYSDATE - 1, 'yyyymmdd')
+		                         AND A.systm_cd = B.systm_cd
+		                         AND A.MENU_CD = C.menu_cd
+		                         AND B.HGRN_SYSTM_CD IS NULL
+		                GROUP BY b.HGRN_SYSTM_CD,
+		                         b.USE_SYSTM_NM,
+		                         b.use_systm_nm,
+		                         c.menu_nm
+		                ORDER BY 5 DESC) aa) Sub
+		 WHERE     main.up_systm_nm = sub.up_systm_nm(+)
+		       AND main.use_systm_nm = sub.use_systm_nm(+)
+		       AND main.menu_nm = sub.menu_nm(+)
+		UNION ALL
+		SELECT main.RANK,
+		       'ALL',
+		       main.up_systm_nm,
+		       main.menu_nm,
+		       main.cnt,
+		       sub.y_rank
+		  FROM (SELECT ROWNUM AS RANK, aa.*
+		          FROM (  SELECT b.USE_SYSTM_NM up_systm_nm,
+		                         b.use_systm_nm,
+		                         c.menu_nm,
+		                         COUNT (*) cnt
+		                    FROM T_CNKC_USER_CNNC_LOG01H1 A,
+		                         T_CNKC_BSWR_SYSTM01M1 B,
+		                         T_CNKC_INTG_MENU01M1 C
+		                   WHERE     TO_CHAR (lsttm_logn_dttm, 'yyyymmdd') =
+		                                TO_CHAR (SYSDATE, 'yyyymmdd')
+		                         AND A.systm_cd = B.systm_cd
+		                         AND A.MENU_CD = C.menu_cd
+		                         AND B.HGRN_SYSTM_CD IN ('FCL', 'UKP', 'DSG', 'CON')
+		                         AND B.HGRN_SYSTM_CD <![CDATA[ <> ]]>'MAI'
+		                GROUP BY b.USE_SYSTM_NM, b.use_systm_nm, c.menu_nm
+		                ORDER BY 4 DESC) aa
+		         WHERE ROWNUM <![CDATA[ < ]]> 6) main,
+		       (SELECT ROWNUM AS y_RANK, aa.*
+		          FROM (  SELECT b.USE_SYSTM_NM up_systm_nm,
+		                         b.use_systm_nm,
+		                         c.menu_nm,
+		                         COUNT (*)
+		                    FROM T_CNKC_USER_CNNC_LOG01H1 A,
+		                         T_CNKC_BSWR_SYSTM01M1 B,
+		                         T_CNKC_INTG_MENU01M1 C
+		                   WHERE     TO_CHAR (lsttm_logn_dttm, 'yyyymmdd') =
+		                                TO_CHAR (SYSDATE - 1, 'yyyymmdd')
+		                         AND A.systm_cd = B.systm_cd
+		                         AND A.MENU_CD = C.menu_cd
+		                         AND B.HGRN_SYSTM_CD IN ('FCL', 'UKP', 'DSG', 'CON')
+		                         AND B.HGRN_SYSTM_CD <![CDATA[ <> ]]> 'MAI'
+		                GROUP BY b.USE_SYSTM_NM, b.use_systm_nm, c.menu_nm
+		                ORDER BY 4 DESC) aa) Sub
+		 WHERE     main.up_systm_nm = sub.up_systm_nm(+)
+		       AND main.use_systm_nm = sub.use_systm_nm(+)
+		       AND main.menu_nm = sub.menu_nm(+)
+		ORDER BY HGRN_SYSTM_CD, RANK, cnt DESC
+  
+    </select>
+	
+	<!-- 비즈니스 공통 사용자 탑 10 그리드 쿼리 -->
+	<select id="bucCmmnDAO.bucCmmnLoadinfouserdbgridAjax" parameterClass="bucCmmnVO" resultClass="bucCmmnVO">	
+		/* bucCmmnLoadinfomenudbAjax 조회 */
+		SELECT main.rank 
+           , main.HGRN_SYSTM_CD
+           , main.dptcd
+           , main.rtur_id
+           , main.rtur_nm
+               , main.cnt
+               , sub.y_rank
+          FROM (
+                SELECT rownum AS RANK, aa.* FROM (
+                SELECT b.HGRN_SYSTM_CD,
+                       c.dptcd,
+                       a.rtur_id,
+                       c.rtur_nm,
+                       count(*) cnt
+                  FROM T_CNKC_USER_CNNC_LOG01H1 A,
+                       T_CNKC_BSWR_SYSTM01M1 B,
+                       T_CNKC_INTG_USER01M1 C
+                WHERE to_char(a.lsttm_logn_dttm, 'yyyymmdd') = TO_CHAR (SYSDATE, 'yyyymmdd')
+                  AND B.HGRN_SYSTM_CD = 'DSG'
+                  AND a.rtur_id not in('superAdmin')
+                  <![CDATA[ AND REGEXP_LIKE(a.rtur_id, '^[0-9]*$$') ]]>
+                  AND a.rtur_id = c.rtur_id
+                  AND a.systm_cd = b.systm_cd
+                GROUP BY b.HGRN_SYSTM_CD,
+                         c.dptcd,
+                          a.rtur_id,              
+                           c.rtur_nm
+                  ORDER BY cnt desc  
+                  )aa WHERE ROWNUM <![CDATA[ < ]]> 11
+                ) main,
+                (
+                SELECT ROWNUM AS y_RANK, aa.* FROM (
+                SELECT b.HGRN_SYSTM_CD,
+                       c.dptcd,
+                       a.rtur_id,
+                       c.rtur_nm,
+                       count(*) cnt
+                FROM T_CNKC_USER_CNNC_LOG01H1 A,
+                     T_CNKC_BSWR_SYSTM01M1 B,
+                     T_CNKC_INTG_USER01M1 C
+                WHERE to_char(a.lsttm_logn_dttm, 'yyyymmdd') = TO_CHAR (SYSDATE-1, 'yyyymmdd')
+                  AND B.HGRN_SYSTM_CD = 'DSG'
+                  AND a.rtur_id not in('superAdmin')
+                  <![CDATA[ AND REGEXP_LIKE(a.rtur_id, '^[0-9]*$$') ]]>
+                  AND a.rtur_id = c.rtur_id
+                  AND a.systm_cd = b.systm_cd
+                GROUP By b.HGRN_SYSTM_CD,
+                          c.dptcd,
+                          a.rtur_id,                                       
+                           c.rtur_nm
+                  ORDER BY cnt desc  
+                  )aa WHERE ROWNUM <![CDATA[ < ]]> 11
+                  ) Sub 
+         WHERE main.HGRN_SYSTM_CD = sub.HGRN_SYSTM_CD (+)
+         AND main.rtur_id = sub.rtur_id (+)
+          
+          
+        UNION all
+        
+        SELECT main.rank
+           , main.HGRN_SYSTM_CD
+           , main.dptcd
+           , main.rtur_id
+           , main.rtur_nm
+               , main.cnt
+               , sub.y_rank
+          FROM (
+                SELECT rownum AS RANK, aa.* FROM (
+                SELECT b.HGRN_SYSTM_CD,
+                       c.dptcd,
+                       a.rtur_id,
+                       c.rtur_nm,
+                       count(*) cnt
+                  FROM T_CNKC_USER_CNNC_LOG01H1 A,
+                       T_CNKC_BSWR_SYSTM01M1 B,
+                       T_CNKC_INTG_USER01M1 C
+                WHERE to_char(a.lsttm_logn_dttm, 'yyyymmdd') = TO_CHAR (SYSDATE, 'yyyymmdd')
+                  AND B.HGRN_SYSTM_CD = 'FCL'
+                  AND a.rtur_id not in('superAdmin')
+                  <![CDATA[ AND REGEXP_LIKE(a.rtur_id, '^[0-9]*$$') ]]>
+                  AND a.rtur_id = c.rtur_id
+                  AND a.systm_cd = b.systm_cd
+                GROUP BY b.HGRN_SYSTM_CD,
+                         c.dptcd,
+                          a.rtur_id,              
+                           c.rtur_nm
+                  ORDER BY cnt desc  
+                  )aa WHERE ROWNUM <![CDATA[ < ]]> 11
+                ) main,
+                (
+                SELECT ROWNUM AS y_RANK, aa.* FROM (
+                SELECT b.HGRN_SYSTM_CD,
+                       c.dptcd,
+                       a.rtur_id,
+                       c.rtur_nm,
+                       count(*) cnt
+                FROM T_CNKC_USER_CNNC_LOG01H1 A,
+                     T_CNKC_BSWR_SYSTM01M1 B,
+                     T_CNKC_INTG_USER01M1 C
+                WHERE to_char(a.lsttm_logn_dttm, 'yyyymmdd') = TO_CHAR (SYSDATE-1, 'yyyymmdd')
+                  AND B.HGRN_SYSTM_CD = 'FCL'
+                  AND a.rtur_id not in('superAdmin')
+                  <![CDATA[ AND REGEXP_LIKE(a.rtur_id, '^[0-9]*$$') ]]>
+                  AND a.rtur_id = c.rtur_id
+                  AND a.systm_cd = b.systm_cd
+                GROUP By b.HGRN_SYSTM_CD,
+                          c.dptcd,
+                          a.rtur_id,                                       
+                           c.rtur_nm
+                  ORDER BY cnt desc  
+                  )aa WHERE ROWNUM <![CDATA[ < ]]> 11
+                  ) Sub 
+         WHERE main.HGRN_SYSTM_CD = sub.HGRN_SYSTM_CD (+)
+          AND main.rtur_id = sub.rtur_id (+)
+           
+           
+           UNION ALL
+           
+           SELECT       main.rank 
+           , main.HGRN_SYSTM_CD
+           , main.dptcd
+           , main.rtur_id
+           , main.rtur_nm
+               , main.cnt
+               , sub.y_rank
+          FROM (
+                SELECT rownum AS RANK, aa.* FROM (
+                SELECT b.HGRN_SYSTM_CD,
+                       c.dptcd,
+                       a.rtur_id,
+                       c.rtur_nm,
+                       count(*) cnt
+                  FROM T_CNKC_USER_CNNC_LOG01H1 A,
+                       T_CNKC_BSWR_SYSTM01M1 B,
+                       T_CNKC_INTG_USER01M1 C
+                WHERE to_char(a.lsttm_logn_dttm, 'yyyymmdd') = TO_CHAR (SYSDATE, 'yyyymmdd')
+                  AND B.HGRN_SYSTM_CD = 'UKP'
+                  AND a.rtur_id not in('superAdmin')
+                  <![CDATA[ AND REGEXP_LIKE(a.rtur_id, '^[0-9]*$$') ]]>
+                  AND a.rtur_id = c.rtur_id
+                  AND a.systm_cd = b.systm_cd
+                GROUP BY b.HGRN_SYSTM_CD,
+                         c.dptcd,
+                          a.rtur_id,              
+                           c.rtur_nm
+                  ORDER BY cnt desc  
+                  )aa WHERE ROWNUM <![CDATA[ < ]]> 11
+                ) main,
+                (
+                SELECT ROWNUM AS y_RANK, aa.* FROM (
+                SELECT b.HGRN_SYSTM_CD,
+                       c.dptcd,
+                       a.rtur_id,
+                       c.rtur_nm,
+                       count(*) cnt
+                FROM T_CNKC_USER_CNNC_LOG01H1 A,
+                     T_CNKC_BSWR_SYSTM01M1 B,
+                     T_CNKC_INTG_USER01M1 C
+                WHERE to_char(a.lsttm_logn_dttm, 'yyyymmdd') = TO_CHAR(SYSDATE - 1,'YYYYMMDD')
+                  AND B.HGRN_SYSTM_CD = 'UKP'
+                  AND a.rtur_id not in('superAdmin')
+                  <![CDATA[ AND REGEXP_LIKE(a.rtur_id, '^[0-9]*$$') ]]>
+                  AND a.rtur_id = c.rtur_id
+                  AND a.systm_cd = b.systm_cd
+                GROUP By b.HGRN_SYSTM_CD,
+                          c.dptcd,
+                          a.rtur_id,                                       
+                           c.rtur_nm
+                  ORDER BY cnt desc  
+                  )aa WHERE ROWNUM <![CDATA[ < ]]> 11
+                  ) Sub 
+         WHERE main.HGRN_SYSTM_CD = sub.HGRN_SYSTM_CD (+)
+          AND main.rtur_id = sub.rtur_id (+)
+         
+          
+        UNION all 
+        
+       SELECT main.rank 
+           , main.HGRN_SYSTM_CD
+           , main.dptcd
+           , main.rtur_id
+           , main.rtur_nm
+               , main.cnt
+               , sub.y_rank
+          FROM (
+                SELECT rownum AS RANK, aa.* FROM (
+                SELECT b.HGRN_SYSTM_CD,
+                       c.dptcd,
+                       a.rtur_id,
+                       c.rtur_nm,
+                       count(*) cnt
+                  FROM T_CNKC_USER_CNNC_LOG01H1 A,
+                       T_CNKC_BSWR_SYSTM01M1 B,
+                       T_CNKC_INTG_USER01M1 C
+                WHERE to_char(a.lsttm_logn_dttm, 'yyyymmdd') = TO_CHAR (SYSDATE, 'yyyymmdd')
+                  AND B.HGRN_SYSTM_CD = 'CON'
+                  AND a.rtur_id not in('superAdmin')
+                  <![CDATA[ AND REGEXP_LIKE(a.rtur_id, '^[0-9]*$$') ]]>
+                  AND a.rtur_id = c.rtur_id
+                  AND a.systm_cd = b.systm_cd
+                GROUP BY b.HGRN_SYSTM_CD,
+                         c.dptcd,
+                          a.rtur_id,              
+                           c.rtur_nm
+                  ORDER BY cnt desc  
+                  )aa WHERE ROWNUM <![CDATA[ < ]]> 11
+                ) main,
+                (
+                SELECT ROWNUM AS y_RANK, aa.* FROM (
+                SELECT b.HGRN_SYSTM_CD,
+                       c.dptcd,
+                       a.rtur_id,
+                       c.rtur_nm,
+                       count(*) cnt
+                FROM T_CNKC_USER_CNNC_LOG01H1 A,
+                     T_CNKC_BSWR_SYSTM01M1 B,
+                     T_CNKC_INTG_USER01M1 C
+                WHERE to_char(a.lsttm_logn_dttm, 'yyyymmdd') = TO_CHAR(SYSDATE - 1,'YYYYMMDD')
+                  AND B.HGRN_SYSTM_CD = 'CON'
+                  AND a.rtur_id not in('superAdmin')
+                  <![CDATA[ AND REGEXP_LIKE(a.rtur_id, '^[0-9]*$$') ]]>
+                  AND a.rtur_id = c.rtur_id
+                  AND a.systm_cd = b.systm_cd
+                GROUP By b.HGRN_SYSTM_CD,
+                          c.dptcd,
+                          a.rtur_id,                                       
+                           c.rtur_nm
+                  ORDER BY cnt desc  
+                  )aa WHERE ROWNUM <![CDATA[ < ]]> 11
+                  ) Sub 
+         WHERE main.HGRN_SYSTM_CD = sub.HGRN_SYSTM_CD (+)
+          AND main.rtur_id = sub.rtur_id (+)
+           
+        union all
+                
+        SELECT main.rank 
+           , 'ALL'
+           , main.dptcd
+           , main.rtur_id
+           , main.rtur_nm
+               , main.cnt
+               , sub.y_rank
+          FROM (
+                SELECT rownum AS RANK, aa.* FROM (
+                SELECT c.dptcd,
+                       a.rtur_id,
+                       c.rtur_nm,
+                       count(*) cnt
+                  FROM T_CNKC_USER_CNNC_LOG01H1 A,
+                       T_CNKC_BSWR_SYSTM01M1 B,
+                       T_CNKC_INTG_USER01M1 C
+                WHERE to_char(a.lsttm_logn_dttm, 'yyyymmdd') = TO_CHAR (SYSDATE, 'yyyymmdd')
+                  AND B.HGRN_SYSTM_CD  in ('DSG', 'CON', 'UKP', 'FCL')
+                  AND a.rtur_id not in('superAdmin')
+                  <![CDATA[ AND REGEXP_LIKE(a.rtur_id, '^[0-9]*$$') ]]>
+                  AND a.rtur_id = c.rtur_id
+                  AND a.systm_cd = b.systm_cd
+                GROUP BY c.dptcd,
+                          a.rtur_id,              
+                           c.rtur_nm
+                  ORDER BY cnt desc  
+                  )aa WHERE ROWNUM <![CDATA[ < ]]> 11
+                ) main,
+                (
+                SELECT ROWNUM AS y_RANK, aa.* FROM (
+                SELECT c.dptcd,
+                       a.rtur_id,
+                       c.rtur_nm,
+                       count(*) cnt
+                FROM T_CNKC_USER_CNNC_LOG01H1 A,
+                     T_CNKC_BSWR_SYSTM01M1 B,
+                     T_CNKC_INTG_USER01M1 C
+                WHERE to_char(a.lsttm_logn_dttm, 'yyyymmdd') = TO_CHAR(SYSDATE-1,'YYYYMMDD')
+                  AND B.HGRN_SYSTM_CD in ('DSG', 'CON', 'UKP', 'FCL')
+                  AND a.rtur_id not in('superAdmin')
+                  <![CDATA[ AND REGEXP_LIKE(a.rtur_id, '^[0-9]*$$') ]]>
+                  AND a.rtur_id = c.rtur_id
+                  AND a.systm_cd = b.systm_cd
+                GROUP By  c.dptcd,
+                          a.rtur_id,
+                          c.rtur_nm
+                  ORDER BY cnt desc  
+                  )aa WHERE ROWNUM <![CDATA[ < ]]> 11
+                  ) Sub 
+         WHERE  main.rtur_id = sub.rtur_id (+)
+         ORDER BY HGRN_SYSTM_CD, RANK 
+	</select>
+	
+	<!-- 비즈니스 공통 사용자 탑 10 파이차트 쿼리 -->
+	<select id="bucCmmnDAO.bucCmmnLoadinfouserdbAjax" parameterClass="bucCmmnVO" resultClass="bucCmmnVO">
+	/* bucCmmnLoadinfouserdbAjax 조회 */
+	SELECT <isEqual property="use_system" compareValue = "ALL">
+				'ALL' HGRN_SYSTM_CD,
+			</isEqual>
+			<isNotEqual property="use_system" compareValue = "ALL">
+				HGRN_SYSTM_CD,
+			</isNotEqual>
+	       aa.use_systm_nm,
+	       aa.rtur_id,
+	       aa.rtur_nm,
+	       aa.row_cnt
+	  FROM (  SELECT <isEqual property="use_system" compareValue = "ALL">
+						'ALL' HGRN_SYSTM_CD,
+					</isEqual>
+					<isNotEqual property="use_system" compareValue = "ALL">
+						HGRN_SYSTM_CD,
+					</isNotEqual>
+	                 b.USE_SYSTM_NM use_systm_nm,
+	                 a.rtur_id AS rtur_id,
+	                 (SELECT rtur_nm
+	                    FROM T_CNKC_INTG_USER01M1
+	                   WHERE rtur_id = a.rtur_id)
+	                    AS rtur_nm,
+	                 COUNT (*) row_cnt
+	            FROM T_CNKC_USER_CNNC_LOG01H1 a,
+	                 T_CNKC_BSWR_SYSTM01M1 b,
+	                 T_CNKC_INTG_USER01M1 c
+	           WHERE     TO_CHAR (a.lsttm_logn_dttm, 'yyyymmdd') = TO_CHAR (SYSDATE, 'yyyymmdd')
+	                 <isEqual property="use_system" compareValue = "ALL">
+						AND b.HGRN_SYSTM_CD in ('UKP','DSG','FCL','CON') 
+					</isEqual>
+					<isNotEqual property="use_system" compareValue = "ALL">
+						AND b.HGRN_SYSTM_CD = #use_system#
+					</isNotEqual>
+	                 <isNotEmpty property="user_id">
+		               	AND a.rtur_id = #user_id#
+		            </isNotEmpty>
+	                 AND a.rtur_id NOT IN ('superAdmin')
+	                 <![CDATA[ AND REGEXP_LIKE(a.rtur_id, '^[0-9]*$$') ]]>
+	                 AND a.rtur_id = c.rtur_id
+	                 AND a.systm_cd = b.systm_cd
+	        GROUP BY HGRN_SYSTM_CD,
+	                 b.USE_SYSTM_NM,
+	                 a.rtur_id,
+	                 rtur_nm
+	        ORDER BY HGRN_SYSTM_CD, rtur_id, row_cnt DESC) aa
+	 WHERE ROWNUM <![CDATA[ < ]]> 5
+	 
+	 UNION ALL
+	
+	select <isEqual property="use_system" compareValue = "ALL">
+				'ALL' HGRN_SYSTM_CD,
+			</isEqual>
+			<isNotEqual property="use_system" compareValue = "ALL">
+				HGRN_SYSTM_CD,
+			</isNotEqual>
+	       '기타' as use_systm_nm,
+	       '' as rtur_id,
+	       '' as rtur_nm,
+	       SUM (CASE WHEN row_rank <![CDATA[ > ]]> 4 THEN cnt ELSE 0 END) AS row_cnt
+	  from (select <isEqual property="use_system" compareValue = "ALL">
+						'ALL' HGRN_SYSTM_CD,
+					</isEqual>
+					<isNotEqual property="use_system" compareValue = "ALL">
+						HGRN_SYSTM_CD,
+					</isNotEqual>
+	               use_systm_nm,
+	               rtur_id,
+	               rtur_nm,
+	               cnt,
+	               rownum as row_rank
+	        from (select b.HGRN_SYSTM_CD,
+	                       b.use_systm_nm,
+	                       a.rtur_id as rtur_id,
+	                       (select c.rtur_nm
+	                        from t_cnkc_intg_user01m1
+	                        where rtur_id = a.rtur_id)
+	                        as rtur_nm,
+	                        count (*) cnt
+	              from T_CNKC_USER_CNNC_LOG01H1 a,
+	                   t_cnkc_bswr_systm01m1 b,
+	                   t_cnkc_intg_user01m1 c
+	              where to_char (a.lsttm_logn_dttm, 'yyyymmdd') = TO_CHAR (SYSDATE, 'yyyymmdd')
+	                <isEqual property="use_system" compareValue = "ALL">
+						AND b.HGRN_SYSTM_CD in ('UKP','DSG','FCL','CON') 
+					</isEqual>
+					<isNotEqual property="use_system" compareValue = "ALL">
+						AND b.HGRN_SYSTM_CD = #use_system#
+					</isNotEqual>
+	                 <isNotEmpty property="user_id">
+		               	AND a.rtur_id = #user_id#
+		            </isNotEmpty>
+	                and a.rtur_id not in ('superAdmin')
+	                <![CDATA[ AND REGEXP_LIKE(a.rtur_id, '^[0-9]*$$') ]]>
+	                and a.rtur_id = c.rtur_id
+	                and a.systm_cd = b.systm_cd
+	           group by b.HGRN_SYSTM_CD,
+	                    b.use_systm_nm,
+	                    a.rtur_id,
+	                    rtur_nm
+	           order by HGRN_SYSTM_CD, a.rtur_id, cnt desc)
+	           )
+	     GROUP BY HGRN_SYSTM_CD,
+	              '기타' ,
+	              '' ,
+	             '' 
+	</select>
+	
+	<!-- 비즈니스 공통 메인차트 시설물 쿼리 -->
+		<select id="bucCmmnDAO.bucCmmnMaindbFcltsAjax" parameterClass="bucCmmnVO" resultClass="bucCmmnVO">
+	 	/* bucCmmnMaindbFcltsAjax 조회 */
+		 SELECT   BIZ_LOCT_SEQ , /*시퀀스 번호*/
+	                 BIZ_MGMT_NM , /* 사업단명*/
+	                 BLNG_DPTCD , /* 사업단코드*/
+	                 TO_NUMBER(WHOL_PLAN_RATE) AS WHOL_PLAN_RATE , /*계획*/
+	                 TO_NUMBER(WHOL_EFCN_RATE) AS WHOL_EFCN_RATE , /* 실시*/
+	                 TO_NUMBER(WHOL_CTRS_PRCRT) AS WHOL_CTRS_PRCRT , /*전체공정율*/
+	                 STEP_CLSS_CD , /* 구분*/
+	                 (SELECT MAX(TO_CHAR(RGST_DTTM, 'YYYY-MM-DD')) FROM T_CPMB_PRCSS_PROCS01M1) AS STANDART_DATE /* 일자*/
+	            FROM (  SELECT TO_CHAR(O.BIZ_LOCT_SEQ) AS BIZ_LOCT_SEQ ,
+	                           O.BIZ_MGMT_NM ,
+	                           O.BLNG_DPTCD ,
+	                           TP.CONT_TOT_PER  AS CONT_TOT_PER ,
+	                           TP.PRYR_RATE  AS PRYR_RATE ,
+	                           TP.THYY_CNTRT_RATE  AS THYY_CNTRT_RATE ,
+	                           TP.THYY_CNTRT_CMTL_RATE  AS THYY_CNTRT_CMTL_RATE ,
+	                           TP.THYY_PLAN_RATE  AS THYY_PLAN_RATE ,
+	                           TP.THYY_EFCN_RATE  AS THYY_EFCN_RATE ,
+	                           TP.THYY_CTRS_RATE  AS THYY_CTRS_RATE ,
+	                           TP.WHOL_PLAN_RATE  AS WHOL_PLAN_RATE ,
+	                           TP.WHOL_EFCN_RATE  AS WHOL_EFCN_RATE ,
+	                           TP.WHOL_CTRS_PRCRT  AS WHOL_CTRS_PRCRT ,
+	                           TP.ANNL_ESTN_RATE  AS ANNL_ESTN_RATE ,
+	                           TP.WHOL_ESTN_RATE  AS WHOL_ESTN_RATE ,
+	                           O.STEP_CLSS_CD
+	                      FROM V_CPMB_SECT_INST01M1 O ,
+	                            (
+	                /* 사업단 */
+	         SELECT
+	         TO_CHAR(O.BIZ_LOCT_SEQ) AS BIZ_LOCT_SEQ,  V.SORT_SEQ ,
+	         100 AS CONT_TOT_PER ,
+	         O.PRYR_RATE ,
+	         O.THYY_CNTRT_RATE ,
+	         O.THYY_CNTRT_CMTL_RATE ,
+	         O.THYY_PLAN_RATE ,
+	         O.THYY_EFCN_RATE ,
+	         O.THYY_CTRS_RATE ,
+	         O.WHOL_PLAN_RATE ,
+	         O.WHOL_EFCN_RATE ,
+	         O.WHOL_CTRS_PRCRT ,
+	         O.ANNL_ESTN_RATE ,
+	         O. WHOL_ESTN_RATE
+	                             FROM
+	                              (
+	                               SELECT
+	                                   BLNG_DPTCD AS BIZ_LOCT_SEQ ,
+	                                   
+	                                   100 AS CONT_TOT_PER ,
+	                                   
+	                                   NVL (ROUND (CNCST_PRYR_CNTRT_AMT / DECODE (SBCT_CNTRT_AMT, 0, NULL, SBCT_CNTRT_AMT)  * 100, 0) , 0)
+	                                      AS PRYR_RATE ,
+	                                   
+	                                   NVL (ROUND (THYY_CNTRT_AMT / DECODE (SBCT_CNTRT_AMT, 0, NULL, SBCT_CNTRT_AMT)  * 100, 0) , 0)
+	                                      AS THYY_CNTRT_RATE ,
+	                                   
+	                                   NVL  (
+	                                      ROUND (THYY_CNTRT_CMTL_AMT / DECODE (SBCT_CNTRT_AMT, 0, NULL, SBCT_CNTRT_AMT)  * 100, 0)  ,
+	                                      0)
+	                                      AS THYY_CNTRT_CMTL_RATE ,
+	                                   
+	                                   NVL (ROUND (THYY_PLAN_AMT / DECODE (THYY_CNTRT_AMT, 0, NULL, THYY_CNTRT_AMT)  * 100, 0)  ,
+	                                        0)
+	                                      AS THYY_PLAN_RATE ,
+	                                   
+	                                   NVL (ROUND (THYY_EFCN_AMT / DECODE (THYY_CNTRT_AMT, 0, NULL, THYY_CNTRT_AMT)  * 100, 0)  ,
+	                                        0)
+	                                      AS THYY_EFCN_RATE ,
+	                                   NVL (ROUND (THYY_EFCN_AMT / DECODE (THYY_PLAN_AMT, 0, NULL, THYY_PLAN_AMT)  * 100, 0)  ,
+	                                        0)
+	                                      AS THYY_CTRS_RATE ,
+	                                   
+	                                   TO_CHAR(NVL (ROUND (WHOL_PLAN_AMT / DECODE (SBCT_CNTRT_AMT, 0, NULL, SBCT_CNTRT_AMT)  * 100, 0) , 0))
+	                                      AS WHOL_PLAN_RATE ,
+	                                   
+	                                   NVL (ROUND (WHOL_EFCN_AMT / DECODE (SBCT_CNTRT_AMT, 0, NULL, SBCT_CNTRT_AMT)  * 100, 0) , 0)
+	                                      AS WHOL_EFCN_RATE ,
+	                                   NVL (ROUND (WHOL_EFCN_AMT / DECODE (WHOL_PLAN_AMT, 0, NULL, WHOL_PLAN_AMT)  * 100,0) , 0)
+	                                      AS WHOL_CTRS_PRCRT ,
+	                                   
+	                                   NVL (ROUND (ANNL_ESTN_AMT / DECODE (THYY_CNTRT_AMT, 0, NULL, THYY_CNTRT_AMT)  * 100, 0)  ,
+	                                        0)
+	                                      AS ANNL_ESTN_RATE ,
+	                                   
+	                                   NVL (ROUND (WHOL_ESTN_AMT / DECODE (SBCT_CNTRT_AMT, 0, NULL, SBCT_CNTRT_AMT)  * 100, 0) , 0)
+	                                      AS WHOL_ESTN_RATE
+	                              FROM (  SELECT O.BLNG_DPTCD ,
+	                                             SUM (TP.SBCT_CNTRT_AMT)  AS SBCT_CNTRT_AMT ,
+	                                             SUM (TP.CNCST_PRYR_CNTRT_AMT)  AS CNCST_PRYR_CNTRT_AMT ,
+	                                             SUM (TP.THYY_CNTRT_AMT)  AS THYY_CNTRT_AMT ,
+	                                             SUM (TP.THYY_CNTRT_CMTL_AMT)  AS THYY_CNTRT_CMTL_AMT ,
+	                                             SUM (TP.THYY_PLAN_AMT)  AS THYY_PLAN_AMT ,
+	                                             SUM (TP.THYY_EFCN_AMT)  AS THYY_EFCN_AMT ,
+	                                             SUM (TP.WHOL_PLAN_AMT)  AS WHOL_PLAN_AMT ,
+	                                             SUM (TP.WHOL_EFCN_AMT)  AS WHOL_EFCN_AMT ,
+	                                             SUM (TP.ANNL_ESTN_AMT)  AS ANNL_ESTN_AMT ,
+	                                             SUM (TP.WHOL_ESTN_AMT)  AS WHOL_ESTN_AMT
+	                                        FROM V_CPMB_SECT_INST01M1 O, T_CPMB_PRCSS_PROCS01M1 TP
+	                                       WHERE     STEP_CLSS_CD = '4'
+	                                             AND O.BIZ_PRGS_STAT_CD = 'C02'
+	                                             AND O.CSTR_STEP_CD = 'S'
+	                                             AND O.BIZ_LOCT_SEQ = TP.BIZ_LOCT_SEQ
+	                                             AND TP.RGST_DTTM = (SELECT MAX (RGST_DTTM)  FROM T_CPMB_PRCSS_PROCS01M1)
+	                                    GROUP BY O.BLNG_DPTCD
+	          )
+	         )  O ,
+	                    (
+	                     SELECT BIZ_LOCT_SEQ,BLNG_DPTCD,SORT_SEQ FROM V_CPMB_SECT_INST01M1 O
+	                      WHERE
+	                       O.BIZ_PRGS_STAT_CD = 'C02'
+	          AND O.CSTR_STEP_CD = 'S'
+	                             AND STEP_CLSS_CD=1
+	                             ORDER BY SORT_SEQ
+	                   )  V
+	                   WHERE
+	                     O.BIZ_LOCT_SEQ=V.BLNG_DPTCD
+	              )  TP
+	                     WHERE (TO_CHAR(O.BIZ_LOCT_SEQ) = TP.BIZ_LOCT_SEQ OR O.BLNG_DPTCD = TP.BIZ_LOCT_SEQ)
+	                       AND O.BIZ_PRGS_STAT_CD = 'C02'
+	                       AND O.CSTR_STEP_CD = 'S'
+	              AND TP.SORT_SEQ=O.SORT_SEQ
+	                  ORDER BY O.SORT_SEQ
+	            )
+	            WHERE STEP_CLSS_CD =  1 /* 사업단만 나오게 */
+    </select>
+    
+    <!-- 비즈니스 공통 메인차트 유지관리 쿼리 -->       
+    <select id="bucCmmnDAO.bucCmmnMaindbMntmngAjax" parameterClass="bucCmmnVO" resultClass="bucCmmnVO">        
+    		 /* bucCmmnMaindbMntmngAjax 조회 */
+    		SELECT  
+		    	  D.IMDT_HGRN_DPTCD as bonbu_cd
+			      , (SELECT KOR_DPTNM FROM V_CNKC_INTG_DPRT01C1 WHERE INTG_DPTCD = D.IMDT_HGRN_DPTCD) as bonbu
+			      , round(SUM(A.PLAN_KM)) AS PLAN_KM
+			      , SUM(B.PLAN_WORKER_CNT) AS PLAN_WORKER_CNT
+			      , SUM(C.PLAN_EQP_CNT) AS PLAN_EQP_CNT
+			      , round(SUM(E.KM)) AS C_KM
+			      , SUM(F.WORKER_CNT) AS WORKER_CNT
+			      , SUM(G.EQP_CNT) AS EQP_CNT
+			  FROM  (SELECT  DISTINCT MTNOF_DPTCD /*지사코드*/
+			                ,DALY_JOB_DATES 
+			           FROM  T_EXMA_JOB_PLAN01M1 
+			         ) MAIN
+			        ,(
+			         SELECT  MTNOF_DPTCD /*지사코드*/
+			                ,DALY_JOB_DATES
+			                ,sum(abs(EDPNT_DSTNC - STPNT_DSTNC)) PLAN_KM
+			           FROM T_EXMA_FILD_JOB_PLAN01L1 
+			          WHERE DALY_JOB_DATES BETWEEN TO_CHAR(SYSDATE - 7, 'YYYYMMDD') AND TO_CHAR(SYSDATE, 'YYYYMMDD')
+			            GROUP BY MTNOF_DPTCD, DALY_JOB_DATES           
+			        ) A
+			       ,(
+			         SELECT MTNOF_DPTCD, DALY_JOB_DATES, COUNT(*) PLAN_WORKER_CNT
+			           FROM T_EXMA_MOBZE_NMPR_PLAN01L1 
+			          WHERE DALY_JOB_DATES BETWEEN TO_CHAR(SYSDATE - 7, 'YYYYMMDD') AND TO_CHAR(SYSDATE, 'YYYYMMDD')
+			          GROUP BY MTNOF_DPTCD, DALY_JOB_DATES   
+			        ) B
+			       ,(
+			         SELECT MTNOF_DPTCD, DALY_JOB_DATES, COUNT(*) PLAN_EQP_CNT
+			           FROM T_EXMA_MOBZE_EQPM_PLAN01L1 
+			          WHERE DALY_JOB_DATES BETWEEN TO_CHAR(SYSDATE - 7, 'YYYYMMDD') AND TO_CHAR(SYSDATE, 'YYYYMMDD')
+			          GROUP BY MTNOF_DPTCD, DALY_JOB_DATES   
+			        ) C
+			       ,V_CNKC_INTG_DPRT01C1 D
+			       ,(
+			         SELECT MTNOF_DPTCD, DALY_JOB_DATES, SUM(ABS(EDPNT_DSTNC - STPNT_DSTNC)) KM
+			           FROM T_EXMA_JOB_CTNT01L1 
+			          WHERE DALY_JOB_DATES BETWEEN TO_CHAR(SYSDATE - 7, 'YYYYMMDD') AND TO_CHAR(SYSDATE, 'YYYYMMDD')
+			          GROUP BY MTNOF_DPTCD, DALY_JOB_DATES   
+			        ) E
+			       ,(
+			         SELECT MTNOF_DPTCD, DALY_JOB_DATES, COUNT(*) WORKER_CNT
+			           FROM T_EXMA_MOBZE_NMPR01L1 
+			          WHERE DALY_JOB_DATES BETWEEN TO_CHAR(SYSDATE - 7, 'YYYYMMDD') AND TO_CHAR(SYSDATE, 'YYYYMMDD')
+			          GROUP BY MTNOF_DPTCD, DALY_JOB_DATES   
+			        ) F
+			       ,(
+			         SELECT MTNOF_DPTCD, DALY_JOB_DATES, COUNT(*) EQP_CNT
+			           FROM T_EXMA_MOBZE_EQPM01L1 
+			          WHERE DALY_JOB_DATES BETWEEN TO_CHAR(SYSDATE - 7, 'YYYYMMDD') AND TO_CHAR(SYSDATE, 'YYYYMMDD')
+			          GROUP BY MTNOF_DPTCD, DALY_JOB_DATES   
+			        ) G
+			WHERE MAIN.MTNOF_DPTCD      = A.MTNOF_DPTCD
+			  AND MAIN.DALY_JOB_DATES   = A.DALY_JOB_DATES
+			  AND MAIN.MTNOF_DPTCD      = B.MTNOF_DPTCD
+			  AND MAIN.DALY_JOB_DATES   = B.DALY_JOB_DATES
+			  AND MAIN.MTNOF_DPTCD      = C.MTNOF_DPTCD
+			  AND MAIN.DALY_JOB_DATES   = C.DALY_JOB_DATES
+			  AND MAIN.MTNOF_DPTCD      = D.INTG_DPTCD
+			  AND MAIN.MTNOF_DPTCD      = E.MTNOF_DPTCD
+			  AND MAIN.DALY_JOB_DATES   = E.DALY_JOB_DATES
+			  AND MAIN.MTNOF_DPTCD      = F.MTNOF_DPTCD
+			  AND MAIN.DALY_JOB_DATES   = F.DALY_JOB_DATES
+			  AND MAIN.MTNOF_DPTCD      = G.MTNOF_DPTCD
+			  AND MAIN.DALY_JOB_DATES   = G.DALY_JOB_DATES
+			GROUP BY D.IMDT_HGRN_DPTCD  
+			order by 1
+		    
+    </select>       
+    <!-- 대외연계 쿼리 -->        
+    <select id="bucCmmnDAO.bucCmmnExtrnlcntcdbAjax" parameterClass="bucCmmnVO" resultClass="bucCmmnVO">   
+        /* bucCmmnExtrnlcntcdbAjax 조회 */
+		select (select CMMN_CD_NM
+			   from T_CNKC_CMMN_CD01C1
+			   where CMMN_GRP_CD = 'BIZ_TY'
+			   and CMMN_CD = A.SND_STM) as BIZ_NM,
+			   A.TRST_TY, /*R:수신 S:송신 */
+			   sum(decode(B.TRST_STAT,'R',1,0)) as TRST_STAT_R,
+			   sum(decode(B.TRST_STAT,'C',1,0)) as TRST_STAT_C,
+			   sum(decode(B.TRST_STAT,'E',1,0)) as TRST_STAT_E
+		from T_ESIA001_M01 A,
+			     T_ESIA004_D01 B
+		where A.IF_ID = B.IF_ID
+			and to_char(B.CRE_DTTM,'YYYYMMDD') between TO_CHAR (SYSDATE, 'yyyymmdd') and TO_CHAR (SYSDATE, 'yyyymmdd')
+			and A.BIZ_TY NOT IN('CO')
+			and A.IN_EX_TY = '02'
+		group by A.SND_STM ,A.TRST_TY
+		order by A.SND_STM
+	</select>
+	
+	<select id="bucCmmnDAO.bucCmmnMaindbDsgnAjax" parameterClass="bucCmmnVO" resultClass="bucCmmnVO">
+		/* bucCmmnMaindbDsgnAjax 조회 */
+<!-- 				설계도서 반입/반출 현황 -->
+		
+		SELECT SUBSTR(B.DSGNG_BOOK_CLSFC_NM, 4, LENGTH(B.DSGNG_BOOK_CLSFC_NM)-3) AS DSGNG_BOOK_CLSFC_NM, <!-- A.PROC_DATE, --> COUNT(*) AS CNT
+		  FROM (
+		        SELECT DISTINCT A.DSGNG_BOOK_CLSFC_ID, SUBSTR(B.DSGNG_BOOK_STND_CLSFC_CD, 1, 2) AS  DSGNG_BOOK_STND_CLSFC_CD,
+		               IDM_DOC_NO, 
+		               DSGNG_BOOK_FILE_TITL_NM, 
+		               TO_CHAR(A.LSTTM_ALTR_DTTM, 'YYYYMMDD') AS PROC_DATE        
+		          fROM T_EXDA_DSGNG_BOOK_FILE01H1 A,
+		               T_EXDA_DSGNG_BOOK_CLSFC01M1 B  
+		         WHERE A.LSTTM_ALTR_DTTM > SYSDATE
+<!-- 		            AND DSGNG_BOOK_FILE_CHNG_CD in ('CF','RT')      CI : 반입 , CO : 반출   (역시 데이터 없음) -->
+		           AND A.DSGNG_BOOK_CLSFC_ID = B.DSGNG_BOOK_CLSFC_ID           
+		         ) A,
+		       ( 
+		         SELECT DISTINCT DSGNG_BOOK_STND_CLSFC_CD, DSGNG_BOOK_CLSFC_NM
+		           FROM T_EXDA_DSGNG_BOOK_CLSFC01M1
+		          WHERE LENGTH(DSGNG_BOOK_STND_CLSFC_CD) = 2
+		            AND HGRN_DSGNG_BOOK_CLSFC_ID IS NOT NULL
+		        ) B   
+		  WHERE A.DSGNG_BOOK_STND_CLSFC_CD = B.DSGNG_BOOK_STND_CLSFC_CD
+		GROUP BY B.DSGNG_BOOK_CLSFC_NM
+		ORDER BY B.DSGNG_BOOK_CLSFC_NM
+    </select>
+		
+	<select id="bucCmmnDAO.selectMainInstt1lv" parameterClass="mainCmmnVO" resultClass="mainCmmnVO">
+        /* 본사 코드 검색 selectMainInstt1lv 조회 */
+		 select 
+			 	INTG_DPTCD
+			 , KOR_DPTNM
+		from V_CNKC_INTG_DPRT01C1
+			where PRAF_USE_YN = 'Y'
+			  and INST_CLSFC_CD = 2
+			  and EXRS_STEP_CD = '03'
+  
+    </select>
+
+    <select id="bucCmmnDAO.selectMainInstt2lv" parameterClass="mainCmmnVO" resultClass="mainCmmnVO">
+        /* 지사 코드 검색 selectMainInstt1lv 조회 */
+     select INTG_DPTCD, KOR_DPTNM
+		from V_CNKC_INTG_DPRT01C1
+		where IMDT_HGRN_DPTCD IN (select INTG_DPTCD
+		                            from V_CNKC_INTG_DPRT01C1
+		                           where PRAF_USE_YN = 'Y'
+		                             and INST_CLSFC_CD = 2
+		                             and EXRS_STEP_CD = '03'
+		                             <isNotEmpty property = "brffccode">
+		                             and INTG_DPTCD = #brffccode#
+		                             </isNotEmpty>)
+		  and PRAF_USE_YN = 'Y'
+		  and INST_CLSFC_CD = 4
+		order by IMDT_HGRN_DPTCD
+    </select>	
+	<!-- 예약업무 파이차트 쿼리 -->	
+    <select id="bucCmmnDAO.bucCmmnInfotrnsfertrkgchartdbAjax" parameterClass="bucCmmnVO" resultClass="bucCmmnVO">
+		/*예약업무발송방법별 건수 파이차트 (기간없음 추후 추가 가능)*/  
+		SELECT  SUM(DECODE(SEND_MTHD_SMS_YN, 'Y', 1, 0)) SMS
+		       ,SUM(DECODE(SEND_MTHD_EMAIL_YN, 'Y', 1, 0)) EMAIL
+		       ,SUM(DECODE(SEND_MTHD_MSGR_YN, 'Y', 1, 0)) MSGR
+		       ,SUM(DECODE(SEND_MTHD_POPP_YN, 'Y', 1, 0)) POPP
+		  FROM T_CNKC_RSEV_BSWR_MGMT01M1
+    </select>
+    <!-- 예약업무 발송그리드 쿼리 -->
+    <select id="bucCmmnDAO.bucCmmnInfotrnsfertrkgsenddbAjax" parameterClass="bucCmmnVO" resultClass="bucCmmnVO">
+		/* 예약업무 활용 부서 TOP5 (발송기준)*/  
+		SELECT  SYSTM_CD, 
+		        SNDR_DPTCD,
+		        B.HGRN_DPTCD,
+		        (SELECT KOR_DPTNM  FROM T_CNKC_INTG_DPRT01M1 WHERE  DPTCD = B.HGRN_DPTCD) HGRN_DPTNM,
+		        SNDR_DPTNM, 
+		        COUNT(*) CNT
+		  FROM T_CNKC_RSEV_BSWR_SEND01D1 A,
+		       T_CNKC_INTG_DPRT01M1 B
+		 WHERE A.FSTTM_RGST_DTTM <![CDATA[ >= ]]>  SYSDATE - 30
+		   AND A.SNDR_DPTCD = B.DPTCD(+)    
+		   AND <![CDATA[ ROWNUM < 6  ]]> 
+		 GROUP BY SYSTM_CD, B.HGRN_DPTCD, SNDR_DPTCD, SNDR_DPTNM
+		 ORDER BY COUNT(*)
+    </select>
+    <!-- 예약업무 수신그리드 쿼리 -->	
+    <select id="bucCmmnDAO.bucCmmnInfotrnsfertrkgrecvdbAjax" parameterClass="bucCmmnVO" resultClass="bucCmmnVO">
+		/*예약업무 활용 부서 TOP5 (수신기준)*/ 
+		SELECT  RECVR_DPTCD,
+		        B.HGRN_DPTCD,
+		        (SELECT KOR_DPTNM  FROM T_CNKC_INTG_DPRT01M1 WHERE  DPTCD = B.HGRN_DPTCD) HGRN_DPTNM,
+		        RECVR_DPTNM, 
+		        COUNT(*) CNT
+		  FROM T_CNKC_RSEV_BSWR_SEND01D2 A,
+		       T_CNKC_INTG_DPRT01M1 B
+		 WHERE A.FSTTM_RGST_DTTM <![CDATA[ >= ]]>  SYSDATE - 30
+		   AND A.RECVR_DPTCD = B.DPTCD(+)
+		   AND <![CDATA[ ROWNUM < 6  ]]> 
+		 GROUP BY B.HGRN_DPTCD, RECVR_DPTCD, RECVR_DPTNM 
+		ORDER BY COUNT(*)
+    </select>			
+    <!-- 시스템별 만족도 쿼리 -->
+    <select id="bucCmmnDAO.bucCmmnSystmSatisdbAjax" parameterClass="bucCmmnVO" resultClass="bucCmmnVO">
+    	select 
+    		CASE  WHEN aa.HGRN_SYSTM_CD = 'DSG' THEN 'DSG'
+	              WHEN aa.HGRN_SYSTM_CD = 'CON' THEN 'CON'
+	              WHEN aa.HGRN_SYSTM_CD = 'UKP' THEN 'UKP'
+	              WHEN aa.HGRN_SYSTM_CD = 'FCL' THEN 'FCL'                     
+	             ELSE 'ETC'
+             END HGRN_SYSTM_CD,
+			NVL(bb.STSF_INVS_RSLT_1,0) as very_good, 
+			NVL(bb.STSF_INVS_RSLT_2,0) as good,
+			NVL(bb.STSF_INVS_RSLT_3,0) as soso,
+			NVL(bb.STSF_INVS_RSLT_4,0) as bad,
+			NVL(bb.STSF_INVS_RSLT_5,0) as very_bad
+			from
+			(
+			select distinct HGRN_SYSTM_CD
+			  from T_CNKC_BSWR_SYSTM01M1
+			 where HGRN_SYSTM_CD IN ('DSG','CON','UKP','FCL','MAI')
+			) aa
+			,(SELECT  HGRN_SYSTM_CD
+			       , SUM(NVL(STSF_INVS_RSLT_1,0)) AS STSF_INVS_RSLT_1
+			       , SUM(NVL(STSF_INVS_RSLT_2,0)) AS STSF_INVS_RSLT_2
+			       , SUM(NVL(STSF_INVS_RSLT_3,0)) AS STSF_INVS_RSLT_3
+			       , SUM(NVL(STSF_INVS_RSLT_4,0)) AS STSF_INVS_RSLT_4
+			       , SUM(NVL(STSF_INVS_RSLT_5,0)) AS STSF_INVS_RSLT_5
+			FROM(
+			        SELECT CASE  WHEN HGRN_SYSTM_CD = 'DSG' THEN 'DSG'
+			                     WHEN HGRN_SYSTM_CD = 'CON' THEN 'CON'
+			                     WHEN HGRN_SYSTM_CD = 'UKP' THEN 'UKP'
+			                     WHEN HGRN_SYSTM_CD = 'FCL' THEN 'FCL'                     
+			                     ELSE 'MAI'
+			                     END HGRN_SYSTM_CD
+			              , SUM(NVL(STSF_INVS_RSLT_1,0)) AS STSF_INVS_RSLT_1
+			              , SUM(NVL(STSF_INVS_RSLT_2,0)) AS STSF_INVS_RSLT_2
+			              , SUM(NVL(STSF_INVS_RSLT_3,0)) AS STSF_INVS_RSLT_3
+			              , SUM(NVL(STSF_INVS_RSLT_4,0)) AS STSF_INVS_RSLT_4
+			              , SUM(NVL(STSF_INVS_RSLT_5,0)) AS STSF_INVS_RSLT_5
+			        FROM (SELECT SYSTM_CD
+			              , SUM(NVL(STSF_INVS_RSLT_1,0)) AS STSF_INVS_RSLT_1
+			              , SUM(NVL(STSF_INVS_RSLT_2,0)) AS STSF_INVS_RSLT_2
+			              , SUM(NVL(STSF_INVS_RSLT_3,0)) AS STSF_INVS_RSLT_3
+			              , SUM(NVL(STSF_INVS_RSLT_4,0)) AS STSF_INVS_RSLT_4
+			              , SUM(NVL(STSF_INVS_RSLT_5,0)) AS STSF_INVS_RSLT_5
+			               FROM(
+			              SELECT CASE  WHEN S.SYSTM_CD IS NULL THEN 'COM'
+			                     ELSE S.SYSTM_CD
+			                     END SYSTM_CD
+			                    , COUNT(DECODE(S.STSF_INVS_RSLT_STAT_CD, '1', '1')) AS STSF_INVS_RSLT_1
+			                    , COUNT(DECODE(S.STSF_INVS_RSLT_STAT_CD, '2', '1')) AS STSF_INVS_RSLT_2
+			                    , COUNT(DECODE(S.STSF_INVS_RSLT_STAT_CD, '3', '1')) AS STSF_INVS_RSLT_3
+			                    , COUNT(DECODE(S.STSF_INVS_RSLT_STAT_CD, '4', '1')) AS STSF_INVS_RSLT_4
+			                    , COUNT(DECODE(S.STSF_INVS_RSLT_STAT_CD, '5', '1')) AS STSF_INVS_RSLT_5
+			             FROM T_CNKC_STSF_INVS_LIST01M1 S
+			             WHERE TO_CHAR(S.FSTTM_RGST_DTTM, 'YYYYMMDD') BETWEEN TO_CHAR(sysdate, 'YYYYMM') || '01' AND TO_CHAR(sysdate, 'YYYYMM') || '31'
+			             GROUP BY S.SYSTM_CD)
+			             GROUP BY SYSTM_CD) AA
+			             ,T_CNKC_BSWR_SYSTM01M1 BB
+			        WHERE AA.SYSTM_CD = BB.SYSTM_CD  
+			        GROUP BY HGRN_SYSTM_CD)
+			GROUP BY HGRN_SYSTM_CD) bb
+			WHERE aa.HGRN_SYSTM_CD = bb.HGRN_SYSTM_CD(+)
+    </select>
+        <!-- 이벤트 점용만료 쿼리 -->	
+    <select id="bucCmmnDAO.bucCmmnEventListdbAjax" parameterClass="bucCmmnVO" resultClass="bucCmmnVO">
+       /* Formatted on 2017-09-28 오후 1:37:05 (QP5 v5.227.12220.39754) */
+	  SELECT (SELECT KOR_DPTNM
+	            FROM V_CNKC_INTG_DPRT01C1
+	           WHERE INTG_DPTCD = B.IMDT_HGRN_DPTCD)
+	            AS BONBU_NM,
+	         A.MTNOF_DPTCD,
+	         B.KOR_DPTNM,
+	         TO_CHAR (TO_DATE (A.PRVU_END_DATES, 'yyyymmdd'), 'yyyy-mm-dd')
+	            AS PRVU_END_DATES,
+	         SUBSTR (A.RLAT_CTNT, 0, 20) || DECODE(A.RLAT_CTNT, '', '', '...')AS RLAT_BASS_CTNT,
+	         SUBSTR (A.PRVU_OBJTV_CTNT, 0, 30) || DECODE(A.PRVU_OBJTV_CTNT, '', '', '...')AS PRVU_OBJTV_CTNT
+	    FROM T_EXMA_ROAD_PRVU_LGPR01M1 A, V_CNKC_INTG_DPRT01C1 B
+	   WHERE     A.MTNOF_DPTCD = B.INTG_DPTCD
+	         AND USE_YN = 'Y'
+	         AND PRVU_END_DATES BETWEEN TO_CHAR (SYSDATE, 'yyyymmdd')
+	                                AND TO_CHAR (SYSDATE + 7, 'yyyymmdd')
+	ORDER BY PRVU_END_DATES
+    </select>			
+    <select id="bucCmmnDAO.bucCmmnSimplctysanctndbAjax" parameterClass="bucCmmnVO" resultClass="bucCmmnVO">
+		SELECT APRVL_NM,
+                 SUM (completed) completed,
+                 SUM (rejected) rejected,
+                 SUM (timed) timed
+        FROM (  SELECT CASE
+                          WHEN APRVL_NM = '설계' THEN '설계'
+                          WHEN APRVL_NM = '건설' THEN '건설'
+                          WHEN APRVL_NM = '원클릭' THEN '유지관리'
+                          WHEN APRVL_NM = '재난' THEN '유지관리'
+                          WHEN APRVL_NM = '장비' THEN '유지관리'
+                          WHEN APRVL_NM = '부대시설' THEN '유지관리'
+                          WHEN APRVL_NM = '원클릭' THEN '유지관리'
+                          WHEN APRVL_NM = '전자지도' THEN '유지관리'
+                          WHEN APRVL_NM = '시설물' THEN '시설물'
+                          WHEN APRVL_NM = '도로관리' THEN '유지관리'
+                          ELSE APRVL_NM
+                       END
+                          APRVL_NM,
+                       SUM (completed) completed,
+                       SUM (rejected) rejected,
+                       SUM (timed) timed
+                  FROM (
+                        SELECT '장비' AS APRVL_NM,
+                               NVL (
+                                  SUM (
+                                     DECODE (APRV_PROS_STAT_VAL, 'completed', 1, 0)),
+                                  0)
+                                  AS completed,
+                               NVL (
+                                  SUM (DECODE (APRV_PROS_STAT_VAL, 'rejected', 1, 0)),
+                                  0)
+                                  AS rejected,
+                               NVL (SUM (DECODE (APRV_PROS_STAT_VAL, '', 1, 0)), 0)
+                                  AS timed
+                          FROM T_EXMB_SMPC_APRVL01L1
+                         WHERE ACPT_DATES = TO_CHAR (SYSDATE, 'YYYYMMDD') AND USE_YN = 'Y'
+                        UNION ALL
+                        SELECT '전자지도' AS APRVL_NM,
+                               NVL (
+                                  SUM (
+                                     DECODE (SPIN_BCDT_APLCT_PROS_RSLT_CD,
+                                             '02', 1,
+                                             0)),
+                                  0)
+                                  AS completed,
+                               NVL (
+                                  SUM (
+                                     DECODE (SPIN_BCDT_APLCT_PROS_RSLT_CD,
+                                             '04', 1,
+                                             0)),
+                                  0)
+                                  AS rejected,
+                               NVL (
+                                  SUM (
+                                     DECODE (SPIN_BCDT_APLCT_PROS_RSLT_CD,
+                                             '01', 1,
+                                             0)),
+                                  0)
+                                  AS timed
+                          FROM T_EXMD_BCDT_APLCT01M1
+                         WHERE TO_CHAR (FSTTM_RGST_DTTM, 'YYYYMMDD') =
+                                  TO_CHAR (SYSDATE, 'YYYYMMDD')
+                        UNION ALL
+                        SELECT '재난' AS APRVL_NM,
+                               NVL (SUM (DECODE (APRVL_STAT_CD, 'C', 1, 0)), 0)
+                                  AS completed,
+                               NVL (SUM (DECODE (APRVL_STAT_CD, 'R', 1, 0)), 0)
+                                  AS rejected,
+                               NVL (SUM (DECODE (APRVL_STAT_CD, 'P', 1, 0)), 0)
+                                  AS timed
+                          FROM T_DSMA_RPRT_APRVL01D1
+                         WHERE TO_CHAR (FSTTM_RGST_DTTM, 'YYYYMMDD') =
+                                  TO_CHAR (SYSDATE, 'YYYYMMDD')
+                        UNION ALL
+                        SELECT '부대시설' AS APRVL_NM,
+                               NVL (SUM (DECODE (APRVL_YN, '8', 1, 0)), 0)
+                                  AS completed,
+                               NVL (SUM (DECODE (APRVL_YN, '4', 1, 0)), 0)
+                                  AS rejected,
+                               NVL (SUM (DECODE (APRVL_YN, 'N', 1, 0)), 0) AS timed
+                          FROM T_AFMB_WDPL_RQST_MTNOF01M1
+                         WHERE TO_CHAR (FSTTM_RGST_DTTM, 'YYYYMMDD') =
+                                  TO_CHAR (SYSDATE, 'YYYYMMDD')
+                        UNION ALL
+                        SELECT '부대시설' AS APRVL_NM,
+                               NVL (SUM (DECODE (APRVL_STAT_CD, 'C', 1, 0)), 0)
+                                  AS completed,
+                               NVL (SUM (DECODE (APRVL_STAT_CD, 'R', 1, 0)), 0)
+                                  AS rejected,
+                               NVL (SUM (DECODE (APRVL_STAT_CD, 'S', 1, 0)), 0)
+                                  AS timed
+                          FROM T_AFMB_CNSC_ISPC01M1
+                         WHERE ISPC_DATES = TO_CHAR (SYSDATE, 'YYYYMMDD')
+                        UNION ALL
+                        SELECT '부대시설' AS APRVL_NM,
+                               NVL (SUM (DECODE (APRVL_YN, 'C', 1, 0)), 0)
+                                  AS completed,
+                               NVL (SUM (DECODE (APRVL_YN, 'N', 1, 0)), 0)
+                                  AS rejected,
+                               NVL (SUM (DECODE (APRVL_YN, '', 1, 0)), 0) AS timed
+                          FROM T_AFMB_ELTR_ISPC01M1
+                         WHERE TO_CHAR (FSTTM_RGST_DTTM, 'YYYYMMDD') =
+                                  TO_CHAR (SYSDATE, 'YYYYMMDD')
+                        UNION ALL
+                        SELECT '부대시설' AS APRVL_NM,
+                               NVL (SUM (DECODE (APRVL_STAT_CD, 'C', 1, 0)), 0)
+                                  AS completed,
+                               NVL (SUM (DECODE (APRVL_STAT_CD, 'R', 1, 0)), 0)
+                                  AS rejected,
+                               NVL (SUM (DECODE (APRVL_STAT_CD, '', 1, 0)), 0)
+                                  AS timed
+                          FROM T_AFMB_LDAC_ISPC01M1
+                         WHERE ISPC_DATES = TO_CHAR (SYSDATE, 'YYYYMMDD')
+                        UNION ALL
+                        SELECT '도로관리' AS APRVL_NM,
+                               NVL (SUM (DECODE (APRVL_STAT_CD, '1', 1, 0)), 0)
+                                  AS completed,
+                               NVL (SUM (DECODE (APRVL_STAT_CD, '3', 1, 0)), 0)
+                                  AS rejected,
+                               NVL (SUM (DECODE (APRVL_STAT_CD, '0', 1, 0)), 0)
+                                  AS timed
+                          FROM T_EXMA_JOB_CMPT_RPRT01L1
+                         WHERE     TO_CHAR (FSTTM_RGST_DTTM, 'YYYYMMDD') =
+                                      TO_CHAR (SYSDATE, 'YYYYMMDD')
+                               AND USE_YN = 'Y'
+                        UNION ALL
+                        SELECT '도로관리' AS APRVL_NM,
+                               NVL (SUM (DECODE (APRVL_STAT_CD, '1', 1, 0)), 0)
+                                  AS completed,
+                               NVL (SUM (DECODE (APRVL_STAT_CD, '2', 1, 0)), 0)
+                                  AS rejected,
+                               NVL (SUM (DECODE (APRVL_STAT_CD, '0', 1, 0)), 0)
+                                  AS timed
+                          FROM T_EXMA_JOB_ORDE01L1
+                         WHERE     TO_CHAR (FSTTM_RGST_DTTM, 'YYYYMMDD') =
+                                      TO_CHAR (SYSDATE, 'YYYYMMDD')
+                               AND USE_YN = 'Y'
+                        UNION ALL
+                        SELECT '도로관리' AS APRVL_NM,
+                               NVL (SUM (DECODE (APRVL_STAT_CD, '1', 1, 0)), 0)
+                                  AS completed,
+                               NVL (SUM (DECODE (APRVL_STAT_CD, '2', 1, 0)), 0)
+                                  AS rejected,
+                               NVL (SUM (DECODE (APRVL_STAT_CD, '0', 1, 0)), 0)
+                                  AS timed
+                          FROM T_EXMA_NPRF_MNTN01M1
+                         WHERE     TO_CHAR (FSTTM_RGST_DTTM, 'YYYYMMDD') =
+                                      TO_CHAR (SYSDATE, 'YYYYMMDD')
+                               AND USE_YN = 'Y'
+                        UNION ALL
+                        SELECT '도로관리' AS APRVL_NM,
+                               NVL (SUM (DECODE (APRVL_STAT_CD, 'C', 1, 0)), 0)
+                                  AS completed,
+                               NVL (SUM (DECODE (APRVL_STAT_CD, 'R', 1, 0)), 0)
+                                  AS rejected,
+                               NVL (SUM (DECODE (APRVL_STAT_CD, '', 1, 0)), 0)
+                                  AS timed
+                          FROM T_EXMA_CLDR_MGMT01M1
+                         WHERE     TO_CHAR (FSTTM_RGST_DTTM, 'YYYYMMDD') =
+                                      TO_CHAR (SYSDATE, 'YYYYMMDD')
+                               AND USE_YN = 'Y'
+                        UNION ALL
+                        SELECT '도로관리' AS APRVL_NM,
+                               NVL (SUM (DECODE (APRVL_STAT_CD, 'C', 1, 0)), 0)
+                                  AS completed,
+                               NVL (SUM (DECODE (APRVL_STAT_CD, 'R', 1, 0)), 0)
+                                  AS rejected,
+                               NVL (SUM (DECODE (APRVL_STAT_CD, '', 1, 0)), 0)
+                                  AS timed
+                          FROM T_EXMA_DEFC_END_INSP01L1
+                         WHERE TO_CHAR (FSTTM_RGST_DTTM, 'YYYYMMDD') =
+                                  TO_CHAR (SYSDATE, 'YYYYMMDD')
+                        UNION ALL
+                        SELECT '도로관리' AS APRVL_NM,
+                               NVL (SUM (DECODE (APRVL_YN, 'C', 1, 0)), 0)
+                                  AS completed,
+                               NVL (SUM (DECODE (APRVL_YN, 'R', 1, 0)), 0)
+                                  AS rejected,
+                               NVL (SUM (DECODE (APRVL_YN, '', 1, 0)), 0) AS timed
+                          FROM T_EXMA_DEFC_ISPC01L1
+                         WHERE ISPC_DATES = TO_CHAR (SYSDATE, 'YYYYMMDD')
+                        UNION ALL
+                        SELECT '설계' AS APRVL_NM,
+                               0 AS completed,
+                               0 AS rejected,
+                               0 AS timed
+                          FROM DUAL
+                        UNION ALL
+                        SELECT '건설' AS APRVL_NM,
+                               0 AS completed,
+                               0 AS rejected,
+                               0 AS timed
+                          FROM DUAL
+                        UNION ALL
+                        SELECT '시설물' AS APRVL_NM,
+                               0 AS completed,
+                               0 AS rejected,
+                               0 AS timed
+                          FROM DUAL)
+              GROUP BY APRVL_NM)
+    GROUP BY APRVL_NM
+    </select>
+    <!-- 비즈니스 공통 데이터이관율 쿼리 -->
+    <select id="bucCmmnDAO.bucCmmnDatatrnsferdbAjax" parameterClass="bucCmmnVO" resultClass="bucCmmnVO">
+		SELECT ROUND(AVG(ROUND(CASE WHEN AA.DSNGTRNSFER = 0 THEN 0
+		            ELSE (AA.DSNGTRNSFER/AA.DSNGSUM)*100
+		       END,0)),0) AS DSNGTRNSFER
+		       ,ROUND(AVG(ROUND(CASE WHEN AA.BNSTYTRNSFER = 0 THEN 0
+		            ELSE (AA.BNSTYTRNSFER/AA.BNSTYSUM)*100
+		       END,0)),0) AS BNSTYTRNSFER
+		       ,ROUND(AVG(ROUND(CASE WHEN AA.DSNGAPPROVAL = 0 THEN 0
+		            ELSE (AA.DSNGAPPROVAL/AA.DSNGSUM)*100
+		       END,0)),0) AS DSNGAPPROVAL
+		       ,ROUND(AVG(ROUND(CASE WHEN AA.BNSTYAPPROVAL = 0 THEN 0
+		            ELSE (AA.BNSTYAPPROVAL/AA.BNSTYSUM)*100
+		       END,0)),0) AS BNSTYAPPROVAL
+		       ,ROUND(AVG(ROUND(DSNGINPUTAVG,0)),0) AS DSNGINPUTAVG
+		       ,ROUND(AVG(ROUND(BNSTYINPUTAVG,0)),0) AS BNSTYINPUTAVG
+		       
+		FROM(SELECT INTG_FCLTS_KIND_CD
+		       ,SUM(CASE WHEN INTG_FCLTS_STAT_CD = '21' THEN 1
+		            ELSE 0
+		        END) DSNGTRNSFER
+		       ,SUM(CASE WHEN INTG_FCLTS_STAT_CD = '31' THEN 1
+		            ELSE 0
+		        END) BNSTYTRNSFER
+		       ,SUM(CASE WHEN INTG_FCLTS_STAT_CD = '81' OR INTG_FCLTS_STAT_CD = '82' OR INTG_FCLTS_STAT_CD = '83' THEN 1
+		            ELSE 0
+		        END) DSNGAPPROVAL 
+		       ,SUM(CASE WHEN INTG_FCLTS_STAT_CD = '91' OR INTG_FCLTS_STAT_CD = '92' OR INTG_FCLTS_STAT_CD = '93' THEN 1
+		            ELSE 0
+		        END) BNSTYAPPROVAL 
+		        
+		       ,NVL(AVG(CASE WHEN INTG_FCLTS_STAT_CD = '10' THEN FCLTS_BCDT_INPUT_RATE
+		                 WHEN INTG_FCLTS_STAT_CD = '20' THEN FCLTS_BCDT_INPUT_RATE
+		                 WHEN INTG_FCLTS_STAT_CD = '21' THEN FCLTS_BCDT_INPUT_RATE
+		            END),0) DSNGINPUTAVG
+		       ,NVL(AVG(CASE WHEN INTG_FCLTS_STAT_CD = '22' THEN FCLTS_BCDT_INPUT_RATE
+		                 WHEN INTG_FCLTS_STAT_CD = '30' THEN FCLTS_BCDT_INPUT_RATE
+		                 WHEN INTG_FCLTS_STAT_CD = '31' THEN FCLTS_BCDT_INPUT_RATE
+		            END),0) BNSTYINPUTAVG
+		       ,SUM(CASE WHEN INTG_FCLTS_STAT_CD = '10' THEN 1
+		                 WHEN INTG_FCLTS_STAT_CD = '20' THEN 1
+		                 WHEN INTG_FCLTS_STAT_CD = '21' THEN 1
+		                 ELSE 0
+		       END) DSNGSUM
+		       ,SUM(CASE WHEN INTG_FCLTS_STAT_CD = '22' THEN 1
+		                 WHEN INTG_FCLTS_STAT_CD = '30' THEN 1
+		                 WHEN INTG_FCLTS_STAT_CD = '31' THEN 1
+		                 ELSE 0
+		       END) BNSTYSUM
+		   
+		FROM T_CPMB_FCLTS_INPUT_BRIF01L1
+		
+		GROUP BY INTG_FCLTS_KIND_CD) AA
+		
+    </select>
+    <select id="bucCmmnDAO.bucCmmnEventGraphdbAjax" parameterClass="bucCmmnVO" resultClass="bucCmmnVO">
+	   <![CDATA[ SELECT 
+	       TB2.INTERVAL1 as mm
+	     , TB2.MTNOF_DPTCD as hgrn_dptcd
+	     , TB2.KOR_DPTNM as kor_dptnm
+	     , TB2.PRVU_END_COUNT as use_end
+       
+		FROM (SELECT TO_CHAR(ADD_MONTHS(TO_DATE('201101', 'YYYYMM') , LEVEL-1), 'MM') AS INTERVAL 
+		      FROM   DUAL
+		      CONNECT BY LEVEL <= 12) TB1
+		      LEFT OUTER JOIN
+		     (SELECT A.MTNOF_DPTCD
+		             ,B.KOR_DPTNM
+		             ,TO_CHAR(TO_DATE(TO_CHAR(PRVU_END_DATES, 'YYYYMM'), 'YYYYMM'), 'MM') AS INTERVAL1
+		             ,NVL(COUNT(PRVU_END_DATES),0) PRVU_END_COUNT
+		       FROM T_EXMA_ROAD_PRVU_LGPR01M1 A
+		            ,V_CNKC_INTG_DPRT01C1 B
+		       WHERE A.MTNOF_DPTCD = B.INTG_DPTCD
+		         AND USE_YN ='Y'
+		          AND PRVU_END_DATES  BETWEEN TO_CHAR(sysdate, 'YYYY') || '0101' AND TO_CHAR(sysdate, 'YYYY') || '1231'
+		       GROUP BY A.MTNOF_DPTCD, B.KOR_DPTNM ,TO_CHAR(TO_DATE(TO_CHAR(PRVU_END_DATES, 'YYYYMM'), 'YYYYMM'), 'MM')) TB2
+		ON TB1.INTERVAL = TB2.INTERVAL1
+		
+		ORDER BY TB2.MTNOF_DPTCD, TB1.INTERVAL]]>
+	</select>
+</sqlMap>

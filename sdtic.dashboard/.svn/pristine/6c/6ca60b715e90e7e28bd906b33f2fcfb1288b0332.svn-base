@@ -1,0 +1,315 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="mainCmmmn">
+
+    <typeAlias  alias="egovMap"   type="egovframework.rte.psl.dataaccess.util.EgovMap"  />
+    <typeAlias  alias="mainCmmnVO"  type="egovframework.com.sdtic.main.service.MainCmmnVO" />
+
+     <insert id="mainCmmnDAO.insertMainCmmnSms" parameterClass="mainCmmnVO">
+        <selectKey resultClass="java.lang.String" keyProperty="sms_seq">
+            SELECT
+               (SELECT nvl(MAX(TO_NUMBER(SMS_SEQ)),0)+ 1 FROM IOC_SDTIC_MAIN_EVENT_SMS ) AS SMS_SEQ
+            FROM DUAL
+        </selectKey>
+      <![CDATA[
+        /* 통합관제 SMS 서버 전송 쿼리 */
+        INSERT INTO IOC_SDTIC_MAIN_EVENT_SMS
+        (
+             SMS_SEQ
+            ,SMS_TYPE_CD
+            ,SEND_DT
+            ,SUBJECT
+            ,MSG
+            ,USE_YN
+            ,CREATOR
+            ,CREATE_DT
+            ,CALLNAME
+            ,CALLPHONE
+        )
+        VALUES
+        (
+             #sms_seq#
+            ,'MMS'
+            , SYSDATE
+            , #subject#
+            , #msg#
+            , 'Y'
+            , 'TEST'
+            , SYSDATE
+            , #callname#
+            , #callphone#
+        )
+       ]]>
+     </insert>
+
+     <insert id="mainCmmnSmsDAO.insertMainCmmnMysqlSms" parameterClass="mainCmmnVO">
+
+      <![CDATA[
+      /* MYSQL SMS 서버 전송 쿼리 */
+        INSERT INTO roadcombine.SUREData
+        (
+             INTIME
+            ,USERCODE
+            ,REQNAME
+            ,REQPHONE
+            ,CALLNAME
+            ,CALLPHONE
+            ,SUBJECT
+            ,MSG
+            ,REQTIME
+            ,RESULT
+            ,KIND
+        )
+        VALUES
+        (
+            CAST(DATE_FORMAT(NOW(),'%Y%m%d%H%i%s') As char)
+            ,'roadcombine'
+            ,'통합관제'
+            , '00000000000'
+            , #callname#
+            , #callphone#
+            , #subject#
+            , #msg#
+            , '00000000000000'
+            , '0'
+            , 'M'
+
+        )
+       ]]>
+     </insert>
+
+
+    <select id="mainCmmnDAO.mainCmmnReportList" parameterClass="mainCmmnVO" resultClass="mainCmmnVO">
+        /* 보고서 목록  mainCmmnReportList 조회 */
+        SELECT
+             ROWNUM AS ROWCNT
+            ,REPORT_ID
+            ,CASE   WHEN CLFY_TYP = '001' THEN '메인'
+                    WHEN CLFY_TYP = '002' THEN '인프라'
+                    WHEN CLFY_TYP = '003' THEN '비즈니스'
+                    ELSE '현장설비' END CLFY_TYP
+            ,URL
+            ,REPORT_DESC
+            ,REPORT_NM
+            ,INST_DATE
+            ,UPDT_DATE
+            ,USE_YN
+        FROM IOC_SDTIC_REPORT_TABLE
+        WHERE REPORT_ID IS NOT NULL
+              AND USE_YN = 'Y'
+             <isNotEmpty prepend="AND" property="clfy_typ" ><![CDATA[ CLFY_TYP = #clfy_typ# ]]></isNotEmpty>
+             <isNotEmpty prepend="AND" property="report_id" ><![CDATA[ REPORT_ID LIKE '%' ||  #report_id# || '%'  ]]></isNotEmpty>
+             <isNotEmpty prepend="AND" property="report_nm" ><![CDATA[ REPORT_NM LIKE '%' || #report_nm# || '%'   ]]></isNotEmpty>
+        ORDER BY REPORT_ID ASC
+    </select>
+
+
+    <select id="mainCmmnDAO.mainCmmnReportDetail" parameterClass="mainCmmnVO" resultClass="mainCmmnVO">
+        /* 보고서 상세보기  mainCmmnReportDetail 조회 */
+        SELECT
+             REPORT_ID
+            ,CLFY_TYP
+            ,URL
+            ,REPORT_DESC
+            ,REPORT_NM
+            ,INST_DATE
+            ,UPDT_DATE
+            ,USE_YN
+        FROM IOC_SDTIC_REPORT_TABLE
+        WHERE REPORT_ID = #report_id#
+
+    </select>
+
+
+    <insert id="mainCmmnDAO.mainCmmnReportInst" parameterClass="mainCmmnVO">
+        <selectKey resultClass="java.lang.String" keyProperty="report_id">
+            SELECT
+               (SELECT nvl(MAX(TO_NUMBER(REPORT_ID)),0)+ 1 FROM IOC_SDTIC_REPORT_TABLE ) AS REPORT_ID
+            FROM DUAL
+        </selectKey>
+      <![CDATA[
+        /* 보고서 입력 */
+        INSERT INTO IOC_SDTIC_REPORT_TABLE
+        (
+             REPORT_ID
+            ,CLFY_TYP
+            ,URL
+            ,REPORT_DESC
+            ,REPORT_NM
+            ,INST_DATE
+            ,UPDT_DATE
+            ,USE_YN
+        )
+        VALUES
+        (
+             #report_id#
+            ,#clfy_typ#
+            ,#url#
+            ,#report_desc#
+            ,#report_nm#
+            ,sysdate
+            ,sysdate
+            ,'Y'
+        )
+       ]]>
+     </insert>
+
+    <update id="mainCmmnDAO.mainCmmnReportUpdt" parameterClass="mainCmmnVO">
+        /* 보고서 수정 */
+        UPDATE IOC_SDTIC_REPORT_TABLE SET
+             CLFY_TYP     = #clfy_typ#
+            ,URL          = #url#
+            ,REPORT_DESC  = #report_desc#
+            ,REPORT_NM    = #report_nm#
+            ,UPDT_DATE    = SYSDATE
+        WHERE REPORT_ID   = #report_id#
+    </update>
+
+    <update id="mainCmmnDAO.mainCmmnReportDel" parameterClass="mainCmmnVO">
+        /* 보고서 삭제 */
+        UPDATE IOC_SDTIC_REPORT_TABLE SET
+             USE_YN     = 'N'
+        WHERE REPORT_ID   = #report_id#
+    </update>
+
+    <select id="mainCmmnDAO.mainCmmnSmsUserViewAjax" parameterClass="mainCmmnVO" resultClass="mainCmmnVO">
+        /* SMS 사용자 목록  mainCmmnSmsUserViewAjax 조회 */
+        SELECT
+             USER_SEQ
+            ,USER_NM
+            ,USER_MBL_NUM
+        FROM IOC_SDTIC_SMS_USER
+        ORDER BY USER_SEQ ASC
+    </select>
+
+    <insert id="mainCmmnDAO.insertMainCmmnSmsUserAjax" parameterClass="mainCmmnVO">
+        <selectKey resultClass="java.lang.String" keyProperty="user_seq">
+            SELECT
+               (SELECT nvl(MAX(TO_NUMBER(USER_SEQ)),0)+ 1 FROM IOC_SDTIC_SMS_USER ) AS USER_SEQ
+            FROM DUAL
+        </selectKey>
+      <![CDATA[
+        /* SMS 사용자 입력  insertMainCmmnSmsUserAjax */
+        INSERT INTO IOC_SDTIC_SMS_USER
+        (
+             USER_SEQ
+            ,USER_NM
+            ,USER_MBL_NUM
+        )
+        VALUES
+        (
+             #user_seq#
+            ,#user_nm#
+            ,#user_mbl_num#
+        )
+       ]]>
+     </insert>
+
+    <select id="mainCmmnDAO.mainCmmnSmsUserDelDetail" parameterClass="mainCmmnVO" resultClass="mainCmmnVO">
+        /* SMS 사용자 상세(삭제)화면   mainCmmnSmsUserDelDetail 조회 */
+        SELECT
+             USER_SEQ
+            ,USER_NM
+            ,USER_MBL_NUM
+        FROM IOC_SDTIC_SMS_USER
+        WHERE USER_SEQ  = #user_seq#
+
+    </select>
+
+    <delete id="mainCmmnDAO.deleteMainCmmnSmsUserAjax" parameterClass="mainCmmnVO" >
+    <![CDATA[
+        /* SMS 사용자 삭제 */
+        DELETE FROM IOC_SDTIC_SMS_USER
+        WHERE USER_SEQ   = #user_seq#
+    ]]>
+    </delete>
+
+
+    <select id="mainCmmnDAO.mainCmmnCycleManageAjax" parameterClass="mainCmmnVO" resultClass="mainCmmnVO">
+        /* 장애등급주기 목록  mainCmmnCycleManageAjax 조회 */
+        SELECT
+             A.MANAGESEQ
+            ,A.DETAILCLSE
+            ,A.TROBLGRADSE
+            ,A.TROBLCOLCTSE
+            ,A.THRHLD
+            ,A.COLCTCYCLE
+            ,A.USE_YN
+            ,A.USER_SEQ
+            ,B.USER_NM
+            ,SUBSTR(B.USER_MBL_NUM,0,3 )||'-'|| SUBSTR(B.USER_MBL_NUM,4,4 ) ||'-'|| SUBSTR(B.USER_MBL_NUM,8,4 )  AS USER_MBL_NUM
+        FROM IOC_SDTIC_EVENT_COLCT_CYCLE A,
+             IOC_SDTIC_SMS_USER B
+        WHERE A.USER_SEQ = B.USER_SEQ
+             ORDER BY MANAGESEQ ASC
+    </select>
+
+    <select id="mainCmmnDAO.mainCmmnCycleManageDetail" parameterClass="mainCmmnVO" resultClass="mainCmmnVO">
+        /* 장애등급주기 상세보기  mainCmmnCycleManageDetail 조회 */
+        SELECT
+             A.MANAGESEQ
+            ,A.DETAILCLSE
+            ,A.TROBLGRADSE
+            ,A.TROBLCOLCTSE
+            ,A.THRHLD
+            ,A.COLCTCYCLE
+            ,A.USE_YN
+            ,A.USER_SEQ
+            ,B.USER_NM
+            ,B.USER_MBL_NUM
+        FROM IOC_SDTIC_EVENT_COLCT_CYCLE A,
+             IOC_SDTIC_SMS_USER B
+        WHERE MANAGESEQ  = #manageseq#
+          AND A.USER_SEQ = B.USER_SEQ
+
+    </select>
+
+    <update id="mainCmmnDAO.updateMainCmmnCycleManageAjax" parameterClass="mainCmmnVO">
+        /* 장애등급주기 수정 */
+        UPDATE IOC_SDTIC_EVENT_COLCT_CYCLE SET
+             THRHLD        = #thrhld#
+            ,COLCTCYCLE    = #colctcycle#
+            ,USE_YN        = #use_yn#
+            ,USER_SEQ      = #user_seq#
+            ,UPDT_DATE     = sysdate
+        WHERE MANAGESEQ    = #manageseq#
+    </update>
+    
+    <select id="mainCmmnDAO.mainCmmnUseCycleManageAjax" parameterClass="mainCmmnVO" resultClass="mainCmmnVO">
+        /* 활성화된 장애등급주기 가져오기 */
+        SELECT
+             A.MANAGESEQ
+            ,A.DETAILCLSE
+            ,A.TROBLGRADSE
+            ,A.TROBLCOLCTSE
+            ,A.THRHLD
+            ,A.COLCTCYCLE
+            ,A.USE_YN
+            ,A.USER_SEQ
+        FROM IOC_SDTIC_EVENT_COLCT_CYCLE A
+       WHERE A.USE_YN = 'Y'
+       ORDER BY MANAGESEQ ASC
+    </select>
+    
+    <select id="mainCmmnDAO.mainCmmnSmsUserAjax" parameterClass="mainCmmnVO" resultClass="mainCmmnVO">
+        /* mainCmmnSmsUserAjax */
+        SELECT A.MANAGESEQ
+              ,A.DETAILCLSE
+              ,A.TROBLGRADSE
+              ,A.TROBLCOLCTSE
+              ,A.THRHLD
+              ,A.COLCTCYCLE
+              ,A.USE_YN
+              ,A.USER_SEQ
+              ,B.USER_NM
+              ,B.USER_MBL_NUM
+         FROM IOC_SDTIC_EVENT_COLCT_CYCLE A,
+              IOC_SDTIC_SMS_USER B
+        WHERE A.USER_SEQ = B.USER_SEQ
+          AND A.USE_YN = 'Y'
+          AND A.DETAILCLSE = #detailclse#
+          AND A.TROBLGRADSE = #troblgradse#
+    </select>
+
+</sqlMap>

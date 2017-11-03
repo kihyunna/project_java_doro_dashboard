@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:task="http://www.springframework.org/schema/task"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans  
+                           http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+                           http://www.springframework.org/schema/context
+                           http://www.springframework.org/schema/context/spring-context-4.0.xsd
+						   http://www.springframework.org/schema/task
+	                       http://www.springframework.org/schema/task/spring-task-4.0.xsd">
+	
+<!-- 	<bean id="fecTotl" class="egovframework.com.sdtic.fecrs.service.impl.fecTotlInsrDAO"></bean> -->
+<!-- 	<bean id="fecTotlFclt" class="egovframework.com.sdtic.fecrs.service.impl.fecTotlInsrFcltDAO"></bean> -->
+<!-- 	<bean id="fecTotlTot" class="egovframework.com.sdtic.fecrs.service.impl.fecTotlInsrTotDAO"></bean> -->
+	
+	<context:component-scan base-package="egovframework.com.sdtic.fecrs.service.impl" />
+	<context:component-scan base-package="egovframework.application" />
+ 
+  
+    <bean id="scheduleTest" class="egovframework.application.Test"/>
+    <bean id="StateScheduler" class="egovframework.application.FecStateScheduler"/>
+    <bean id="ErrorTEScheduler" class="egovframework.application.FecErrorTEScheduler"/>
+    <bean id="ErrorSSScheduler" class="egovframework.application.FecErrorSSScheduler"/>
+    <bean id="EventTunnelScheduler" class="egovframework.application.FecEventTunnelScheduler"/>
+    <bean id="EventElctsScheduler" class="egovframework.application.FecEventElctsScheduler"/>
+    <bean id="EventSlopeScheduler" class="egovframework.application.FecEventSlopeScheduler"/>
+    <bean id="EventSvarScheduler" class="egovframework.application.FecEventSvarScheduler"/>
+    <bean id="EventCctvScheduler1" class="egovframework.application.FecEventCctvScheduler1"/>
+    <bean id="EventCctvScheduler2" class="egovframework.application.FecEventCctvScheduler2"/>
+    <bean id="EventCctvScheduler3" class="egovframework.application.FecEventCctvScheduler3"/>
+    <bean id="EventCctvScheduler4" class="egovframework.application.FecEventCctvScheduler4"/>
+    <bean id="EventCctvScheduler5" class="egovframework.application.FecEventCctvScheduler5"/>
+    <bean id="EventCctvScheduler6" class="egovframework.application.FecEventCctvScheduler6"/>
+    <bean id="EventCctvScheduler7" class="egovframework.application.FecEventCctvScheduler7"/>
+    <bean id="EventCctvScheduler8" class="egovframework.application.FecEventCctvScheduler8"/>
+
+    <task:scheduled-tasks scheduler="scheduler">
+<!--         <task:scheduled ref="StateScheduler" method="Execute" cron="0 0 03 * * ?"/> -->
+<!--         <task:scheduled ref="ErrorTEScheduler" method="Execute" cron="30 0/5 * * * ?"/> -->
+<!--         <task:scheduled ref="ErrorSSScheduler" method="Execute" cron="0 3/5 * * * ?"/> -->
+<!--         <task:scheduled ref="EventTunnelScheduler" method="Execute" cron="2/10 * * * * ?"/> -->
+<!--         <task:scheduled ref="EventElctsScheduler" method="Execute" cron="4/10 * * * * ?"/> -->
+<!--         <task:scheduled ref="EventSlopeScheduler" method="Execute" cron="6/10 * * * * ?"/> -->
+<!--         <task:scheduled ref="EventSvarScheduler" method="Execute" cron="8/10 * * * * ?"/> -->
+<!--         <task:scheduled ref="EventCctvScheduler1" method="Execute" cron="0 0 * * * ?"/> -->
+<!--         <task:scheduled ref="EventCctvScheduler2" method="Execute" cron="30 7 * * * ?"/> -->
+<!--         <task:scheduled ref="EventCctvScheduler3" method="Execute" cron="0 15 * * * ?"/> -->
+<!--         <task:scheduled ref="EventCctvScheduler4" method="Execute" cron="30 22 * * * ?"/> -->
+<!--         <task:scheduled ref="EventCctvScheduler5" method="Execute" cron="0 30 * * * ?"/> -->
+<!--         <task:scheduled ref="EventCctvScheduler6" method="Execute" cron="30 37 * * * ?"/> -->
+<!--         <task:scheduled ref="EventCctvScheduler7" method="Execute" cron="0 45 * * * ?"/> -->
+<!--         <task:scheduled ref="EventCctvScheduler8" method="Execute" cron="30 52 * * * ?"/> -->
+<!--          <task:scheduled ref="StateScheduler" method="Execute" cron="0 4/5 * * * ?"/>         -->
+        <!-- add more job here -->
+        <task:scheduled ref="scheduleTest" method="Excute" fixed-rate="500000000"/>        
+    </task:scheduled-tasks>
+    
+    <task:scheduler id="scheduler" pool-size="20"/>
+    
+    <task:executor id="executorWithCallerRunsPolicy"
+	    pool-size="5-25"
+	    queue-capacity="100"
+	    rejection-policy="CALLER_RUNS"/>
+    
+    <task:annotation-driven />
+    
+</beans>

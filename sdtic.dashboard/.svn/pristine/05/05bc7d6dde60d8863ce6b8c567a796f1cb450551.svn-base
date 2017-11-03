@@ -1,0 +1,813 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="fecTotlInsrFcltDAO">
+	<typeAlias  alias="fecDeptVO"  type="egovframework.com.sdtic.fecrs.service.fecDeptVO" />    
+	<typeAlias  alias="fecTunnelVO"  type="egovframework.com.sdtic.fecrs.service.fecTunnelVO" />
+	<typeAlias  alias="fecElrmVO"  type="egovframework.com.sdtic.fecrs.service.fecElrmVO" />    
+	<typeAlias  alias="fecSlpVO"  type="egovframework.com.sdtic.fecrs.service.fecSlpVO" />
+	<typeAlias  alias="fecSvarVO"  type="egovframework.com.sdtic.fecrs.service.fecSvarVO" />    
+	<typeAlias  alias="fecSlwtVO"  type="egovframework.com.sdtic.fecrs.service.fecSlwtVO" />
+
+    <select id="fecTotlInsrFcltDAO.fecGetDept" resultClass="fecDeptVO">  
+	    select a.hdqr_cd hdqr_cd, a.hdqr_nm hdqr_nm, b.mtnof_cd mtnof_cd, b.mtnof_nm mtnof_nm
+		from
+		(select hdqr_cd, HDQR_NM from T_CNKC_HDQR01M1   
+		where use_yn = 'Y') a,
+		(select mtnof_cd, mtnof_nm, hdqr_cd from T_CNKC_MTNOF01M1
+		where use_yn = 'Y') b
+		where a.hdqr_cd = b.hdqr_cd     
+    </select> 
+    
+    <select id="fecTotlInsrFcltDAO.fecGetTunnel" resultClass="fecTunnelVO">  
+	    select b.insr_seq insr_seq, a.tunl_cd tunl_cd, a.route_cd route_cd, a.mtnof_cd mtnof_cd, a.tunl_nm tunl_nm, b.tnrm_eqpmt_clss_cd, b.tnrm_mchn_clss_cd, b.modl_nm
+		from T_AFMF_TNRM_TUNL01M1 a, T_AFMF_TNRM_INSR01M1 b
+		where a.USE_YN = 'Y'
+		and a.TUNL_CD = b.TUNL_CD  
+    </select> 
+    
+    <select id="fecTotlInsrFcltDAO.fecGetTroblTunnel" resultClass="fecTunnelVO"> 
+		select insr_seq, mtnof_cd, tunl_cd, tnrm_eqpmt_clss_cd, tnrm_mchn_clss_cd, route_cd, tunl_nm, modl_nm, max(log_time) as log_time
+		from
+		(
+		select a.DEVICE_SEQ, b.TUNL_CD, b.ROUTE_CD, b.MTNOF_CD, b.HDQR_CD, b.TUNL_NM,c.INSR_SEQ, c.MODL_NM, to_char(a.LOG_TIME, 'yyyymmddhh24miss') as LOG_TIME,
+		c.TNRM_EQPMT_CLSS_CD, c.TNRM_MCHN_CLSS_CD,
+		nvl(a.DI_3,0) DI_3, nvl(a.DI_4,0) DI_4, nvl(a.DI_8,0) DI_8, nvl(a.DI_9,0) DI_9, nvl(a.DI_10,0) DI_10, nvl(a.DI_11,0) DI_11,
+		nvl(a.DI_12,0) DI_12,nvl(a.DI_13,0) DI_13,nvl(a.DI_14,0) DI_14
+		from TB_LOG_AFF a, T_AFMF_TNRM_TUNL01M1 b,  T_AFMF_TNRM_INSR01M1 c
+		where 1=1
+		and a.LOG_TIME <![CDATA[  >=  ]]> to_date(to_char(sysdate, 'yyyymmdd')||'000000', 'yyyymmddhh24miss')
+		and (nvl(a.DI_3,0) = 1 or nvl(a.DI_4,0) = 1 or nvl(a.DI_8,0) = 1 or nvl(a.DI_9,0) = 1 or nvl(a.DI_10,0) = 1 or nvl(a.DI_11,0) = 1
+		or nvl(a.DI_12,0) = 1 or nvl(a.DI_13,0) = 1 or nvl(a.DI_14,0) = 1)
+		and b.USE_YN = 'Y'
+		and a.DEVICE_SEQ = c.INSR_SEQ
+		and b.TUNL_CD = c.TUNL_CD
+		)
+		where 1=1
+		and( decode(MODL_NM,'측류팬',DI_3,0) = 1
+		or decode(MODL_NM,'측류팬',DI_4,0) = 1
+		or decode(MODL_NM,'측류팬2',DI_8,0) = 1
+		or decode(MODL_NM,'측류팬2',DI_9,0) = 1
+		or decode(MODL_NM,'측류팬2',DI_10,0) = 1
+		or decode(MODL_NM,'측류팬2',DI_11,0) = 1
+		or decode(MODL_NM,'측류팬3',DI_12,0) = 1
+		or decode(MODL_NM,'측류팬3',DI_13,0) = 1
+		or decode(MODL_NM,'측류팬3',DI_14,0) = 1
+		)
+		group by DEVICE_SEQ, TUNL_CD, ROUTE_CD, MTNOF_CD, HDQR_CD, TUNL_NM,INSR_SEQ, MODL_NM, TNRM_EQPMT_CLSS_CD, TNRM_MCHN_CLSS_CD
+		
+		union all
+		
+		select insr_seq, mtnof_cd, tunl_cd, tnrm_eqpmt_clss_cd, tnrm_mchn_clss_cd, route_cd, tunl_nm, modl_nm, max(log_time) as log_time
+		from
+		(
+		select a.DEVICE_SEQ, b.TUNL_CD, b.ROUTE_CD, b.MTNOF_CD, b.HDQR_CD, b.TUNL_NM,c.INSR_SEQ, c.MODL_NM, to_char(a.LOG_TIME, 'yyyymmddhh24miss') as LOG_TIME,
+		c.TNRM_EQPMT_CLSS_CD, c.TNRM_MCHN_CLSS_CD,
+		nvl(a.DEVICE_STATE,0) DEVICE_STATE
+		from TB_LOG_JTFN a, T_AFMF_TNRM_TUNL01M1 b,  T_AFMF_TNRM_INSR01M1 c
+		where 1=1
+		and a.LOG_TIME   <![CDATA[  >=  ]]> to_date(to_char(sysdate, 'yyyymmdd')||'000000', 'yyyymmddhh24miss')
+		and (nvl(a.DEVICE_STATE,0) = 1)
+		and b.USE_YN = 'Y'
+		and a.DEVICE_SEQ = c.INSR_SEQ
+		and b.TUNL_CD = c.TUNL_CD
+		)
+		group by INSR_SEQ, MTNOF_CD, TUNL_CD, TNRM_EQPMT_CLSS_CD, TNRM_MCHN_CLSS_CD, ROUTE_CD, TUNL_NM, MODL_NM
+		
+		union all
+		
+		select insr_seq, mtnof_cd, tunl_cd, tnrm_eqpmt_clss_cd, tnrm_mchn_clss_cd, route_cd, tunl_nm, modl_nm, max(log_time) as log_time
+		from
+		(
+		select a.DEVICE_SEQ, b.TUNL_CD, b.ROUTE_CD, b.MTNOF_CD, b.HDQR_CD, b.TUNL_NM,c.INSR_SEQ, c.MODL_NM, to_char(a.LOG_TIME, 'yyyymmddhh24miss') as LOG_TIME,
+		c.TNRM_EQPMT_CLSS_CD, c.TNRM_MCHN_CLSS_CD
+		from TB_LOG_VNTL_EQPMT a, T_AFMF_TNRM_TUNL01M1 b,  T_AFMF_TNRM_INSR01M1 c
+		where 1=1
+		and a.LOG_TIME  <![CDATA[  >=  ]]>  to_date(to_char(sysdate, 'yyyymmdd')||'000000', 'yyyymmddhh24miss')
+		and (nvl(a.DI_1,0) = 1)
+		and b.USE_YN = 'Y'
+		and a.DEVICE_SEQ = c.INSR_SEQ
+		and b.TUNL_CD = c.TUNL_CD
+		)
+		group by INSR_SEQ, MTNOF_CD, TUNL_CD, TNRM_EQPMT_CLSS_CD, TNRM_MCHN_CLSS_CD, ROUTE_CD, TUNL_NM, MODL_NM
+		
+		union all
+		
+		select insr_seq, mtnof_cd, tunl_cd, tnrm_eqpmt_clss_cd, tnrm_mchn_clss_cd, route_cd, tunl_nm, modl_nm, max(log_time) as log_time
+		from
+		(
+		select a.DEVICE_SEQ, b.TUNL_CD, b.ROUTE_CD, b.MTNOF_CD, b.HDQR_CD, b.TUNL_NM,c.INSR_SEQ, c.MODL_NM, to_char(a.LOG_TIME, 'yyyymmddhh24miss') as LOG_TIME,
+		c.TNRM_EQPMT_CLSS_CD, c.TNRM_MCHN_CLSS_CD
+		from TB_LOG_OTHS_SLTR a, T_AFMF_TNRM_TUNL01M1 b,  T_AFMF_TNRM_INSR01M1 c
+		where 1=1
+		and a.LOG_TIME   <![CDATA[  >=  ]]>  to_date(to_char(sysdate, 'yyyymmdd')||'000000', 'yyyymmddhh24miss')
+		and (nvl(a.DEVICE_STATE,0) = 1 or nvl(a.CONNECT_STATE,0) = 1)
+		and b.USE_YN = 'Y'
+		and a.DEVICE_SEQ = c.INSR_SEQ
+		and b.TUNL_CD = c.TUNL_CD
+		)
+		group by INSR_SEQ, MTNOF_CD, TUNL_CD, TNRM_EQPMT_CLSS_CD, TNRM_MCHN_CLSS_CD, ROUTE_CD, TUNL_NM, MODL_NM
+		
+		union all
+		
+		select insr_seq, mtnof_cd, tunl_cd, tnrm_eqpmt_clss_cd, tnrm_mchn_clss_cd, route_cd, tunl_nm, modl_nm, max(log_time) as log_time
+		from
+		(
+		select a.DEVICE_SEQ, b.TUNL_CD, b.ROUTE_CD, b.MTNOF_CD, b.HDQR_CD, b.TUNL_NM,c.INSR_SEQ, c.MODL_NM, to_char(a.LOG_TIME, 'yyyymmddhh24miss') as LOG_TIME,
+		c.TNRM_EQPMT_CLSS_CD, c.TNRM_MCHN_CLSS_CD
+		from TB_LOG_GAS_SNSR a, T_AFMF_TNRM_TUNL01M1 b,  T_AFMF_TNRM_INSR01M1 c
+		where 1=1
+		and a.LOG_TIME   <![CDATA[  >=  ]]>  to_date(to_char(sysdate, 'yyyymmdd')||'000000', 'yyyymmddhh24miss')
+		and (nvl(a.DEVICE_STATE,0) = 1 or nvl(a.CONNECT_STATE,0) = 1)
+		and b.USE_YN = 'Y'
+		and a.DEVICE_SEQ = c.INSR_SEQ
+		and b.TUNL_CD = c.TUNL_CD
+		)
+		group by INSR_SEQ, MTNOF_CD, TUNL_CD, TNRM_EQPMT_CLSS_CD, TNRM_MCHN_CLSS_CD, ROUTE_CD, TUNL_NM, MODL_NM
+		
+		union all
+		
+		select insr_seq, mtnof_cd, tunl_cd, tnrm_eqpmt_clss_cd, tnrm_mchn_clss_cd, route_cd, tunl_nm, modl_nm, max(log_time) as log_time
+		from
+		(
+		select a.DEVICE_SEQ, b.TUNL_CD, b.ROUTE_CD, b.MTNOF_CD, b.HDQR_CD, b.TUNL_NM,c.INSR_SEQ, c.MODL_NM, to_char(a.LOG_TIME, 'yyyymmddhh24miss') as LOG_TIME,
+		c.TNRM_EQPMT_CLSS_CD, c.TNRM_MCHN_CLSS_CD
+		from TB_LOG_VICO a, T_AFMF_TNRM_TUNL01M1 b,  T_AFMF_TNRM_INSR01M1 c
+		where 1=1
+		and a.LOG_TIME   <![CDATA[  >=  ]]> to_date(to_char(sysdate, 'yyyymmdd')||'000000', 'yyyymmddhh24miss')
+		and (
+		nvl(a.DEVICE_STATE,0) = 1 or nvl(a.CONNECT_STATE,0) = 1 
+		or nvl(a.ALARM_VI,0) = 1 
+		or nvl(a.ALARM_CO,0) = 1 
+		or nvl(a.ALARM_NO,0) = 1 
+		or nvl(a.ALARM_FIRE,0) = 1
+		)
+		and b.USE_YN = 'Y'
+		and a.DEVICE_SEQ = c.INSR_SEQ
+		and b.TUNL_CD = c.TUNL_CD
+		)
+		group by INSR_SEQ, MTNOF_CD, TUNL_CD, TNRM_EQPMT_CLSS_CD, TNRM_MCHN_CLSS_CD, ROUTE_CD, TUNL_NM, MODL_NM
+		
+		union all
+		
+		select insr_seq, mtnof_cd, tunl_cd, tnrm_eqpmt_clss_cd, tnrm_mchn_clss_cd, route_cd, tunl_nm, modl_nm, max(log_time) as log_time
+		from
+		(
+		select a.DEVICE_SEQ, b.TUNL_CD, b.ROUTE_CD, b.MTNOF_CD, b.HDQR_CD, b.TUNL_NM,c.INSR_SEQ, c.MODL_NM, to_char(a.LOG_TIME, 'yyyymmddhh24miss') as LOG_TIME,
+		c.TNRM_EQPMT_CLSS_CD, c.TNRM_MCHN_CLSS_CD
+		from TB_LOG_DSPR_EQPMT a, T_AFMF_TNRM_TUNL01M1 b,  T_AFMF_TNRM_INSR01M1 c
+		where 1=1
+		and a.LOG_TIME   <![CDATA[  >=  ]]>  to_date(to_char(sysdate, 'yyyymmdd')||'000000', 'yyyymmddhh24miss')
+		and (
+		nvl(a.DI_1,0) = 1)
+		and b.USE_YN = 'Y'
+		and a.DEVICE_SEQ = c.INSR_SEQ
+		and b.TUNL_CD = c.TUNL_CD
+		)
+		group by INSR_SEQ, MTNOF_CD, TUNL_CD, TNRM_EQPMT_CLSS_CD, TNRM_MCHN_CLSS_CD, ROUTE_CD, TUNL_NM, MODL_NM
+		
+		union all
+		
+		select insr_seq, mtnof_cd, tunl_cd, tnrm_eqpmt_clss_cd, tnrm_mchn_clss_cd, route_cd, tunl_nm, modl_nm, max(log_time) as log_time
+		from
+		(
+		select a.DEVICE_SEQ, b.TUNL_CD, b.ROUTE_CD, b.MTNOF_CD, b.HDQR_CD, b.TUNL_NM,c.INSR_SEQ, c.MODL_NM, to_char(a.LOG_TIME, 'yyyymmddhh24miss') as LOG_TIME,
+		c.TNRM_EQPMT_CLSS_CD, c.TNRM_MCHN_CLSS_CD
+		from TB_LOG_ETRY_BOOM a, T_AFMF_TNRM_TUNL01M1 b,  T_AFMF_TNRM_INSR01M1 c
+		where 1=1
+		and a.LOG_TIME   <![CDATA[  >=  ]]>  to_date(to_char(sysdate, 'yyyymmdd')||'000000', 'yyyymmddhh24miss')
+		and (
+		nvl(a.DEVICE_STATE,0) = 1)
+		and b.USE_YN = 'Y'
+		and a.DEVICE_SEQ = c.INSR_SEQ
+		and b.TUNL_CD = c.TUNL_CD
+		)
+		group by INSR_SEQ, MTNOF_CD, TUNL_CD, TNRM_EQPMT_CLSS_CD, TNRM_MCHN_CLSS_CD, ROUTE_CD, TUNL_NM, MODL_NM
+		
+		union all
+		
+		select insr_seq, mtnof_cd, tunl_cd, tnrm_eqpmt_clss_cd, tnrm_mchn_clss_cd, route_cd, tunl_nm, modl_nm, max(log_time) as log_time
+		from
+		(
+		select a.DEVICE_SEQ, b.TUNL_CD, b.ROUTE_CD, b.MTNOF_CD, b.HDQR_CD, b.TUNL_NM,c.INSR_SEQ, c.MODL_NM, to_char(a.LOG_TIME, 'yyyymmddhh24miss') as LOG_TIME,
+		c.TNRM_EQPMT_CLSS_CD, c.TNRM_MCHN_CLSS_CD
+		from TB_LOG_ETRY_BOOM2 a, T_AFMF_TNRM_TUNL01M1 b,  T_AFMF_TNRM_INSR01M1 c
+		where 1=1
+		and a.LOG_TIME   <![CDATA[  >=  ]]>  to_date(to_char(sysdate, 'yyyymmdd')||'000000', 'yyyymmddhh24miss')
+		and (
+		nvl(a.DEVICE_STATE,0) = 1)
+		and b.USE_YN = 'Y'
+		and a.DEVICE_SEQ = c.INSR_SEQ
+		and b.TUNL_CD = c.TUNL_CD
+		)
+		group by INSR_SEQ, MTNOF_CD, TUNL_CD, TNRM_EQPMT_CLSS_CD, TNRM_MCHN_CLSS_CD, ROUTE_CD, TUNL_NM, MODL_NM
+		
+		union all
+		
+		select insr_seq, mtnof_cd, tunl_cd, tnrm_eqpmt_clss_cd, tnrm_mchn_clss_cd, route_cd, tunl_nm, modl_nm, max(log_time) as log_time
+		from
+		(
+		select a.DEVICE_SEQ, b.TUNL_CD, b.ROUTE_CD, b.MTNOF_CD, b.HDQR_CD, b.TUNL_NM,c.INSR_SEQ, c.MODL_NM, to_char(a.LOG_TIME, 'yyyymmddhh24miss') as LOG_TIME,
+		c.TNRM_EQPMT_CLSS_CD, c.TNRM_MCHN_CLSS_CD
+		from TB_LOG_ELTR_EQPMT a, T_AFMF_TNRM_TUNL01M1 b,  T_AFMF_TNRM_INSR01M1 c
+		where 1=1
+		and a.LOG_TIME   <![CDATA[  >=  ]]>  to_date(to_char(sysdate, 'yyyymmdd')||'000000', 'yyyymmddhh24miss')
+		and (
+		nvl(a.DI_1,0) = 1
+		)
+		and b.USE_YN = 'Y'
+		and a.DEVICE_SEQ = c.INSR_SEQ
+		and b.TUNL_CD = c.TUNL_CD
+		and MACHINE_CODE = '0404'
+		)
+		group by INSR_SEQ, MTNOF_CD, TUNL_CD, TNRM_EQPMT_CLSS_CD, TNRM_MCHN_CLSS_CD, ROUTE_CD, TUNL_NM, MODL_NM
+		
+		union all
+		
+		select insr_seq, mtnof_cd, tunl_cd, tnrm_eqpmt_clss_cd, tnrm_mchn_clss_cd, route_cd, tunl_nm, modl_nm, max(log_time) as log_time
+		from
+		(
+		select a.DEVICE_SEQ, b.TUNL_CD, b.ROUTE_CD, b.MTNOF_CD, b.HDQR_CD, b.TUNL_NM,c.INSR_SEQ, c.MODL_NM, to_char(a.LOG_TIME, 'yyyymmddhh24miss') as LOG_TIME,
+		c.TNRM_EQPMT_CLSS_CD, c.TNRM_MCHN_CLSS_CD
+		from TB_LOG_DIMG_CTRL a, T_AFMF_TNRM_TUNL01M1 b,  T_AFMF_TNRM_INSR01M1 c
+		where 1=1
+		and a.LOG_TIME   <![CDATA[  >=  ]]>  to_date(to_char(sysdate, 'yyyymmdd')||'000000', 'yyyymmddhh24miss')
+		and (
+		nvl(a.ALL_FIRE_STATE,0) = 1
+		)
+		and b.USE_YN = 'Y'
+		and a.DEVICE_SEQ = c.INSR_SEQ
+		and b.TUNL_CD = c.TUNL_CD
+		)
+		group by INSR_SEQ, MTNOF_CD, TUNL_CD, TNRM_EQPMT_CLSS_CD, TNRM_MCHN_CLSS_CD, ROUTE_CD, TUNL_NM, MODL_NM
+		
+		union all
+		
+		select insr_seq, mtnof_cd, tunl_cd, tnrm_eqpmt_clss_cd, tnrm_mchn_clss_cd, route_cd, tunl_nm, modl_nm, max(log_time) as log_time
+		from
+		(
+		select a.DEVICE_SEQ, b.TUNL_CD, b.ROUTE_CD, b.MTNOF_CD, b.HDQR_CD, b.TUNL_NM,c.INSR_SEQ, c.MODL_NM, to_char(a.LOG_TIME, 'yyyymmddhh24miss') as LOG_TIME,
+		c.TNRM_EQPMT_CLSS_CD, c.TNRM_MCHN_CLSS_CD
+		from TB_LOG_DIMG_CTRL_AE2 a, T_AFMF_TNRM_TUNL01M1 b,  T_AFMF_TNRM_INSR01M1 c
+		where 1=1
+		and a.LOG_TIME   <![CDATA[  >=  ]]>  to_date(to_char(sysdate, 'yyyymmdd')||'000000', 'yyyymmddhh24miss')
+		and (
+		nvl(a.COMM_FAULT_STATE,0) = 1 
+		or nvl(a.CPU_FAULT_STATE,0) = 1 
+		or nvl(a.POWER_FAULT_STATE,0) = 1
+		)
+		and b.USE_YN = 'Y'
+		and a.DEVICE_SEQ = c.INSR_SEQ
+		and b.TUNL_CD = c.TUNL_CD
+		)
+		group by INSR_SEQ, MTNOF_CD, TUNL_CD, TNRM_EQPMT_CLSS_CD, TNRM_MCHN_CLSS_CD, ROUTE_CD, TUNL_NM, MODL_NM
+		
+		union all
+		
+		select insr_seq, mtnof_cd, tunl_cd, tnrm_eqpmt_clss_cd, tnrm_mchn_clss_cd, route_cd, tunl_nm, modl_nm, max(log_time) as log_time
+		from
+		(
+		select a.DEVICE_SEQ, b.TUNL_CD, b.ROUTE_CD, b.MTNOF_CD, b.HDQR_CD, b.TUNL_NM,c.INSR_SEQ, c.MODL_NM, to_char(a.LOG_TIME, 'yyyymmddhh24miss') as LOG_TIME,
+		c.TNRM_EQPMT_CLSS_CD, c.TNRM_MCHN_CLSS_CD
+		from TB_LOG_GNRT a, T_AFMF_TNRM_TUNL01M1 b,  T_AFMF_TNRM_INSR01M1 c
+		where 1=1
+		and a.LOG_TIME   <![CDATA[  >=  ]]>  to_date(to_char(sysdate, 'yyyymmdd')||'000000', 'yyyymmddhh24miss')
+		and (
+		nvl(a.CONNECT_STATE,0) = 1 
+		or nvl(a.DEVICE_STATE,0) = 1 
+		or nvl(a.ALARM_OCR,0) = 1 
+		or nvl(a.ALARM_OCGR,0) = 1 
+		or nvl(a.ALARM_UVR,0) = 1 
+		or nvl(a.ALARM_OVR,0) = 1 
+		
+		)
+		and b.USE_YN = 'Y'
+		and a.DEVICE_SEQ = c.INSR_SEQ
+		and b.TUNL_CD = c.TUNL_CD
+		)
+		group by INSR_SEQ, MTNOF_CD, TUNL_CD, TNRM_EQPMT_CLSS_CD, TNRM_MCHN_CLSS_CD, ROUTE_CD, TUNL_NM, MODL_NM
+		
+		union all
+		
+		
+		select insr_seq, mtnof_cd, tunl_cd, tnrm_eqpmt_clss_cd, tnrm_mchn_clss_cd, route_cd, tunl_nm, modl_nm, max(log_time) as log_time
+		from
+		(
+		select a.DEVICE_SEQ, b.TUNL_CD, b.ROUTE_CD, b.MTNOF_CD, b.HDQR_CD, b.TUNL_NM,c.INSR_SEQ, c.MODL_NM, to_char(a.LOG_TIME, 'yyyymmddhh24miss') as LOG_TIME,
+		c.TNRM_EQPMT_CLSS_CD, c.TNRM_MCHN_CLSS_CD
+		from TB_LOG_LGHT_CTRL a, T_AFMF_TNRM_TUNL01M1 b,  T_AFMF_TNRM_INSR01M1 c
+		where 1=1
+		and a.LOG_TIME  <![CDATA[  >=  ]]>  to_date(to_char(sysdate, 'yyyymmdd')||'000000', 'yyyymmddhh24miss')
+		and (
+		nvl(a.CONNECT_STATE,0) = 1 
+		or nvl(a.DEVICE_STATE,0) = 1 
+		)
+		and b.USE_YN = 'Y'
+		and a.DEVICE_SEQ = c.INSR_SEQ
+		and b.TUNL_CD = c.TUNL_CD
+		)
+		group by INSR_SEQ, MTNOF_CD, TUNL_CD, TNRM_EQPMT_CLSS_CD, TNRM_MCHN_CLSS_CD, ROUTE_CD, TUNL_NM, MODL_NM
+		
+		union all
+		
+		select insr_seq, mtnof_cd, tunl_cd, tnrm_eqpmt_clss_cd, tnrm_mchn_clss_cd, route_cd, tunl_nm, modl_nm, max(log_time) as log_time
+		from
+		(
+		select a.DEVICE_SEQ, b.TUNL_CD, b.ROUTE_CD, b.MTNOF_CD, b.HDQR_CD, b.TUNL_NM,c.INSR_SEQ, c.MODL_NM, to_char(a.LOG_TIME, 'yyyymmddhh24miss') as LOG_TIME,
+		c.TNRM_EQPMT_CLSS_CD, c.TNRM_MCHN_CLSS_CD
+		from TB_LOG_LGHT_CTRL2 a, T_AFMF_TNRM_TUNL01M1 b,  T_AFMF_TNRM_INSR01M1 c
+		where 1=1
+		and a.LOG_TIME   <![CDATA[  >=  ]]>  to_date(to_char(sysdate, 'yyyymmdd')||'000000', 'yyyymmddhh24miss')
+		and (
+		nvl(a.ALL_FIRE_STATE,0) = 1 
+		)
+		and b.USE_YN = 'Y'
+		and a.DEVICE_SEQ = c.INSR_SEQ
+		and b.TUNL_CD = c.TUNL_CD
+		)
+		group by INSR_SEQ, MTNOF_CD, TUNL_CD, TNRM_EQPMT_CLSS_CD, TNRM_MCHN_CLSS_CD, ROUTE_CD, TUNL_NM, MODL_NM
+		
+		union all
+		
+		select insr_seq, mtnof_cd, tunl_cd, tnrm_eqpmt_clss_cd, tnrm_mchn_clss_cd, route_cd, tunl_nm, modl_nm, max(log_time) as log_time
+		from
+		(
+		select a.DEVICE_SEQ, b.TUNL_CD, b.ROUTE_CD, b.MTNOF_CD, b.HDQR_CD, b.TUNL_NM,c.INSR_SEQ, c.MODL_NM, to_char(a.LOG_TIME, 'yyyymmddhh24miss') as LOG_TIME,
+		c.TNRM_EQPMT_CLSS_CD, c.TNRM_MCHN_CLSS_CD
+		from TB_LOG_STRLT_CTRL a, T_AFMF_TNRM_TUNL01M1 b,  T_AFMF_TNRM_INSR01M1 c
+		where 1=1
+		and a.LOG_TIME   <![CDATA[  >=  ]]>  to_date(to_char(sysdate, 'yyyymmdd')||'000000', 'yyyymmddhh24miss')
+		and (
+		nvl(a.CONNECT_STATE,0) = 1 
+		or nvl(a.DEVICE_STATE,0) = 1 
+		)
+		and b.USE_YN = 'Y'
+		and a.DEVICE_SEQ = c.INSR_SEQ
+		and b.TUNL_CD = c.TUNL_CD
+		)
+		group by INSR_SEQ, MTNOF_CD, TUNL_CD, TNRM_EQPMT_CLSS_CD, TNRM_MCHN_CLSS_CD, ROUTE_CD, TUNL_NM, MODL_NM
+		
+		union all
+		
+		select insr_seq, mtnof_cd, tunl_cd, tnrm_eqpmt_clss_cd, tnrm_mchn_clss_cd, route_cd, tunl_nm, modl_nm, max(log_time) as log_time
+		from
+		(
+		select a.DEVICE_SEQ, b.TUNL_CD, b.ROUTE_CD, b.MTNOF_CD, b.HDQR_CD, b.TUNL_NM,c.INSR_SEQ, c.MODL_NM, to_char(a.LOG_TIME, 'yyyymmddhh24miss') as LOG_TIME,
+		c.TNRM_EQPMT_CLSS_CD, c.TNRM_MCHN_CLSS_CD
+		from TB_LOG_TRFMR a, T_AFMF_TNRM_TUNL01M1 b,  T_AFMF_TNRM_INSR01M1 c
+		where 1=1
+		and a.LOG_TIME   <![CDATA[  >=  ]]>  to_date(to_char(sysdate, 'yyyymmdd')||'000000', 'yyyymmddhh24miss')
+		and (
+		nvl(a.ALARM_STATE,0) = 1 
+		)
+		and b.USE_YN = 'Y'
+		and a.DEVICE_SEQ = c.INSR_SEQ
+		and b.TUNL_CD = c.TUNL_CD
+		)
+		group by INSR_SEQ, MTNOF_CD, TUNL_CD, TNRM_EQPMT_CLSS_CD, TNRM_MCHN_CLSS_CD, ROUTE_CD, TUNL_NM, MODL_NM
+		
+		union all
+		
+		select insr_seq, mtnof_cd, tunl_cd, tnrm_eqpmt_clss_cd, tnrm_mchn_clss_cd, route_cd, tunl_nm, modl_nm, max(log_time) as log_time
+		from
+		(
+		select a.DEVICE_SEQ, b.TUNL_CD, b.ROUTE_CD, b.MTNOF_CD, b.HDQR_CD, b.TUNL_NM,c.INSR_SEQ, c.MODL_NM, to_char(a.LOG_TIME, 'yyyymmddhh24miss') as LOG_TIME,
+		c.TNRM_EQPMT_CLSS_CD, c.TNRM_MCHN_CLSS_CD
+		from TB_LOG_UPS a, T_AFMF_TNRM_TUNL01M1 b,  T_AFMF_TNRM_INSR01M1 c
+		where 1=1
+		and a.LOG_TIME   <![CDATA[  >=  ]]>  to_date(to_char(sysdate, 'yyyymmdd')||'000000', 'yyyymmddhh24miss')
+		and (
+		nvl(a.INPUT_STATE,0) = 1 
+		)
+		and b.USE_YN = 'Y'
+		and a.DEVICE_SEQ = c.INSR_SEQ
+		and b.TUNL_CD = c.TUNL_CD
+		)
+		group by INSR_SEQ, MTNOF_CD, TUNL_CD, TNRM_EQPMT_CLSS_CD, TNRM_MCHN_CLSS_CD, ROUTE_CD, TUNL_NM, MODL_NM
+		
+		union all
+		
+		select insr_seq, mtnof_cd, tunl_cd, tnrm_eqpmt_clss_cd, tnrm_mchn_clss_cd, route_cd, tunl_nm, modl_nm, max(log_time) as log_time
+		from
+		(
+		select a.DEVICE_SEQ, b.TUNL_CD, b.ROUTE_CD, b.MTNOF_CD, b.HDQR_CD, b.TUNL_NM,c.INSR_SEQ, c.MODL_NM, to_char(a.LOG_TIME, 'yyyymmddhh24miss') as LOG_TIME,
+		c.TNRM_EQPMT_CLSS_CD, c.TNRM_MCHN_CLSS_CD
+		from TB_LOG_MCHN_EQPMT a, T_AFMF_TNRM_TUNL01M1 b,  T_AFMF_TNRM_INSR01M1 c
+		where 1=1
+		and a.LOG_TIME   <![CDATA[  >=  ]]>  to_date(to_char(sysdate, 'yyyymmdd')||'000000', 'yyyymmddhh24miss')
+		and (
+		nvl(a.DI_4,0) = 1 
+		or nvl(a.DI_5,0) = 1 
+		)
+		and b.USE_YN = 'Y'
+		and a.DEVICE_SEQ = c.INSR_SEQ
+		and b.TUNL_CD = c.TUNL_CD
+		)
+		group by INSR_SEQ, MTNOF_CD, TUNL_CD, TNRM_EQPMT_CLSS_CD, TNRM_MCHN_CLSS_CD, ROUTE_CD, TUNL_NM, MODL_NM
+		
+		union all
+		
+		select insr_seq, mtnof_cd, tunl_cd, tnrm_eqpmt_clss_cd, tnrm_mchn_clss_cd, route_cd, tunl_nm, modl_nm, max(log_time) as log_time
+		from
+		(
+		select a.DEVICE_SEQ, b.TUNL_CD, b.ROUTE_CD, b.MTNOF_CD, b.HDQR_CD, b.TUNL_NM,c.INSR_SEQ, c.MODL_NM, to_char(a.LOG_TIME, 'yyyymmddhh24miss') as LOG_TIME,
+		c.TNRM_EQPMT_CLSS_CD, c.TNRM_MCHN_CLSS_CD
+		from TB_LOG_ARFN a, T_AFMF_TNRM_TUNL01M1 b,  T_AFMF_TNRM_INSR01M1 c
+		where 1=1
+		and a.LOG_TIME   <![CDATA[  >=  ]]>  to_date(to_char(sysdate, 'yyyymmdd')||'000000', 'yyyymmddhh24miss')
+		and (nvl(a.DEVICE_STATE,0) = 1)
+		and b.USE_YN = 'Y'
+		and a.DEVICE_SEQ = c.INSR_SEQ
+		and b.TUNL_CD = c.TUNL_CD
+		)
+		group by INSR_SEQ, MTNOF_CD, TUNL_CD, TNRM_EQPMT_CLSS_CD, TNRM_MCHN_CLSS_CD, ROUTE_CD, TUNL_NM, MODL_NM
+		
+		union all
+		
+		select insr_seq, mtnof_cd, tunl_cd, tnrm_eqpmt_clss_cd, tnrm_mchn_clss_cd, route_cd, tunl_nm, modl_nm, max(log_time) as log_time
+		from
+		(
+		select a.DEVICE_SEQ, b.TUNL_CD, b.ROUTE_CD, b.MTNOF_CD, b.HDQR_CD, b.TUNL_NM,c.INSR_SEQ, c.MODL_NM, to_char(a.LOG_TIME, 'yyyymmddhh24miss') as LOG_TIME,
+		c.TNRM_EQPMT_CLSS_CD, c.TNRM_MCHN_CLSS_CD
+		from TB_LOG_VNTL_OP a, T_AFMF_TNRM_TUNL01M1 b,  T_AFMF_TNRM_INSR01M1 c
+		where 1=1
+		and a.LOG_TIME   <![CDATA[  >=  ]]>  to_date(to_char(sysdate, 'yyyymmdd')||'000000', 'yyyymmddhh24miss')
+		and (
+		nvl(a.CONNECT_STATE,0) = 1 
+		or nvl(a.DEVICE_STATE,0) = 1 
+		)
+		and b.USE_YN = 'Y'
+		and a.DEVICE_SEQ = c.INSR_SEQ
+		and b.TUNL_CD = c.TUNL_CD
+		)
+		group by INSR_SEQ, MTNOF_CD, TUNL_CD, TNRM_EQPMT_CLSS_CD, TNRM_MCHN_CLSS_CD, ROUTE_CD, TUNL_NM, MODL_NM  
+    </select>
+    
+    <select id="fecTotlInsrFcltDAO.fecGetEventTunnel" parameterClass="String"  resultClass="fecTunnelVO">
+     	select c.insr_seq, to_char(a.event_time, 'yyyymmddhh24miss') as event_time, b.tunl_cd , b.route_cd , b.mtnof_cd , b.tunl_nm, a.event_log_seq, c.modl_nm, a.event_division, a.event_stat, a.event_value , a.event_type, a.event_level, a.recover,
+		d.evnt_nm, d.tnrm_evnt_levls_cd, d.dsbl_ocrn_stat_val
+		from TB_LOG_ALARM a, T_AFMF_TNRM_TUNL01M1 b,  T_AFMF_TNRM_INSR01M1 c, T_AFMF_EVNT01M1 d
+		where a.TUNL_CD = b.TUNL_CD
+		and a.EVENT_TIME  <![CDATA[  >=  ]]>  to_date(to_char(sysdate, 'yyyymmdd')||'000000', 'yyyymmddhh24miss')
+		and b.USE_YN = 'Y'
+		and a.TUNL_CD = c.TUNL_CD
+		and a.EQUIP_CODE = c.TNRM_EQPMT_CLSS_CD
+		and a.MACHINE_CODE = c.TNRM_MCHN_CLSS_CD
+		and b.TUNL_CD = c.TUNL_CD
+		and a.POINT_CODE = d.TNRM_TAG_ID
+		and a.EQUIP_CODE = d.TNRM_EQPMT_CLSS_CD
+		and a.MACHINE_CODE = d.TNRM_MCHN_CLSS_CD
+		and (a.DEVICE_CODE-(a.MACHINE_CODE*1000)) = c.TNRM_MCHN_SQNO
+		and a.EVENT_LOG_SEQ   <![CDATA[  >  ]]>   #event_log_seq#
+    </select>
+    
+    <select id="fecTotlInsrFcltDAO.fecGetElrm" resultClass="fecElrmVO">  
+	    select b.ELRM_RTU_ID elrm_rtu_id, a.INSR_MGMT_DPTCD mtnof_cd, a.ELRM_FCLT_CLSS_CD elrm_fclt_clss_cd, nvl(a.ELRM_FCLTS_NM, '') fclts_clss_nm
+		from T_AFMC_ELRM_FCLTS01M1 a, T_AFMC_ELRM_RTU01M1 b
+		where 1=1
+		and a.OP_YN = 'Y'
+		and a.USE_YN = 'Y'
+		and a.ELRM_FCLTS_SEQ = b.ELRM_FCLTS_SEQ   
+    </select> 
+    
+    <select id="fecTotlInsrFcltDAO.fecGetTroblElrm" resultClass="fecElrmVO">  
+	    select elrm_rtu_id,  mtnof_cd, fclts_clss_nm, elrm_fclts_seq,  elrm_fclts_nm, elrm_fclt_clss_cd, route_cd,  fclts_insl_dstnc, ggtm_xcord, ggtm_ycord,  grs80_xcord,grs80_ycord, to_char(regdate, 'yyyymmddhh24miss') as regdate, fclts_code
+		from
+		(
+		select ELRM_RTU_ID, INSR_MGMT_DPTCD mtnof_cd, '가로등' as fclts_clss_nm, ELRM_FCLTS_SEQ,  ELRM_FCLTS_NM, ELRM_FCLT_CLSS_CD, ROUTE_CD,  FCLTS_INSL_DSTNC, GGTM_XCORD, GGTM_YCORD,  GRS80_XCORD,GRS80_YCORD, max(regdate) as regdate, 1 fclts_code
+		from
+		(
+		select a.regdate, a.STAT, b.ELRM_FCLTS_SEQ, b.ELRM_RTU_ID, c.INSR_MGMT_DPTCD,c.ELRM_FCLT_CLSS_CD,c.ELRM_FCLTS_NM, d.ROUTE_CD, d.FCLTS_INSL_DSTNC, d.GGTM_XCORD, d.GGTM_YCORD, d.GRS80_XCORD,d.GRS80_YCORD
+		from TBL_LO_RTU_LAMP a, T_AFMC_ELRM_RTU01M1 b, T_AFMC_ELRM_FCLTS01M1 c, T_AFMC_ELRM_LOCT01M1 d
+		where 1=1
+		and a.regdate <![CDATA[  >=  ]]> to_date(to_char(sysdate, 'yyyymmdd')||'000000', 'yyyymmddhh24miss')
+		and a.STAT = 1
+		and a.EVT_GBN = 'N'
+		and c.op_yn = 'Y'
+		and c.use_yn = 'Y'
+		and a.rtu_seq = b.ELRM_RTU_ID
+		and c.ELRM_FCLTS_SEQ = b.ELRM_FCLTS_SEQ
+		and c.HGIS_SEQ = d.HGIS_SEQ(+)
+		) 
+		group by ELRM_RTU_ID, INSR_MGMT_DPTCD , ELRM_FCLTS_SEQ,  ELRM_FCLTS_NM, ELRM_FCLT_CLSS_CD, ROUTE_CD,  FCLTS_INSL_DSTNC, GGTM_XCORD, GGTM_YCORD,  GRS80_XCORD,GRS80_YCORD
+		
+		union all
+		
+		select ELRM_RTU_ID, INSR_MGMT_DPTCD mtnof_cd, '화재수신기' as fclts_clss_nm, ELRM_FCLTS_SEQ,  ELRM_FCLTS_NM, ELRM_FCLT_CLSS_CD, ROUTE_CD,  FCLTS_INSL_DSTNC, GGTM_XCORD, GGTM_YCORD,  GRS80_XCORD,GRS80_YCORD, max(regdate) as regdate, 2 fclts_code
+		from
+		(
+		select a.regdate, a.FIREALAM STAT, b.ELRM_FCLTS_SEQ, b.ELRM_RTU_ID, c.INSR_MGMT_DPTCD,c.ELRM_FCLT_CLSS_CD,c.ELRM_FCLTS_NM, d.ROUTE_CD, d.FCLTS_INSL_DSTNC, d.GGTM_XCORD, d.GGTM_YCORD, d.GRS80_XCORD,d.GRS80_YCORD
+		from TBL_LO_RTU_FIRE a, T_AFMC_ELRM_RTU01M1 b, T_AFMC_ELRM_FCLTS01M1 c, T_AFMC_ELRM_LOCT01M1 d
+		where 1=1
+		and a.regdate <![CDATA[  >=  ]]> to_date(to_char(sysdate, 'yyyymmdd')||'000000', 'yyyymmddhh24miss')
+		and a.FIREALAM = 1
+		and a.FIREALAM = 1
+		and a.EVT_GBN = 'N'
+		and c.op_yn = 'Y'
+		and c.use_yn = 'Y'
+		and a.rtu_seq = b.ELRM_RTU_ID
+		and c.ELRM_FCLTS_SEQ = b.ELRM_FCLTS_SEQ
+		and c.HGIS_SEQ = d.HGIS_SEQ(+)
+		) 
+		group by ELRM_RTU_ID, INSR_MGMT_DPTCD , ELRM_FCLTS_SEQ,  ELRM_FCLTS_NM, ELRM_FCLT_CLSS_CD, ROUTE_CD,  FCLTS_INSL_DSTNC, GGTM_XCORD, GGTM_YCORD,  GRS80_XCORD,GRS80_YCORD
+		
+		union all
+		
+		select ELRM_RTU_ID, INSR_MGMT_DPTCD mtnof_cd, '발전기' as fclts_clss_nm, ELRM_FCLTS_SEQ,  ELRM_FCLTS_NM, ELRM_FCLT_CLSS_CD, ROUTE_CD,  FCLTS_INSL_DSTNC, GGTM_XCORD, GGTM_YCORD,  GRS80_XCORD,GRS80_YCORD, max(regdate) as regdate, 3 fclts_code
+		from
+		(
+		select a.regdate, a.STAT, b.ELRM_FCLTS_SEQ, b.ELRM_RTU_ID, c.INSR_MGMT_DPTCD,c.ELRM_FCLT_CLSS_CD,c.ELRM_FCLTS_NM, d.ROUTE_CD, d.FCLTS_INSL_DSTNC, d.GGTM_XCORD, d.GGTM_YCORD, d.GRS80_XCORD,d.GRS80_YCORD
+		from TBL_LO_RTU_POWER a, T_AFMC_ELRM_RTU01M1 b, T_AFMC_ELRM_FCLTS01M1 c, T_AFMC_ELRM_LOCT01M1 d
+		where 1=1
+		and a.regdate <![CDATA[  >=  ]]> to_date(to_char(sysdate, 'yyyymmdd')||'000000', 'yyyymmddhh24miss')
+		and (a.STAT = 1 or a.ALAM = 1)
+		and c.op_yn = 'Y'
+		and c.use_yn = 'Y'
+		and a.rtu_seq = b.ELRM_RTU_ID
+		and c.ELRM_FCLTS_SEQ = b.ELRM_FCLTS_SEQ
+		and c.HGIS_SEQ = d.HGIS_SEQ(+)
+		) 
+		group by ELRM_RTU_ID, INSR_MGMT_DPTCD , ELRM_FCLTS_SEQ,  ELRM_FCLTS_NM, ELRM_FCLT_CLSS_CD, ROUTE_CD,  FCLTS_INSL_DSTNC, GGTM_XCORD, GGTM_YCORD,  GRS80_XCORD,GRS80_YCORD
+		
+		union all
+		
+		select ELRM_RTU_ID, INSR_MGMT_DPTCD mtnof_cd, '태양광' as fclts_clss_nm, ELRM_FCLTS_SEQ,  ELRM_FCLTS_NM, ELRM_FCLT_CLSS_CD, ROUTE_CD,  FCLTS_INSL_DSTNC, GGTM_XCORD, GGTM_YCORD,  GRS80_XCORD,GRS80_YCORD, max(regdate) as regdate, 4 fclts_code
+		from
+		(
+		select a.regdate, a.SOLAR_STAT STAT, b.ELRM_FCLTS_SEQ, b.ELRM_RTU_ID, c.INSR_MGMT_DPTCD,c.ELRM_FCLT_CLSS_CD,c.ELRM_FCLTS_NM, d.ROUTE_CD, d.FCLTS_INSL_DSTNC, d.GGTM_XCORD, d.GGTM_YCORD, d.GRS80_XCORD,d.GRS80_YCORD
+		from TBL_LO_RTU_SOLAR a, T_AFMC_ELRM_RTU01M1 b, T_AFMC_ELRM_FCLTS01M1 c, T_AFMC_ELRM_LOCT01M1 d
+		where 1=1
+		and a.regdate <![CDATA[  >=  ]]> to_date(to_char(sysdate, 'yyyymmdd')||'000000', 'yyyymmddhh24miss')
+		and (a.SOLAR_STAT = 1 or a.INVERTER_STAT = 1 or a.OUTPUT_OVERCURR = 1 or a.OVERHEAT = 1 or a.GROUNDING_ERROR = 1)
+		and c.op_yn = 'Y'
+		and c.use_yn = 'Y'
+		and a.rtu_seq = b.ELRM_RTU_ID
+		and c.ELRM_FCLTS_SEQ = b.ELRM_FCLTS_SEQ
+		and c.HGIS_SEQ = d.HGIS_SEQ(+)
+		) 
+		group by ELRM_RTU_ID, INSR_MGMT_DPTCD , ELRM_FCLTS_SEQ,  ELRM_FCLTS_NM, ELRM_FCLT_CLSS_CD, ROUTE_CD,  FCLTS_INSL_DSTNC, GGTM_XCORD, GGTM_YCORD,  GRS80_XCORD,GRS80_YCORD
+		
+		union all
+		
+		select ELRM_RTU_ID, INSR_MGMT_DPTCD mtnof_cd, '복합계전기' as fclts_clss_nm, ELRM_FCLTS_SEQ,  ELRM_FCLTS_NM, ELRM_FCLT_CLSS_CD, ROUTE_CD,  FCLTS_INSL_DSTNC, GGTM_XCORD, GGTM_YCORD,  GRS80_XCORD,GRS80_YCORD, max(regdate) as regdate, 5 fclts_code
+		from
+		(
+		select a.regdate, a.STAT, b.ELRM_FCLTS_SEQ, b.ELRM_RTU_ID, c.INSR_MGMT_DPTCD,c.ELRM_FCLT_CLSS_CD,c.ELRM_FCLTS_NM, d.ROUTE_CD, d.FCLTS_INSL_DSTNC, d.GGTM_XCORD, d.GGTM_YCORD, d.GRS80_XCORD,d.GRS80_YCORD
+		from TBL_LO_RTU_TOTRELAY a, T_AFMC_ELRM_RTU01M1 b, T_AFMC_ELRM_FCLTS01M1 c, T_AFMC_ELRM_LOCT01M1 d
+		where 1=1
+		and a.regdate <![CDATA[  >=  ]]> to_date(to_char(sysdate, 'yyyymmdd')||'000000', 'yyyymmddhh24miss')
+		and (a.HIGHINFO = 1 or a.ELECMNGR = 1 or a.OVERCURRUNIT = 1 or a.OVERCURRUNIT_DISCLO = 1 or a.OVERVOLTG = 1 or a.CUTSTAT = 1 or a.LOWVOLTG = 1 or a.ACBINFO = 1 or a.STAT = 1)
+		and c.op_yn = 'Y'
+		and c.use_yn = 'Y'
+		and a.rtu_seq = b.ELRM_RTU_ID
+		and c.ELRM_FCLTS_SEQ = b.ELRM_FCLTS_SEQ
+		and c.HGIS_SEQ = d.HGIS_SEQ(+)
+		) 
+		group by ELRM_RTU_ID, INSR_MGMT_DPTCD , ELRM_FCLTS_SEQ,  ELRM_FCLTS_NM, ELRM_FCLT_CLSS_CD, ROUTE_CD,  FCLTS_INSL_DSTNC, GGTM_XCORD, GGTM_YCORD,  GRS80_XCORD,GRS80_YCORD
+		
+		union all
+		
+		select ELRM_RTU_ID, INSR_MGMT_DPTCD mtnof_cd, '터널등' as fclts_clss_nm, ELRM_FCLTS_SEQ,  ELRM_FCLTS_NM, ELRM_FCLT_CLSS_CD, ROUTE_CD,  FCLTS_INSL_DSTNC, GGTM_XCORD, GGTM_YCORD,  GRS80_XCORD,GRS80_YCORD, max(regdate) as regdate, 6 fclts_code
+		from
+		(
+		select a.regdate, a.STAT, b.ELRM_FCLTS_SEQ, b.ELRM_RTU_ID, c.INSR_MGMT_DPTCD,c.ELRM_FCLT_CLSS_CD,c.ELRM_FCLTS_NM, d.ROUTE_CD, d.FCLTS_INSL_DSTNC, d.GGTM_XCORD, d.GGTM_YCORD, d.GRS80_XCORD,d.GRS80_YCORD
+		from TBL_LO_RTU_TUNNELAMP a, T_AFMC_ELRM_RTU01M1 b, T_AFMC_ELRM_FCLTS01M1 c, T_AFMC_ELRM_LOCT01M1 d
+		where 1=1
+		and a.regdate <![CDATA[  >=  ]]> to_date(to_char(sysdate, 'yyyymmdd')||'000000', 'yyyymmddhh24miss')
+		and (a.STAT = 1)
+		and c.op_yn = 'Y'
+		and c.use_yn = 'Y'
+		and a.rtu_seq = b.ELRM_RTU_ID
+		and c.ELRM_FCLTS_SEQ = b.ELRM_FCLTS_SEQ
+		and c.HGIS_SEQ = d.HGIS_SEQ(+)
+		) 
+		group by ELRM_RTU_ID, INSR_MGMT_DPTCD , ELRM_FCLTS_SEQ,  ELRM_FCLTS_NM, ELRM_FCLT_CLSS_CD, ROUTE_CD,  FCLTS_INSL_DSTNC, GGTM_XCORD, GGTM_YCORD,  GRS80_XCORD,GRS80_YCORD
+		
+		union all
+		
+		select ELRM_RTU_ID, INSR_MGMT_DPTCD mtnof_cd, 'UPS' as fclts_clss_nm, ELRM_FCLTS_SEQ,  ELRM_FCLTS_NM, ELRM_FCLT_CLSS_CD, ROUTE_CD,  FCLTS_INSL_DSTNC, GGTM_XCORD, GGTM_YCORD,  GRS80_XCORD,GRS80_YCORD, max(regdate) as regdate, 7 fclts_code
+		from
+		(
+		select a.regdate, a.STAT, b.ELRM_FCLTS_SEQ, b.ELRM_RTU_ID, c.INSR_MGMT_DPTCD,c.ELRM_FCLT_CLSS_CD,c.ELRM_FCLTS_NM, d.ROUTE_CD, d.FCLTS_INSL_DSTNC, d.GGTM_XCORD, d.GGTM_YCORD, d.GRS80_XCORD,d.GRS80_YCORD
+		from TBL_LO_RTU_UPS a, T_AFMC_ELRM_RTU01M1 b, T_AFMC_ELRM_FCLTS01M1 c, T_AFMC_ELRM_LOCT01M1 d
+		where 1=1
+		and a.regdate <![CDATA[  >=  ]]> to_date(to_char(sysdate, 'yyyymmdd')||'000000', 'yyyymmddhh24miss')
+		and (a.BYPASS_STAT = 1 or a.STAT = 1 or a.ALAMNOELEC = 1)
+		and c.op_yn = 'Y'
+		and c.use_yn = 'Y'
+		and a.rtu_seq = b.ELRM_RTU_ID
+		and c.ELRM_FCLTS_SEQ = b.ELRM_FCLTS_SEQ
+		and c.HGIS_SEQ = d.HGIS_SEQ(+)
+		) 
+		group by ELRM_RTU_ID, INSR_MGMT_DPTCD , ELRM_FCLTS_SEQ,  ELRM_FCLTS_NM, ELRM_FCLT_CLSS_CD, ROUTE_CD,  FCLTS_INSL_DSTNC, GGTM_XCORD, GGTM_YCORD,  GRS80_XCORD,GRS80_YCORD
+		
+		) 
+    </select> 
+    
+    <select id="fecTotlInsrFcltDAO.fecGetDstbx" resultClass="fecElrmVO">  
+	    select a.DSTBX_LTTW_INFO_SEQ dstbx_lttw_info_seq,  a.ELRM_STRLT_CLSS_CD elrm_strlt_clss_cd,  a.INSR_MGMT_DPTCD mtnof_cd,  b.ROUTE_CD route_cd, b.FCLTS_INSL_DSTNC fclts_insl_dstnc, b.FCLTS_DETL_LOCT_CTNT fclts_detl_loct_ctnt     
+		from T_AFMC_DSTBX_LTTW01M1 a, T_AFMC_ELRM_LOCT01M1 b
+		where 1=1
+		and OP_YN = 'Y'
+		and a.HGIS_SEQ = b.HGIS_SEQ
+    </select> 
+    
+    <select id="fecTotlInsrFcltDAO.fecGetTroblDstbx" resultClass="fecElrmVO">  
+	    select lampinfoseq,mtnof_cd,elrm_strlt_clss_cd,route_cd,fclts_insl_dstnc, fclts_detl_loct_ctnt, ggtm_xcord, ggtm_ycord, grs80_xcord,grs80_ycord, max(regdate) as regdate, sum(cutgbn) as cutgbn, sum(leakstat) as leakstat,sum(opendoorstat) as opendoorstat
+        from
+        (
+        select a.LAMPINFOSEQ, a.CUTGBN,a.LEAKSTAT,a.OPENDOORSTAT, b.INSR_MGMT_DPTCD mtnof_cd,  b.ELRM_STRLT_CLSS_CD, c.ROUTE_CD, c.FCLTS_INSL_DSTNC, c.FCLTS_DETL_LOCT_CTNT, to_char(a.regdate, 'yyyymmddhh24miss') as regdate,  c.GGTM_XCORD, c.GGTM_YCORD, c.GRS80_XCORD,c.GRS80_YCORD 
+        from TBL_LO_LAMP a, T_AFMC_DSTBX_LTTW01M1 b, T_AFMC_ELRM_LOCT01M1 c
+        where 1=1
+        and a.regdate <![CDATA[  >=  ]]> to_date(to_char(sysdate, 'yyyymmdd')||'000000', 'yyyymmddhh24miss')
+        and (a.CUTGBN = 1 or a.LEAKSTAT = 1 or a.OPENDOORSTAT = 1)
+        and a.LAMPINFOSEQ = b.DSTBX_LTTW_INFO_SEQ
+        and b.op_yn = 'Y'
+        and b.HGIS_SEQ = c.HGIS_SEQ(+)
+        )
+        group by LAMPINFOSEQ,mtnof_cd ,  ELRM_STRLT_CLSS_CD, ROUTE_CD, FCLTS_INSL_DSTNC, FCLTS_DETL_LOCT_CTNT, GGTM_XCORD, GGTM_YCORD, GRS80_XCORD,GRS80_YCORD
+    </select> 
+    
+    <select id="fecTotlInsrFcltDAO.fecGetEventElcty"  parameterClass="String" resultClass="fecElrmVO">  
+	    select a.loalmseq,a.almseq, a.rtu_lampinfo_seq, to_char ( a.alarmtime,'yyyymmddhh24miss') alarmtime, to_char ( a.ALMLASTDATE,'yyyymmddhh24miss') ALMLASTDATE, a.retcode, '2' sysgbn, b.insr_mgmt_dptcd mtnof_cd, b.elrm_strlt_clss_cd, c.fclts_detl_loct_ctnt elrm_fclts_nm, c.fclts_insl_dstnc, c.ggtm_xcord, c.ggtm_ycord, c.grs80_xcord,c.grs80_ycord, 
+        e.dsatr_cpld_msg_ctnt content
+        from TBL_LO_ALARM a, T_AFMC_DSTBX_LTTW01M1 b, T_AFMC_ELRM_LOCT01M1 c, T_AFMC_ACDN_ALRM_TYPE01M1 e
+        where 1=1
+        and a.ALARMTIME <![CDATA[  >=  ]]> to_date(to_char(sysdate, 'yyyymmdd')||'000000', 'yyyymmddhh24miss')
+        and a.RTU_LAMPINFO_SEQ = b.DSTBX_LTTW_INFO_SEQ
+        and a.ALMSEQ = e.ALRM_SEQ
+        and a.LOALMSEQ <![CDATA[  >  ]]> #loalmseq#
+        and b.HGIS_SEQ = c.HGIS_SEQ(+)
+        union all
+        select a.LOALMSEQ,a.ALMSEQ, a.RTU_LAMPINFO_SEQ, to_char ( a.ALARMTIME,'yyyymmddhh24miss') ALARMTIME, to_char ( a.ALMLASTDATE,'yyyymmddhh24miss') ALMLASTDATE, a.RETCODE, '1' SYSGBN, c.INSR_MGMT_DPTCD mtnof_cd,c.ELRM_FCLT_CLSS_CD,c.ELRM_FCLTS_NM, d.FCLTS_INSL_DSTNC, d.GGTM_XCORD, d.GGTM_YCORD, d.GRS80_XCORD,d.GRS80_YCORD, 
+        e.DSATR_CPLD_MSG_CTNT CONTENT
+        from TBL_LO_ALARM a, T_AFMC_ELRM_RTU01M1 b, T_AFMC_ELRM_FCLTS01M1 c, T_AFMC_ELRM_LOCT01M1 d, T_AFMC_ACDN_ALRM_TYPE01M1 e
+        where 1=1
+        and a.ALARMTIME <![CDATA[  >=  ]]> to_date(to_char(sysdate, 'yyyymmdd')||'000000', 'yyyymmddhh24miss')
+        and a.ALMSEQ = e.ALRM_SEQ
+        and a.LOALMSEQ <![CDATA[  >  ]]>  #loalmseq#
+        and a.RTU_LAMPINFO_SEQ = b.ELRM_RTU_ID
+        and c.ELRM_FCLTS_SEQ = b.ELRM_FCLTS_SEQ
+        and c.HGIS_SEQ = d.HGIS_SEQ(+)
+    </select> 
+    
+    <select id="fecTotlInsrFcltDAO.fecGetSvar" resultClass="fecSvarVO">  
+	    select nvl(a.HGRN_DPTCD,'12313') mtnof_cd, a.SVAR_CD svar_cd, a.SVAR_NM svar_nm, b.DWRM_EQPMT_CD equip_code, b.DWRM_INSR_ID device_code, b.DWRM_INSR_NM dwrm_insr_nm
+		from T_AFMA_SVAR01I1 a,
+		T_AFMA_DWRM_INSR01M1 b
+		where a.use_yn = 'Y'
+		and b.use_yn = 'Y'
+		and a.SVAR_CD=b.SVAR_CD
+    </select>  
+    <select id="fecTotlInsrFcltDAO.fecGetTroblSvar" resultClass="fecSvarVO">  
+	    select nvl(c.HGRN_DPTCD,'asdasd') mtnof_cd, a.office_code svar_cd, a.device_code, a.equip_code, to_char(a.DEV_TIME, 'yyyymmddhh24miss') dev_time, c.svar_nm, b.DWRM_INSR_NM dwrm_insr_nm , 0 phdo, 'DRUM' type_name
+		from
+		(
+		select OFFICE_CODE, DEVICE_CODE, EQUIP_CODE, max(DEV_TIME) as DEV_TIME from
+		(
+		select OFFICE_CODE, DEVICE_CODE, EQUIP_CODE,  DEV_TIME 
+		from TB_DEVICE_LOG_DRUM a
+		where DEV_TIME <![CDATA[  >=  ]]> to_date(to_char(sysdate, 'yyyymmdd')||'000000', 'yyyymmddhh24miss')
+		and (HARDWARE_STATE = 1 or NORMAL_RUN_STATE = 1)
+		)
+		group by OFFICE_CODE, DEVICE_CODE, EQUIP_CODE
+		) a,
+		T_AFMA_DWRM_INSR01M1 b,
+		T_AFMA_SVAR01I1 c
+		where 1=1
+		and a.OFFICE_CODE = b.SVAR_CD
+		and a.DEVICE_CODE = b.DWRM_EQPMT_CD
+		and a.EQUIP_CODE = DWRM_INSR_ID
+		and a.OFFICE_CODE = c.SVAR_CD
+		union all
+		select nvl(c.HGRN_DPTCD,'asdasd') mtnof_cd, a.office_code svar_cd, a.device_code, a.equip_code, to_char(a.DEV_TIME, 'yyyymmddhh24miss') dev_time, c.svar_nm, b.DWRM_INSR_NM dwrm_insr_nm , 0 phdo, 'VALVE' type_name
+		from
+		(
+		select OFFICE_CODE, DEVICE_CODE, EQUIP_CODE, max(DEV_TIME) as DEV_TIME from
+		(
+		select OFFICE_CODE, DEVICE_CODE, EQUIP_CODE,  DEV_TIME 
+		from TB_DEVICE_LOG_VALVE a
+		where DEV_TIME <![CDATA[  >=  ]]> to_date(to_char(sysdate, 'yyyymmdd')||'000000', 'yyyymmddhh24miss')
+		and (HARDWARE_STATE = 1 or NORMAL_RUN_STATE = 1)
+		)
+		group by OFFICE_CODE, DEVICE_CODE, EQUIP_CODE
+		) a,
+		T_AFMA_DWRM_INSR01M1 b,
+		T_AFMA_SVAR01I1 c
+		where 1=1
+		and a.OFFICE_CODE = b.SVAR_CD
+		and a.DEVICE_CODE = b.DWRM_EQPMT_CD
+		and a.EQUIP_CODE = DWRM_INSR_ID
+		and a.OFFICE_CODE = c.SVAR_CD
+		union all
+		select nvl(c.HGRN_DPTCD,'asdasd') mtnof_cd, a.office_code svar_cd, a.device_code, a.equip_code, to_char(a.DEV_TIME, 'yyyymmddhh24miss') dev_time, c.svar_nm, b.DWRM_INSR_NM dwrm_insr_nm , 0 phdo, 'PUMP' type_name
+		from
+		(
+		select OFFICE_CODE, DEVICE_CODE, EQUIP_CODE, max(DEV_TIME) as DEV_TIME from
+		(
+		select OFFICE_CODE, DEVICE_CODE, EQUIP_CODE,  DEV_TIME 
+		from TB_DEVICE_LOG_PUMP a
+		where DEV_TIME <![CDATA[  >=  ]]> to_date(to_char(sysdate, 'yyyymmdd')||'000000', 'yyyymmddhh24miss')
+		and (HARDWARE_STATE = 1 or NORMAL_RUN_STATE = 1)
+		)
+		group by OFFICE_CODE, DEVICE_CODE, EQUIP_CODE
+		) a,
+		T_AFMA_DWRM_INSR01M1 b,
+		T_AFMA_SVAR01I1 c
+		where 1=1
+		and a.OFFICE_CODE = b.SVAR_CD
+		and a.DEVICE_CODE = b.DWRM_EQPMT_CD
+		and a.EQUIP_CODE = DWRM_INSR_ID
+		and a.OFFICE_CODE = c.SVAR_CD
+		union all
+		select nvl(c.HGRN_DPTCD,'asdasd') mtnof_cd, a.office_code svar_cd, a.device_code, a.equip_code, to_char(a.DEV_TIME, 'yyyymmddhh24miss') dev_time, c.svar_nm, b.DWRM_INSR_NM dwrm_insr_nm , 0 phdo, 'PCF' type_name
+		from
+		(
+		select OFFICE_CODE, DEVICE_CODE, EQUIP_CODE, max(DEV_TIME) as DEV_TIME from
+		(
+		select OFFICE_CODE, DEVICE_CODE, EQUIP_CODE,  DEV_TIME 
+		from TB_DEVICE_LOG_PCF a
+		where DEV_TIME <![CDATA[  >=  ]]> to_date(to_char(sysdate, 'yyyymmdd')||'000000', 'yyyymmddhh24miss')
+		and (run_STATE = 1 or NORMAL_RUN_STATE = 1)
+		)
+		group by OFFICE_CODE, DEVICE_CODE, EQUIP_CODE
+		) a,
+		T_AFMA_DWRM_INSR01M1 b,
+		T_AFMA_SVAR01I1 c
+		where 1=1
+		and a.OFFICE_CODE = b.SVAR_CD
+		and a.DEVICE_CODE = b.DWRM_EQPMT_CD
+		and a.EQUIP_CODE = DWRM_INSR_ID
+		and a.OFFICE_CODE = c.SVAR_CD
+		union all		
+		select nvl(c.HGRN_DPTCD,'asdasd') mtnof_cd, a.office_code svar_cd, a.device_code, a.equip_code, to_char(a.DEV_TIME, 'yyyymmddhh24miss') dev_time, c.svar_nm, b.DWRM_INSR_NM dwrm_insr_nm , 0 phdo, 'ELEC' type_name
+		from
+		(
+		select OFFICE_CODE, DEVICE_CODE, EQUIP_CODE, max(DEV_TIME) as DEV_TIME from
+		(
+		select OFFICE_CODE, DEVICE_CODE, EQUIP_CODE,  DEV_TIME 
+		from TB_DEVICE_LOG_ELEC a
+		where DEV_TIME <![CDATA[  >=  ]]> to_date(to_char(sysdate, 'yyyymmdd')||'000000', 'yyyymmddhh24miss')
+		and (NETWORK_STATE = 1 )
+		)
+		group by OFFICE_CODE, DEVICE_CODE, EQUIP_CODE
+		) a,
+		T_AFMA_DWRM_INSR01M1 b,
+		T_AFMA_SVAR01I1 c
+		where 1=1
+		and a.OFFICE_CODE = b.SVAR_CD
+		and a.DEVICE_CODE = b.DWRM_EQPMT_CD
+		and a.EQUIP_CODE = DWRM_INSR_ID
+		and a.OFFICE_CODE = c.SVAR_CD
+		union all
+		select nvl(c.HGRN_DPTCD,'asdasd') mtnof_cd, a.office_code svar_cd, a.device_code, a.equip_code, to_char(a.DEV_TIME, 'yyyymmddhh24miss') dev_time, c.svar_nm, b.DWRM_INSR_NM dwrm_insr_nm , 0 phdo, 'GW' type_name
+		from
+		(
+		select OFFICE_CODE, DEVICE_CODE, EQUIP_CODE, max(DEV_TIME) as DEV_TIME from
+		(
+		select OFFICE_CODE, DEVICE_CODE, EQUIP_CODE,  DEV_TIME 
+		from TB_DEVICE_LOG_GW a
+		where DEV_TIME <![CDATA[  >=  ]]> to_date(to_char(sysdate, 'yyyymmdd')||'000000', 'yyyymmddhh24miss')
+		and (PLC_STATE = 1 or GATE_STATE = 1)
+		)
+		group by OFFICE_CODE, DEVICE_CODE, EQUIP_CODE
+		) a,
+		T_AFMA_DWRM_INSR01M1 b,
+		T_AFMA_SVAR01I1 c
+		where 1=1
+		and a.OFFICE_CODE = b.SVAR_CD
+		and a.DEVICE_CODE = b.DWRM_EQPMT_CD
+		and a.EQUIP_CODE = DWRM_INSR_ID
+		and a.OFFICE_CODE = c.SVAR_CD
+    </select> 
+    
+    <select id="fecTotlInsrFcltDAO.fecGetEventSvar" parameterClass="String" resultClass="fecSvarVO">  
+	    select a.event_index, a.event_time, a.point_code, a.office_code svar_cd, a.equip_code, a.device_code, a.event_stat, a.re , a.event_division, a.event_division_nm, 
+		b.dwrm_insr_nm, c.pont_detl_istc, d.svar_nm, d.hgrn_dptcd mtnof_cd 
+		from
+		(select EVENT_INDEX, to_char(EVENT_TIME,'yyyymmddhh24miss') as  EVENT_TIME, POINT_CODE, office_code, equip_code, device_code, event_stat, recover as re ,event_division , decode(event_division, 1 , '기기 장애', 2 , '접점 이상', 3 , '고장 수리', 4 , '긴급 상황',
+		5 , '통신 이상', 6 , '서버 장애', 7 , '범위 이탈', 8 , '간헐 운전', 9 , '교번 운전', 
+		10 , '누적 시간', 11 , '장애 대응', 12 , '기기 연계', 13 , '수위 상태') event_division_nm
+		from (select * from TB_EVENT_LOG
+		where  1=1
+		and EVENT_INDEX <![CDATA[  >  ]]> #event_index#
+		and event_stat = 1 
+		and EVENT_TIME <![CDATA[  >=  ]]> to_date(to_char(sysdate, 'yyyymmdd')||'000000', 'yyyymmddhh24miss')
+		)
+		) a,
+		T_AFMA_DWRM_INSR01M1 b,
+		T_AFMA_OPND_INSR_PONT01M1 c,
+		T_AFMA_SVAR01I1 d
+		where 1=1
+		and a.office_code = b.SVAR_CD
+		and a.equip_code = b.DWRM_EQPMT_CD
+		and a.device_code = b.DWRM_INSR_ID
+		and a.POINT_CODE = c.PONT_CD
+		and a.equip_code = c.DWRM_EQPMT_CD
+		and a.device_code = c.DWRM_INSR_ID
+		and a.office_code = d.SVAR_CD
+		and c.DRWT_PROS_PRCSS_ID = d.DRWT_PROS_PRCSS_ID
+		group by a.POINT_CODE, a.office_code, a.equip_code, a.device_code,  a.event_stat, a.re , a.event_division, a.event_division_nm, 
+		b.DWRM_INSR_NM, c.PONT_DETL_ISTC, d.SVAR_NM , d.HGRN_DPTCD, a.EVENT_TIME, a.EVENT_INDEX
+    </select> 
+</sqlMap>

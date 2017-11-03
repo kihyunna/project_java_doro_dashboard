@@ -1,0 +1,489 @@
+/*!
+ * Viewer v0.5.1
+ * https://github.com/fengyuanchen/viewer
+ *
+ * Copyright (c) 2015-2016 Fengyuan Chen
+ * Released under the MIT license
+ *
+ * Date: 2016-03-11T07:57:59.486Z
+ */
+
+(function (factory) {
+  if (typeof define === 'function' && define.amd) {
+    // AMD. Register as anonymous module.
+    define('viewer', ['jquery'], factory);
+  } else if (typeof exports === 'object') {
+    // Node / CommonJS
+    factory(require('jquery'));
+  } else {
+    // Browser globals.
+    factory(jQuery);
+  }
+})(function ($) {
+
+  'use strict';
+
+  // 미니맵
+  if (window.addEventListener)
+  {
+	  window.addEventListener('load', InitCanvasEvent, false);
+  }
+
+  var canvasObj, contextObj, tInstance;
+
+  var image = null;
+  var img_Left = 0;
+  var img_Top = 0;
+
+  var cX = 0;
+  var cY = 0;
+  var cW = 256;
+  var cH = 256;
+
+  var cX1 = 0;
+  var cY1 = 0;
+  var cW1 = 10;
+  var cH1 = 10;
+
+  var img_naturalWidth = 0;
+  var img_naturalHeight = 0;
+
+  var scale = 1;
+  var originx = 0;
+  var originy = 0;
+
+  var arryCoord = [];
+  var arryIdx = 0;
+  var finished = false;
+  var Move_Duration = 2000;
+  var Zoom_Duration = 2000;
+  var zinterval = 100;
+  var currentCount = 1;
+  function flyTo(){
+	  scale = 1.0;	
+	  cW1 = cW1 * scale;
+	  cH1 = cH1 * scale;
+
+	  zinterval = 100;
+	  var rvs = ratio_Img_reverse(canvasObj.width/2, canvasObj.height/2);
+	  var current = ratio_Img_reverse(originx, originy);
+
+	  var diffX = (rvs.x - arryCoord[arryIdx][0])/(Move_Duration/zinterval);
+	  var diffY = (rvs.y - arryCoord[arryIdx][1])/(Move_Duration/zinterval);
+	  
+      var diff = {x:diffX, y:diffY};
+	  moveTo(current, diff);
+
+	  if (finished)
+	  {
+		  arryIdx++
+		  if (arryIdx >= arryCoord.length )
+		  {
+			  arryIdx=0;
+		  }
+		  Move_Duration = 2000;
+          Zoom_Duration = 2000;
+		  finished = false; 
+		  return;
+	  }	  
+
+	  setTimeout($.proxy(function () {
+				flyTo();
+			  }, this), zinterval);
+  }
+
+  function moveTo(cPoint, dPoint){
+
+    
+/*
+	//scale = 1.06;	
+
+	var rvs = ratio_Img_reverse(150, 75);
+
+	var DiffX = (rvs.x - pt[0])/(DiffNum);
+	var DiffY = (rvs.y - pt[1]/(DiffNum);
+
+	//var newWidth = cW1 * scale;
+	//var newHeight = cH1 * scale;
+
+	//cW1 = newWidth;
+	//cH1 = newHeight;
+
+	//var rt = ratio_Img(rvs.x, rvs.y);
+	var rt = ratio_Img(DiffX, DiffY);
+	originx -= (rt.x-150);
+	originy -= (rt.y-75);
+
+	//originx = originx * scale;
+	//originy = originy * scale;
+	contextObj.drawImage(image,originx, originy, cW1, cH1);		
+	
+	dataDraw(originx, originy);
+*/
+
+    contextObj.clearRect(0, 0, canvasObj.clientWidth, canvasObj.clientHeight); // clear the canvas
+
+    //scale = 1.0;	
+    
+
+	var rvs = ratio_Img_reverse(canvasObj.width/2, canvasObj.height/2);
+
+    //if ((Math.abs(rvs.x-cPoint.x) >= dPoint.x) || (Math.abs(rvs.y-cPoint.y) >= dPoint.y))
+    //{
+	cPoint.x +=  dPoint.x;
+	cPoint.y +=  dPoint.y;    //}
+
+
+	var rt = ratio_Img(cPoint.x, cPoint.y);
+
+	originx = rt.x;
+	originy = rt.y;
+
+			/*originx -= (rt.x-mousex);
+			originy -= (rt.y-mousey);
+
+			originx = originx * scale;
+			originy = originy * scale;
+*/
+
+	originx = originx ;
+	originy = originy ;
+
+	contextObj.drawImage(image,originx, originy, cW1, cH1);
+	dataDraw(originx, originy);
+
+    
+
+	if (currentCount == 20)
+    {
+		finished = true;
+		currentCount = 1;
+	}else
+	{
+		currentCount ++;
+	}
+	
+  }
+
+  function ratio(xx, yy){
+	var ratiol =  cW1 / canvasObj.clientWidth; //canvasObj1.width
+	var ratiot =  cH1 / canvasObj.clientHeight; //canvasObj1.width
+
+	var ratiox =  canvasObj.clientWidth / img_naturalWidth; 
+	var ratioy =  canvasObj.clientHeight / img_naturalHeight;
+
+	var leftX = (-xx) * ratiox*ratiol;
+	var topY = (-yy) * ratioy*ratiot;
+	return {
+		x: leftX,
+		y: topY
+	};
+  }
+
+  function ratio_Img_reverse(xx, yy){
+	var ratiol =  cW1 / canvasObj.clientWidth; //canvasObj1.width
+	var ratiot =  cH1 / canvasObj.clientHeight; //canvasObj1.width
+
+	var ratiox =  canvasObj.clientWidth / img_naturalWidth; 
+	var ratioy =  canvasObj.clientHeight / img_naturalHeight;
+
+    var orginx = xx / ratiox/ratiol;
+	var orginy   = yy / ratioy/ratiot;
+
+	return {
+		x: orginx,
+		y: orginy,
+	};
+  }
+
+  function ratio_reverse(xx, yy){
+	var ratiol =  canvasObj.width / canvasObj.clientWidth; //canvasObj1.width
+	var ratiot =  canvasObj.height / canvasObj.clientHeight; //canvasObj1.width
+
+	var ratiox =  canvasObj.clientWidth / img_naturalWidth; 
+	var ratioy =  canvasObj.clientHeight / img_naturalHeight;
+
+    var orginx = xx / ratiox/ratiol;
+	var orginy   = yy / ratioy/ratiot;
+
+	return {
+		x: orginx,
+		y: orginy,
+	};
+  }
+
+  function ratio_Img(xx, yy, offset, originalEvent, _event){
+	
+	var ratiol =  cW1 / canvasObj.clientWidth; //canvasObj1.width
+	var ratiot =  cH1 / canvasObj.clientHeight; //canvasObj1.width
+
+	var ratiox =  canvasObj.clientWidth / img_naturalWidth; 
+	var ratioy =  canvasObj.clientHeight / img_naturalHeight;
+
+    var orginx = xx * ratiox*ratiol;
+	var orginy   = yy * ratioy*ratiot;
+
+	return {
+		x: orginx,
+		y: orginy,
+		width : cW1,
+		height : cH1
+	};
+  }
+
+  function ratioImg(xx, yy){
+	var ratiol =  cW1 / canvasObj.clientWidth; //canvasObj1.width
+	var ratiot =  cH1 / canvasObj.clientHeight; //canvasObj1.width
+
+	var ratiox =  canvasObj.clientWidth / img_naturalWidth; 
+	var ratioy =  canvasObj.clientHeight / img_naturalHeight;
+
+	var leftX = (xx-40) * ratiox*ratiol;// 반 크기 80 
+	var topY = (yy-40) * ratioy*ratiot;//
+
+	var leftX1 = (-xx-128) * ratiox*ratiol;
+	var topY1 = (-yy-128) * ratioy*ratiot;
+
+    var line_width = 240 * ratiox*ratiol;
+	var line_height = 240 * ratioy*ratiot;
+
+	return {
+		x: leftX,
+		y: topY,
+		x1 : leftX1,
+		y1 : topY1,
+		width : line_width,
+		height : line_height
+	};
+  }
+
+  function InitCanvasEvent(){
+	canvasObj = document.getElementById("cnvs");
+	if (!canvasObj)
+	{
+		return;
+	}
+
+	if (!canvasObj.getContext) {	   
+	    return;
+    }
+
+	contextObj = canvasObj.getContext('2d');
+	if (!contextObj) {	 
+	  return;
+	}
+
+	canvasObj.width = 800;
+	canvasObj.height = 400;
+
+	image = document.getElementById('source');
+
+    img_naturalWidth = image.naturalWidth;
+    img_naturalHeight = image.naturalHeight;
+	
+	cW1 = canvasObj.width;
+	cH1 = canvasObj.height;
+	
+	originx = 0;
+	originy = 0;
+	var rt = ratio_Img(0,0,{left:0,top:0}); 
+	
+	contextObj.drawImage(image,rt.x,rt.y, cW1, cH1);
+	arryCoord.push([0,0]);
+	arryCoord.push([3495,1273]);
+	//arryCoord.push([6471,721]);
+	arryCoord.push([5591,2289]);
+	//arryCoord.push([7599,3321]);
+	arryCoord.push([10015,3569]);
+	dataDraw(originx, originy);
+
+	tInstance = new canvasEvent();
+
+	canvasObj.addEventListener('mousedown', event_canvas, false);
+	canvasObj.addEventListener('mousemove', event_canvas, false);
+	canvasObj.addEventListener('mouseup',   event_canvas, false);
+	canvasObj.addEventListener('mousewheel',   event_canvas, false);
+	
+	/*setTimeout($.proxy(function () {
+				flyTo();
+			  }, this), 2000);
+	*/		  
+  }
+
+    function event_canvas (ev)
+    {
+        if (ev.layerX || ev.layerX == 0)
+        { // Firefox 브라우저
+          ev._x = ev.layerX;
+          ev._y = ev.layerY;
+        }
+        else if (ev.offsetX || ev.offsetX == 0)
+        { // Opera 브라우저
+          ev._x = ev.offsetX;
+          ev._y = ev.offsetY;
+        }
+ 
+        // tool의 이벤트 핸들러를 호출한다.
+        var func = tInstance[ev.type];
+       
+        if (func)
+        {
+            func(ev);
+        }
+    }
+
+	var msg ="";
+	var Canvas_Move = false;
+	var click_PointX = 0;
+	var click_PointY = 0;
+	var originx = 0;
+	var originy = 0;
+	function canvasEvent()                                
+    {
+        var tool = this;
+        this.started = false;
+ 
+        // 마우스를 누를때 그리기 작업을 시작 한다.
+        this.mousedown = function (ev)
+        {
+            //contextObj.beginPath();
+            //contextObj.moveTo(ev._x, ev._y);
+			Canvas_Move = true;
+			click_PointX = canvasX(ev.clientX);
+			click_PointY = canvasY(ev.clientY);					
+        };
+ 
+        // 마우스가 이동 할때(mousemove) 마다 호출 된다.
+        this.mousemove = function (ev)
+        {
+			if (Canvas_Move)
+            {
+				contextObj.clearRect(0, 0, canvasObj.clientWidth, canvasObj.clientHeight); // clear the canvas
+				var mousex = ev.clientX;//ev.clientX - offsetX
+				mousex = canvasX(mousex) ;
+				var mousey = ev.clientY;//ev.clientY - offsetY
+				mousey = canvasX(mousey) ;
+
+				var dx = mousex - click_PointX;
+				var dy = mousey - click_PointY;
+
+				originx += dx;
+				originy += dy;
+
+				click_PointX = mousex;
+				click_PointY = mousey;
+
+				contextObj.drawImage(image,originx, originy, cW1, cH1);
+				dataDraw(originx, originy);
+						   
+            }
+			return;           
+        };
+ 
+        // 마우스 좌측 버튼을 놓았을때(mouseup) 호출 된다. 
+        this.mouseup = function (ev)
+        {
+			Canvas_Move = false;
+        };
+
+
+		this.mousewheel = function (ev)
+        {
+			contextObj.clearRect(0, 0, canvasObj.clientWidth, canvasObj.clientHeight); // clear the canvas
+			var mousex = ev.clientX;//ev.clientX - offsetX
+			mousex = canvasX(mousex) ;
+			var mousey = ev.clientY;//ev.clientY - offsetY
+			mousey = canvasX(mousey) ;
+			var wheel = ev.wheelDelta/1000;//n or -n
+
+
+			var zoom = 1 + wheel/2;
+
+
+
+			scale = zoom;	
+
+			var rvs = ratio_Img_reverse(mousex, mousey);
+
+			var newWidth = cW1 * scale;
+			var newHeight = cH1 * scale;
+
+			cW1 = newWidth;
+			cH1 = newHeight;
+
+			var rt = ratio_Img(rvs.x, rvs.y, {left:canvasObj.offsetLeft,top:canvasObj.offsetTop});
+			originx -= (rt.x-mousex);
+			originy -= (rt.y-mousey);
+
+			originx = originx * scale;
+			originy = originy * scale;
+			contextObj.drawImage(image,originx, originy, cW1, cH1);		
+			
+			dataDraw(originx, originy);
+        };
+
+    }
+
+	function dataDraw(xX, yY){
+		contextObj.strokeStyle = "rgb(255, 0, 0)";
+		for(var nidx = 0;nidx<arryCoord.length;nidx++){
+			var rvs = ratioImg(arryCoord[nidx][0],arryCoord[nidx][1]);			
+			contextObj.strokeRect(rvs.x+xX, rvs.y+yY, rvs.width, rvs.height);		
+		}
+	}
+
+	var oldx;
+	var oldy;
+
+	function draw(){
+		contextObj.clearRect(0, 0, canvasObj.clientWidth, canvasObj.clientHeight); // clear the canvas
+		var oldcW1 = cW1;
+		var oldcH1 = cH1;
+
+		cW1 = cW1*scale;
+		cH1 = cH1*scale;
+
+		var image = document.getElementById('source');
+
+		var rt = ratio(3495,1273, image); 
+
+		rt.x = rt.x + canvasObj.width/2;
+		rt.y = rt.y + canvasObj.height/2;
+
+		contextObj.drawImage(image,rt.x,rt.y,cW1,cH1);
+
+
+		rt.x1 = cW/2-rt.width/2;
+		rt.y1 = cH/2-rt.height/2;
+		contextObj.strokeStyle = "rgb(255, 0, 0)";
+		contextObj.strokeRect(rt.x1, rt.y1, rt.width, rt.height);	
+	}
+	
+
+	function isInRect(x, y){
+		var bresult=true;
+		if (cX > x || cX+cW < x )
+		{
+			bresult = false;
+		}
+
+		if (cY > y || cY+cH < y )
+		{
+			bresult = false;
+		}
+
+		return bresult;
+	}
+
+	 function canvasX(clientX) {
+		  var bound = canvasObj.getBoundingClientRect();
+		  var bw = 5;
+		  return (clientX - bound.left - bw) * (canvasObj.width / (bound.width - bw * 2));
+	 }
+	
+	 function canvasY(clientY) {
+		  var bound = canvasObj.getBoundingClientRect();
+		  var bw = 5;
+		  return (clientY - bound.top - bw) * (canvasObj.height / (bound.height - bw * 2));
+	 }	 
+});

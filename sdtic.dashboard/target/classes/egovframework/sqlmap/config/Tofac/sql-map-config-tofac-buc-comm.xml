@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMapConfig PUBLIC "-//iBATIS.com//DTD SQL Map Config 2.0//EN" "http://www.ibatis.com/dtd/sql-map-config-2.dtd">
+
+<sqlMapConfig>
+    
+    <!-- <sqlMap resource="egovframework/sqlmap/sdtic/bucrs/BucCmmnHiportal_SQL_Oracle.xml"	/>-->
+    <sqlMap resource="egovframework/sqlmap/sdtic/bucrs/BucBnsty_SQL_Oracle.xml"	/>
+    <sqlMap resource="egovframework/sqlmap/sdtic/bucrs/BucDsgn_SQL_Oracle.xml"	/>
+    <sqlMap resource="egovframework/sqlmap/sdtic/bucrs/BucFclts_SQL_Oracle.xml"	/>
+    <sqlMap resource="egovframework/sqlmap/sdtic/bucrs/BucMntmng_SQL_Oracle.xml"	/>
+    <sqlMap resource="egovframework/sqlmap/sdtic/bucrs/BucMain_SQL_Oracle.xml"	/>
+    <sqlMap resource="egovframework/sqlmap/sdtic/bucrs/BucCmmn_SQL_Oracle.xml"	/>
+    <sqlMap resource="egovframework/sqlmap/sdtic/main/MainCmmn_SQL.xml"	/>
+    <sqlMap resource="egovframework/sqlmap/sdtic/ifcrs/IfcTofac_SQL_Oracle.xml"	/>
+	<sqlMap resource="egovframework/sqlmap/sdtic/fecrs/tot/fecTotlInsrTot_SQL.xml"	/>
+</sqlMapConfig>
+
+

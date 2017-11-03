@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="bucFclts">
+
+    <typeAlias  alias="egovMap"   type="egovframework.rte.psl.dataaccess.util.EgovMap"  />
+    <typeAlias  alias="bucFcltsVO"  type="egovframework.com.sdtic.bucrs.service.BucFcltsVO" />
+	
+	<!-- 비즈니스 시설물 상단위젯 공정율 쿼리 -->
+   <select id="bucFcltsCtlDAO.bucFcltsRtAjax" parameterClass="bucFcltsVO" resultClass="bucFcltsVO">
+        /* bucFcltsRtAjax 조회 */
+		  SELECT round(((SUM(AA.TOT) - SUM(BB.COUNTDATA))/SUM(AA.TOT))*100,0) as rate
+			FROM 
+			     (SELECT COUNT(*) TOT, 'PLTWTR' AS CCLTS_NM
+			      FROM IOC_SDTIC_PLTWTR_TOT_MHRLS A
+			      UNION ALL
+			      SELECT COUNT(*) TOT, 'ELCTY'  AS CCLTS_NM
+			      FROM IOC_SDTIC_ELCTY_FCLTS_TOT B
+			      UNION ALL
+			      SELECT COUNT(*) TOT, 'LGHT'  AS CCLTS_NM
+			      FROM IOC_SDTIC_LGHT_FCLTS_TOT  C
+			      UNION ALL
+			      SELECT COUNT(*) TOT, 'TUNNEL'  AS CCLTS_NM
+			      FROM IOC_SDTIC_TUNNEL_TOT_MHRLS D) AA
+			
+			    ,(SELECT count(*) COUNTDATA, 'PLTWTR' AS CCLTS_NM
+			      FROM IOC_SDTIC_PLTWTR_TROBL
+			      WHERE to_char(DEV_TIME,'YYYYMMDD') =  sysdate
+			      UNION ALL
+			      SELECT count(*) COUNTDATA, 'ELCTY' AS CCLTS_NM
+			      FROM IOC_SDTIC_ELCTY_FCLTS_TROBL
+			      WHERE to_char(REGDATE,'YYYYMMDD') = sysdate
+			      UNION ALL
+			      SELECT count(*) COUNTDATA, 'LGHT' AS CCLTS_NM
+			      FROM IOC_SDTIC_LGHT_FCLTS_TROBL
+			      WHERE to_char(REGDATE,'YYYYMMDD') = sysdate
+			      UNION ALL
+			      SELECT count(*) COUNTDATA, 'TUNNEL' AS CCLTS_NM
+			      FROM IOC_SDTIC_TUNNEL_TROBL
+			      WHERE to_char(LOG_TIME,'YYYYMMDD') = sysdate )BB
+			WHERE AA.CCLTS_NM = BB.CCLTS_NM
+    </select>
+    
+    <!-- 비즈니스 시설물 이관율 쿼리 -->
+    <select id="bucFcltsCtlDAO.bucFcltsDataTransferdbAjax" parameterClass="bucFcltsVO" resultClass="bucFcltsVO">
+	    select 
+		     fcltscd
+		    ,fcltstable_kr as title
+		    ,round(inp_rate,0) as rate
+		from IOC_SDTIC_EXMA_TAB_INP_RATE
+		where to_char(inst_date,'yyyymmdd') = to_char(sysdate, 'yyyymmdd')
+		order by fcltscd  
+	</select>
+	
+	<!-- 비즈니스 시설물 34종 이관율 쿼리 -->
+	<select id="bucFcltsCtlDAO.bucFclts34EscalationRatedbAjax" parameterClass="bucFcltsVO" resultClass="bucFcltsVO">
+	    select 
+		     fcltstable_kr as title
+		    ,round(inp_rate,0) as rate
+		from IOC_SDTIC_EXMA_TAB_INP_RATE
+		where to_char(inst_date,'yyyymmdd') = to_char(sysdate, 'yyyymmdd')
+		order by fcltscd  
+	</select>
+	
+	<!-- 비즈니스 데이터증가량 쿼리 -->
+	<select id="bucFcltsCtlDAO.bucCmmnDataicrrtdbAjax" parameterClass="bucFcltsVO" resultClass="bucFcltsVO">
+		<![CDATA[SELECT A.LOGTIME AS COLLECT_DATE,
+		         round(SUM (USED_MBYTES) / 1024, 1) AS USE_VALUE,
+		         CASE
+		            WHEN A.LOGTIME <
+		                    TO_CHAR (
+		                       SYSDATE - (SELECT TO_CHAR (SYSDATE, 'D') FROM DUAL) + 1,
+		                       'YYYYMMDD')
+		            THEN
+		               'LASTWEEK'
+		            WHEN A.LOGTIME <
+		                    TO_CHAR (
+		                       SYSDATE - (SELECT TO_CHAR (SYSDATE, 'd') FROM DUAL) - 6,
+		                       'YYYYMMDD')
+		            THEN
+		               'DATEWEEK'
+		            ELSE
+		               'THISWEEK'
+		         END
+		            AS GUBUN,
+		         TO_CHAR (TO_DATE (A.LOGTIME, 'YYYYMMDD'), 'D') gubun_day,
+		         '정형' AS SYS_GUBUN
+		    FROM DPM.EPI$$TABLESPACE_USAGE A, DPM.EPI$$INSTANCE B
+		   WHERE     A.INST_NO = B.INST_NO
+		         AND B.ORACLE_SID IN ('CIHMAN', 'CFACIL', 'CBDATA', 'CSM')
+		         AND A.LOGTIME BETWEEN TO_CHAR (
+		                                    SYSDATE
+		                                  - (SELECT TO_CHAR (SYSDATE, 'D') FROM DUAL)
+		                                  - 7,
+		                                  'YYYYMMDD')
+		                           AND TO_CHAR (SYSDATE, 'YYYYMMDD')
+		GROUP BY A.LOGTIME
+		UNION ALL
+		  SELECT AA.COLLECT_DATE,
+		         ROUND (SUM (USE_DISK_VALUE), 1) AS USE_VALUE,
+		         CASE
+		            WHEN AA.COLLECT_DATE < AA.GUBUN THEN 'LASTWEEK'
+		            WHEN AA.COLLECT_DATE < AA.GUBUN2 THEN 'DATEWEEK'
+		            ELSE 'THISWEEK'
+		         END
+		            AS GUBUN,
+		         TO_CHAR (TO_DATE (AA.COLLECT_DATE, 'yyyymmdd'), 'D') gubun_day,
+		         '비정형' AS SYS_GUBUN
+		    FROM (  SELECT TO_CHAR (
+		                      TO_DATE (REPLACE (COLLECT_DATE, '-'), 'YYYYMMDD') - 1,
+		                      'YYYYMMDD')
+		                      AS COLLECT_DATE,
+		                   SUM (USE_DISK_VALUE) / 1024 / 1024 / 1024 AS USE_DISK_VALUE,
+		                   TO_CHAR (
+		                      SYSDATE - (SELECT TO_CHAR (SYSDATE, 'd') FROM DUAL) + 1,
+		                      'YYYYMMDD')
+		                      AS GUBUN,
+		                   TO_CHAR (
+		                      SYSDATE - (SELECT TO_CHAR (SYSDATE, 'd') FROM DUAL) - 6,
+		                      'YYYYMMDD')
+		                      AS GUBUN2
+		              FROM IOC_SDTIC_BUC_USEDISK_SMS
+		             WHERE REPLACE (COLLECT_DATE, '-') BETWEEN TO_CHAR (
+		                                                            SYSDATE
+		                                                          - (SELECT TO_CHAR (
+		                                                                       SYSDATE,
+		                                                                       'd')
+		                                                               FROM DUAL)
+		                                                          - 7,
+		                                                          'YYYYMMDD')
+		                                                   AND TO_CHAR (SYSDATE,
+		                                                                'YYYYMMDD')
+		          GROUP BY REPLACE (COLLECT_DATE, '-')
+		          UNION ALL
+		            SELECT SUBSTR (COLLECT_DATE, 0, 8) AS COLLECT_DATE,
+		                   SUM (USE_DISK_VALUE) / 1024 / 1024 / 1024 AS USE_DISK_VALUE,
+		                   TO_CHAR (
+		                      SYSDATE - (SELECT TO_CHAR (SYSDATE, 'd') FROM DUAL) + 1,
+		                      'YYYYMMDD')
+		                      AS GUBUN,
+		                   TO_CHAR (
+		                      SYSDATE - (SELECT TO_CHAR (SYSDATE, 'd') FROM DUAL) - 6,
+		                      'YYYYMMDD')
+		                      AS GUBUN2
+		              FROM IOC_SDTIC_BUC_USEDISK_ESM
+		             WHERE SUBSTR (COLLECT_DATE, 0, 8) BETWEEN TO_CHAR (
+		                                                            SYSDATE
+		                                                          - (SELECT TO_CHAR (
+		                                                                       SYSDATE,
+		                                                                       'd')
+		                                                               FROM DUAL)
+		                                                          - 7,
+		                                                          'YYYYMMDD')
+		                                                   AND TO_CHAR (SYSDATE,
+		                                                                'YYYYMMDD')
+		          GROUP BY SUBSTR (COLLECT_DATE, 0, 8)) AA
+		GROUP BY AA.COLLECT_DATE, AA.GUBUN, AA.GUBUN2 ]]>
+	</select>
+</sqlMap>

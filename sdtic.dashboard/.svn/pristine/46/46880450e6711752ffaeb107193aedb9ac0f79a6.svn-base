@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="fecTotlInsrDAO">
+   
+	<typeAlias  alias="fecTunnelVO"  type="egovframework.com.sdtic.fecrs.service.fecTunnelVO" />
+	<typeAlias  alias="fecSvarVO"  type="egovframework.com.sdtic.fecrs.service.fecSvarVO" />  
+	<typeAlias  alias="fecElrmVO"  type="egovframework.com.sdtic.fecrs.service.fecElrmVO" />
+	<typeAlias  alias="fecSlpVO"  type="egovframework.com.sdtic.fecrs.service.fecSlpVO" />    
+	<typeAlias  alias="fecCctvVO"  type="egovframework.com.sdtic.fecrs.service.fecCctvVO" />  
+	
+    <update id="fecTotlInsrDAO.fecDeleteDept">
+        delete from IOC_SDTIC_COMMON_DEPT
+    </update>
+    
+    <update id="fecTotlInsrDAO.fecInsertDept" parameterClass="java.util.List">
+	    INSERT ALL
+		    <dynamic>
+		        <iterate conjunction=" ">
+		        into IOC_SDTIC_COMMON_DEPT (hdqr_cd, hdqr_nm, mtnof_cd, mtnof_nm) values
+		         (#[].hdqr_cd#, #[].hdqr_nm#, #[].mtnof_cd#, #[].mtnof_nm#)		      
+		        </iterate>
+		    </dynamic>
+	    SELECT * FROM DUAL
+	</update>
+	
+	<update id="fecTotlInsrDAO.fecDeleteTunnel">
+        delete from IOC_SDTIC_TUNNEL_TOT_MHRLS
+    </update>
+    
+    <update id="fecTotlInsrDAO.fecInsertTunnelList" parameterClass="java.util.List">
+	    INSERT ALL
+		    <dynamic>
+		        <iterate conjunction=" ">
+		        into IOC_SDTIC_TUNNEL_TOT_MHRLS (insr_seq,mtnof_cd,tunl_cd,route_cd,tunl_nm) values
+		         (#[].insr_seq#, #[].mtnof_cd#, #[].tunl_cd#, #[].route_cd#, #[].tunl_nm#)		      
+		        </iterate>
+		    </dynamic>
+	    SELECT * FROM DUAL
+	</update>
+	
+	<update id="fecTotlInsrDAO.fecInsertTunnel" parameterClass="fecTunnelVO">
+		 insert into IOC_SDTIC_TUNNEL_TOT_MHRLS (insr_seq,mtnof_cd,tunl_cd,tnrm_eqpmt_clss_cd,tnrm_mchn_clss_cd,modl_nm,route_cd,tunl_nm) values
+		         (#insr_seq#, #mtnof_cd#, #tunl_cd#, #tnrm_eqpmt_clss_cd#,#tnrm_mchn_clss_cd#,#modl_nm#, #route_cd#, #tunl_nm#)	
+	</update>	
+	
+	<select id="fecTotlInsrDAO.fecGetTroblTunnelMaxSeq" resultClass="String">
+        select max(nvl(tunnel_seq,0))+1 as seq from IOC_SDTIC_TUNNEL_TROBL
+    </select>
+	
+	<update id="fecTotlInsrDAO.fecInsertTroblTunnel" parameterClass="fecTunnelVO">
+		insert into IOC_SDTIC_TUNNEL_TROBL
+		(tunnel_seq, insr_seq, mtnof_cd, tunl_cd, tnrm_eqpmt_clss_cd ,tnrm_mchn_clss_cd, route_cd, tunl_nm, modl_nm, log_time, insert_time)
+		values
+		(#tunnel_seq#, #insr_seq#, #mtnof_cd#, #tunl_cd#, #tnrm_eqpmt_clss_cd#, #tnrm_mchn_clss_cd#,#route_cd#,#tunl_nm#, #modl_nm#, to_date(#log_time#,'yyyymmddhh24miss'), sysdate)
+	</update>
+	
+	<select id="fecTotlInsrDAO.fecGetEventTunnelMaxSeq" resultClass="String">
+        select max(nvl(event_log_seq,0))+1 as seq from IOC_SDTIC_TUNNEL_EVENT
+    </select>
+	
+	<update id="fecTotlInsrDAO.fecInsertEventTunnel" parameterClass="fecTunnelVO">
+		insert into IOC_SDTIC_TUNNEL_EVENT
+		(event_log_seq, insr_seq, event_time, tunl_cd, mtnof_cd ,tunl_nm, modl_nm, event_division, event_stat, event_value, event_type, event_level, recover, evnt_nm, tnrm_evnt_levls_cd, dsbl_ocrn_stat_val, recover_time)
+		values
+		(#event_log_seq#, #insr_seq#, to_date(#event_time#,'yyyymmddhh24miss'), #tunl_cd#, #mtnof_cd# ,#tunl_nm#, #modl_nm#, #event_division#, #event_stat#, #event_value#, #event_type#, #event_level#, #recover#, #evnt_nm#, #tnrm_evnt_levls_cd#, #dsbl_ocrn_stat_val#, to_date(#recover_time#,'yyyymmddhh24miss'))
+	</update>
+	
+	<update id="fecTotlInsrDAO.fecDeleteElrm">
+        delete from IOC_SDTIC_ELCTY_FCLTS_TOT
+    </update>
+    
+    <update id="fecTotlInsrDAO.fecInsertElrmList" parameterClass="java.util.List">
+	    INSERT ALL
+		    <dynamic>
+		        <iterate conjunction=" ">
+		        insert into IOC_SDTIC_ELCTY_FCLTS_TOT (elrm_rtu_id, mtnof_cd, fclts_clss_nm) values
+		         (#[].elrm_rtu_id#, #[].mtnof_cd#, #[].fclts_clss_nm#)		      
+		        </iterate>
+		    </dynamic>
+	    SELECT * FROM DUAL
+	</update>
+	
+	<update id="fecTotlInsrDAO.fecInsertElrm" parameterClass="fecElrmVO">
+        insert into IOC_SDTIC_ELCTY_FCLTS_TOT (elrm_rtu_id, mtnof_cd, elrm_fclt_clss_cd, fclts_clss_nm) values
+		         (#elrm_rtu_id#, #mtnof_cd#, #elrm_fclt_clss_cd#, #fclts_clss_nm#)		      
+	</update>
+	
+	<select id="fecTotlInsrDAO.fecGetTroblElrmMaxSeq" resultClass="String">
+        select max(nvl(elcty_fclts_seq,0))+1 as seq from IOC_SDTIC_ELCTY_FCLTS_TROBL
+    </select>
+	
+	<update id="fecTotlInsrDAO.fecInsertTroblElrm" parameterClass="fecElrmVO">
+
+		insert into IOC_SDTIC_ELCTY_FCLTS_TROBL
+		(elcty_fclts_seq, elrm_rtu_id, mtnof_cd, fclts_clss_nm, elrm_fclts_seq ,elrm_fclts_nm, elrm_fclt_clss_cd, route_cd, fclts_insl_dstnc, regdate, fclts_code, insert_time)
+		values
+		(#elcty_fclts_seq#, #elrm_rtu_id#, #mtnof_cd#, #fclts_clss_nm#, #elrm_fclts_seq#, #elrm_fclts_nm#,#elrm_fclt_clss_cd#,#route_cd#, #fclts_insl_dstnc#, to_date(#regdate#,'yyyymmddhh24miss'), #fclts_code#, sysdate)
+	</update>
+
+	<update id="fecTotlInsrDAO.fecDeleteDstbx">
+        delete from IOC_SDTIC_LGHT_FCLTS_TOT
+    </update>
+    
+    <update id="fecTotlInsrDAO.fecInsertDstbxList" parameterClass="java.util.List">
+	    INSERT ALL
+		    <dynamic>
+		        <iterate conjunction=" ">
+		        insert into IOC_SDTIC_LGHT_FCLTS_TOT (dstbx_lttw_info_seq,elrm_strlt_clss_cd,mtnof_cd, route_cd, fclts_insl_dstnc, fclts_detl_loct_ctnt) values
+		         (#[].dstbx_lttw_info_seq#, #[].elrm_strlt_clss_cd#, #[].mtnof_cd#, #[].route_cd#, #[].fclts_insl_dstnc#, #[].fclts_detl_loct_ctnt#)		      
+		        </iterate>
+		    </dynamic>
+	    SELECT * FROM DUAL
+	</update>
+	
+	<update id="fecTotlInsrDAO.fecInsertDstbx" parameterClass="fecElrmVO">
+        insert into IOC_SDTIC_LGHT_FCLTS_TOT (dstbx_lttw_info_seq,elrm_strlt_clss_cd,mtnof_cd, route_cd, fclts_insl_dstnc, fclts_detl_loct_ctnt) values
+		         (#dstbx_lttw_info_seq#, #elrm_strlt_clss_cd#, #mtnof_cd#, #route_cd#, #fclts_insl_dstnc#, #fclts_detl_loct_ctnt#)		      
+	</update>
+	
+	<select id="fecTotlInsrDAO.fecGetTroblDstbxMaxSeq" resultClass="String">
+        select max(nvl(lght_fclts_seq,0))+1 as seq from IOC_SDTIC_LGHT_FCLTS_TROBL
+    </select>
+	
+	<update id="fecTotlInsrDAO.fecInsertTroblDstbx" parameterClass="fecElrmVO">
+		insert into IOC_SDTIC_LGHT_FCLTS_TROBL
+		(lght_fclts_seq, lampinfoseq, cutgbn, leakstat, opendoorstat, mtnof_cd, elrm_strlt_clss_cd, route_cd, fclts_insl_dstnc, regdate, fclts_detl_loct_ctnt, insert_time)
+		values
+		(#lght_fclts_seq#, #lampinfoseq#, #cutgbn#, #leakstat#, #opendoorstat#, #mtnof_cd#, #elrm_strlt_clss_cd#, #route_cd#,#fclts_insl_dstnc#,to_date(#regdate#,'yyyymmddhh24miss'), #fclts_detl_loct_ctnt#, sysdate)
+	</update>
+	
+	<select id="fecTotlInsrDAO.fecGetEventElctyMaxSeq" resultClass="String">
+        select max(nvl(loalmseq,0))+1 as seq from IOC_SDTIC_ELCTY_FCLTS_EVENT
+    </select>
+	
+	<update id="fecTotlInsrDAO.fecInsertEventElcty" parameterClass="fecElrmVO">
+		insert into IOC_SDTIC_ELCTY_FCLTS_EVENT
+		(loalmseq, almseq, rtu_lampinfo_seq, alarmtime, almlastdate, retcode, content, sysgbn, mtnof_cd, elrm_strlt_clss_cd, elrm_fclts_nm,fclts_insl_dstnc)
+		values
+		(#loalmseq#, #almseq#, #rtu_lampinfo_seq#, to_date(#alarmtime#,'yyyymmddhh24miss'), to_date(#almlastdate#,'yyyymmddhh24miss'), #retcode#, #content#, #sysgbn#, #mtnof_cd#,#elrm_strlt_clss_cd#, #elrm_fclts_nm#, #fclts_insl_dstnc#)
+	</update>
+
+	<update id="fecTotlInsrDAO.fecDeleteSlp">
+        delete from IOC_SDTIC_SNSR_TOT_MHRLS
+    </update>
+    
+    <update id="fecTotlInsrDAO.fecInsertSlp" parameterClass="fecSlpVO">
+        insert into IOC_SDTIC_SNSR_TOT_MHRLS 
+        (msis_gtwy_id,fclts_intg_id,msis_snsr_id,hdqr_cd,hdqr_nm,mtnof_cd,mtnof_nm,pbus_route_cd,regin_nm,use_rotnm,pbus_stpnt_dstnc,drve_drnm,pbus_drve_drct_cd,ggtm_xcord,ggtm_ycord) 
+        values
+         (#msis_gtwy_id#,#fclts_intg_id#,#msis_snsr_id#,#hdqr_cd#,#hdqr_nm#,#mtnof_cd#,#mtnof_nm#,#pbus_route_cd#,#regin_nm#,#use_rotnm#,#pbus_stpnt_dstnc#,#drve_drnm#,#pbus_drve_drct_cd#,#ggtm_xcord#,#ggtm_ycord#)	
+	</update>
+	
+	<select id="fecTotlInsrDAO.fecGetTroblSlpMaxSeq" resultClass="String">
+        select max(nvl(snsr_seq,0))+1 as seq from IOC_SDTIC_SNSR_TROBL
+    </select>
+    
+	<update id="fecTotlInsrDAO.fecInsertTroblSlp" parameterClass="fecSlpVO">
+		insert into IOC_SDTIC_SNSR_TROBL
+        (snsr_seq,msis_gtwy_id,msis_snsr_id,trobl_type,use_yn,fsttm_rgst_dttm,lsttm_altr_dttm,insert_time) 
+        values
+        (#snsr_seq#,#msis_gtwy_id#,#msis_snsr_id#,#trobl_type#,#use_yn#,to_date(#fsttm_rgst_dttm#,'yyyymmddhh24miss'),to_date(#lsttm_altr_dttm#,'yyyymmddhh24miss'),sysdate)
+	</update>	
+	
+	<select id="fecTotlInsrDAO.fecGetEventSlpMaxSeq" resultClass="String">
+        select max(nvl(msis_idx_seq,0))+1 as seq from IOC_SDTIC_SNSR_EVENT
+    </select>
+    
+	<update id="fecTotlInsrDAO.fecInsertEventSlp" parameterClass="fecSlpVO">
+		insert into IOC_SDTIC_SNSR_EVENT
+        (msis_idx_seq,msis_gtwy_id,msis_snsr_id,msis_ntfc_kind_cd,use_yn,fsttm_rgst_dttm,lsttm_altr_dttm) 
+        values
+        (#msis_idx_seq#,#msis_gtwy_id#,#msis_snsr_id#,#msis_ntfc_kind_cd#,#use_yn#,to_date(#fsttm_rgst_dttm#,'yyyymmddhh24miss'),to_date(#lsttm_altr_dttm#,'yyyymmddhh24miss'))
+	</update>
+	
+	<update id="fecTotlInsrDAO.fecDeleteSvar">
+        delete from IOC_SDTIC_PLTWTR_TOT_MHRLS
+    </update>
+   
+    <update id="fecTotlInsrDAO.fecInsertSvarList" parameterClass="java.util.List">
+ 	    INSERT ALL
+		    <dynamic>
+		        <iterate conjunction=" ">
+		        into IOC_SDTIC_PLTWTR_TOT_MHRLS (mtnof_cd, svar_cd, svar_nm, equip_code,device_code,dwrm_insr_nm) values
+		         (#[].mtnof_cd#, #[].svar_cd#, #[].svar_nm#, #[].equip_code#, #[].device_code#, #[].dwrm_insr_nm#)		      
+		        </iterate>
+		    </dynamic>
+	    SELECT * FROM DUAL
+	</update>	
+	
+	<update id="fecTotlInsrDAO.fecInsertSvar" parameterClass="fecSvarVO">
+
+	INSERT into IOC_SDTIC_PLTWTR_TOT_MHRLS (mtnof_cd, svar_cd, svar_nm, equip_code,device_code,dwrm_insr_nm) values 
+ 		         (#mtnof_cd#, #svar_cd#, #svar_nm#, #equip_code#, #device_code#, #dwrm_insr_nm#)
+	</update>		
+	
+	<select id="fecTotlInsrDAO.fecGetTroblMaxSeq" resultClass="String">
+        select max(nvl(pltwtr_seq,0))+1 as seq from IOC_SDTIC_PLTWTR_TROBL
+    </select>
+	
+	<update id="fecTotlInsrDAO.fecInsertTroblSvar" parameterClass="fecSvarVO">
+
+		insert into IOC_SDTIC_PLTWTR_TROBL
+		(pltwtr_seq, mtnof_cd, svar_cd, svar_nm, device_code ,equip_code, dev_time, phdo, dwrm_insr_nm, type_name, insert_time)
+		values
+		(#pltwtr_seq#, #mtnof_cd#, #svar_cd#, #svar_nm#, #device_code#, #equip_code#, to_date(#dev_time#,'yyyymmddhh24miss'),#phdo#, #dwrm_insr_nm#, #type_name#, sysdate)
+	</update>	
+	
+	<select id="fecTotlInsrDAO.fecGetEventMaxSeq" resultClass="String">
+        select max(nvl(event_index,0))+1 as seq from IOC_SDTIC_PLTWTR_EVENT
+    </select>
+	
+	<update id="fecTotlInsrDAO.fecInsertEventSvar" parameterClass="fecSvarVO">
+		insert into IOC_SDTIC_PLTWTR_EVENT
+		(event_index, svar_cd, equip_code, device_code, event_stat ,re, event_time, event_division, event_division_nm, dwrm_insr_nm, mtnof_cd, svar_nm, point_code, pont_detl_istc, to_date(#recover_time#,'yyyymmddhh24miss'))
+		values
+		(#event_index#, #svar_cd#, #equip_code#, #device_code#, #event_stat#, #re#, to_date(#event_time#,'yyyymmddhh24miss'),#event_division#, #event_division_nm#, #dwrm_insr_nm#, #mtnof_cd#, #svar_nm#, #point_code#, #pont_detl_istc#, to_date(#recover_time#,'yyyymmddhh24miss'))
+	</update>
+
+	<update id="fecTotlInsrDAO.fecDeleteSlwt">
+        delete from IOC_SDTIC_SLWT_EQPM_PRSS
+    </update>
+
+    <update id="fecTotlInsrDAO.fecInsertSlwt" parameterClass="java.util.List">
+	    INSERT ALL
+		    <dynamic>
+		        <iterate conjunction=" ">
+		        insert into IOC_SDTIC_SLWT_EQPM_PRSS (eqpm_seq, mtnof_cd, eqpm_no) values
+		         (#[].eqpm_seq#, #[].mtnof_cd#, #[].eqpm_no#)		      
+		        </iterate>
+		    </dynamic>
+	    SELECT * FROM DUAL
+	</update>
+	
+	<update id="fecTotlInsrDAO.fecDeleteCctv" parameterClass="String">
+        delete from IOC_SDTIC_HIWAY_CCTV
+        where hdqr_cd = #hdqr_cd#
+    </update>
+    
+    <update id="fecTotlInsrDAO.fecInsertEventCctv" parameterClass="fecCctvVO">
+		insert into IOC_SDTIC_HIWAY_CCTV
+		(spin_intg_id, spin_intg_nm, data_id, hdqr_cd, mtnof_cd ,route_cd, route_drct_cd, insl_dstnc, ggtm_xcord, ggtm_ycord, cctvurl)
+		values
+		(#spin_intg_id#, #spin_intg_nm#, #data_id#, #hdqr_cd#, #mtnof_cd# ,#route_cd#, #route_drct_cd#, #insl_dstnc#, #ggtm_xcord#, #ggtm_ycord#, #cctvurl#)
+	</update>
+	
+	<select id="fecTotlInsrDAO.getSchedulerState" resultClass="Integer">
+        select state from IOC_SDTIC_SCHEDULER_STATE
+    </select>
+	
+	<update id="fecTotlInsrDAO.updateSchedulerState" parameterClass="Integer">
+        update IOC_SDTIC_SCHEDULER_STATE set
+        state = #state#
+    </update>
+    
+    <update id="fecTotlInsrDAO.fecDeleteTunnelEventData" parameterClass="Integer">
+        delete from IOC_SDTIC_TUNNEL_EVENT
+		where event_time <![CDATA[  <  ]]> sysdate - #day#
+    </update>
+    
+    <update id="fecTotlInsrDAO.fecDeleteElrmEventData" parameterClass="Integer">
+        delete from IOC_SDTIC_ELCTY_FCLTS_EVENT
+		where almlastdate <![CDATA[  <  ]]>  sysdate - #day#
+    </update>
+    
+    <update id="fecTotlInsrDAO.fecDeleteSlpEventData" parameterClass="Integer">
+        delete from IOC_SDTIC_SNSR_EVENT
+		where LSTTM_ALTR_DTTM <![CDATA[  <  ]]>  sysdate - #day#
+    </update>
+    
+    <update id="fecTotlInsrDAO.fecDeleteSvarEventData" parameterClass="Integer">
+        delete from IOC_SDTIC_PLTWTR_EVENT
+		where event_time <![CDATA[  <  ]]>  sysdate - #day#
+    </update>
+    
+    <update id="fecTotlInsrDAO.fecDeleteTunnelTroblData" parameterClass="Integer">
+        delete from IOC_SDTIC_TUNNEL_TROBL
+		where TUNNEL_SEQ <![CDATA[  <  ]]> (select max(TUNNEL_SEQ) - #seq# as TUNNEL_SEQ from IOC_SDTIC_TUNNEL_TROBL)
+    </update>
+    
+    <update id="fecTotlInsrDAO.fecDeleteElrmTroblData" parameterClass="Integer">
+        delete from IOC_SDTIC_ELCTY_FCLTS_TROBL
+		where ELCTY_FCLTS_SEQ <![CDATA[  <  ]]> (select max(ELCTY_FCLTS_SEQ) - #seq# as ELCTY_FCLTS_SEQ from IOC_SDTIC_ELCTY_FCLTS_TROBL)
+    </update>
+    
+    <update id="fecTotlInsrDAO.fecDeleteDstbxTroblData" parameterClass="Integer">
+        delete from IOC_SDTIC_LGHT_FCLTS_TROBL
+		where LGHT_FCLTS_SEQ <![CDATA[  <  ]]> (select max(LGHT_FCLTS_SEQ) - #seq# as LGHT_FCLTS_SEQ from IOC_SDTIC_LGHT_FCLTS_TROBL)
+    </update>
+    
+    <update id="fecTotlInsrDAO.fecDeleteSlpTroblData" parameterClass="Integer">
+        delete from IOC_SDTIC_SNSR_TROBL
+		where SNSR_SEQ <![CDATA[  <  ]]> (select max(SNSR_SEQ) - #seq# as SNSR_SEQ from IOC_SDTIC_SNSR_TROBL)
+    </update>
+    
+    <update id="fecTotlInsrDAO.fecDeleteSvarTroblData" parameterClass="Integer">
+        delete from IOC_SDTIC_PLTWTR_TROBL
+		where PLTWTR_SEQ <![CDATA[  <  ]]> (select max(PLTWTR_SEQ) - #seq# as PLTWTR_SEQ from IOC_SDTIC_PLTWTR_TROBL)
+    </update>
+    
+    
+    
+</sqlMap>

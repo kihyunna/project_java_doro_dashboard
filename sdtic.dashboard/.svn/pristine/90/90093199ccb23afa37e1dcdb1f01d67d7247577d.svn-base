@@ -1,0 +1,582 @@
+var DeptName = '';
+var DeptJson = '';
+var MaxListCount = 0;
+var CurrentListIdx = 0;
+
+var  Options = {	
+	    color: ['gold','aqua'],
+	    title : {
+	        text: '',//DeptName,
+	        x:'center',
+	        textStyle : {
+	            color: '#fff'
+	        }
+	    },
+	    tooltip : {
+	        trigger: 'item',
+	        show:false
+	    }, 
+	    dataRange: {
+	        min : 85,
+	        max : 100,
+	        calculable : true,
+	        color: [ 'lime','orange','#ff3333'],	
+	        textStyle:{
+	            color:'#fff'
+	        },
+	        itemWidth : 10,
+	        itemHeight : 10,
+	        show: false
+	    },			    
+	    series : [					    
+	        {					        
+	            name: '전국지도',					            
+	            type: 'map',
+	            roam: false,
+	            hoverable: false,
+	            mapType: DeptJson, 					            
+	            itemStyle:{
+	            	label: {
+                        show: false				                           					                           
+                        },
+	                normal:{
+	                    borderColor:'rgba(100,149,237,0)',
+	                    borderWidth:0.5,
+	                    areaStyle:{
+	                    	color: '#A8A8A8'	
+	                    },	
+//	                	borderColor:
+//	                		'rgba(120,169,237,1)',
+//	                    borderWidth:0.5,
+//	                    areaStyle:{
+//	                        color: 'rgba(27,27,27,0.5)'
+//	                    	
+//	                        	   
+//	                    },		                    
+	                    label: {
+                            show: false				                           					                           
+	                        }
+                    },
+                    emphasis:{label:{show:false}}					
+	            },	
+	             data : [	            				                   
+	            ],					            
+	            geoCoord: {}//geo_coord
+	        },						        
+	         {
+	            name: '수신율',
+	            type: 'map',
+	            mapType: DeptJson,
+	            hoverable: false,
+	            data:[            		
+	            ],		
+	            itemStyle:{
+	            	label: {
+                        show: false				                           					                           
+                        },
+	                normal:{label:{show:false}},
+	                emphasis:{label:{show:false}}
+	            },
+	            markLine : {
+	                smooth:true,
+	                effect : {
+	                    show: true,
+	                    scaleSize: 1,
+	                    period: 30,
+	                    color: '#fff',
+	                    shadowBlur: 10
+	                },
+	                itemStyle : {	                	
+	                    	normal: {
+	                    		borderWidth:1,
+		                        lineStyle: {
+		                            type: 'solid',
+		                            shadowBlur: 10
+		                        			}
+	                    			},
+	                    	emphasis:{label:{show:false}}
+	                			},
+	                data : []//data_line
+	            },
+	            markPoint : {
+	                symbol:'emptyCircle',
+	                symbolSize : function (v){
+	                    return 1 + v/10						                    				                    
+	                },
+	                effect : {
+	                    show: true,
+	                    shadowBlur : 0
+	                },
+	                itemStyle:{
+	                	label: {
+                            show: false
+                        },
+	                    normal:{
+	                        label:{show:false}
+	                    },
+	                    emphasis: {
+	                        label:{position:'top', show:false}	                        
+	                    }
+	                },
+	                data : []//data_point
+	            }
+	         }
+	    ]
+	};  
+
+function getDeptOption(sVal){
+	if (sVal == '2'){
+		DeptName = '강원본부';
+		DeptJson = 'kangwon';		
+	}else if (sVal == '7'){
+		DeptName = '경북본부';
+		DeptJson = 'kyeongbuk';	
+	}else if (sVal == '8'){
+		DeptName = '경남본부';
+		DeptJson = 'kyeongnam';	
+	}else if (sVal == '1'){
+		DeptName = '수도권본부';
+		DeptJson = 'kyeonggi';	
+	}else if (sVal == '3'){
+		DeptName = '충북본부';
+		DeptJson = 'chungbuk';	
+	}else if (sVal == '4'){
+		DeptName = '충남본부';
+		DeptJson = 'chungnam';	
+	}else if (sVal == '5'){
+		DeptName = '전북본부';
+		DeptJson = 'jeonbuk';	
+	}else if (sVal == '6'){
+		DeptName = '전남본부';
+		DeptJson = 'jeonnam';	
+	}else{
+		DeptName = '수도권본부';
+		DeptJson = 'kyeonggi';	
+	}
+	
+}
+	
+
+AjaxQuery = function(buseo_code, fac_code, locationPath) {
+	if (buseo_code == '' || fac_code == '' ){
+		//alert('검색조건을 확인하십시오.');
+		return;
+	}
+		
+	getDeptOption(buseo_code);
+	var url = "http://" + location.host + "/fecMDTOperLv1.do";
+	
+    $.ajax(
+    {
+    	type: 'post',
+        url: url,
+        dataType: 'json',
+        async: true,
+        data: {'deptCode' : buseo_code, 'facCode' : fac_code },
+        cache: false,
+        success: function(data){  
+        	var data_Oper = {};
+        	var data_Trobl = [];
+        	var data_Map = [];        	
+        	
+        	for (var nidx = 0; nidx<mapData.length;nidx++){
+        		if (mapData[nidx].deptCode == buseo_code)
+        			data_Map.push(mapData[nidx]);        		
+        	}
+        	
+        	for (var nidx = 0; nidx<mapError.length;nidx++){
+        		if (mapError[nidx].deptCode == buseo_code)
+        			data_Oper = mapError[nidx];
+        	}
+        	
+        	for (var nidx = 0; nidx<mapInfo.length;nidx++){
+        		if (mapInfo[nidx].deptCode == buseo_code)
+        			data_Trobl.push(mapInfo[nidx]);
+        	}
+        	
+        	var troblCount = data_Trobl.length-4;        	
+        	
+        	if (troblCount < 1)
+        		troblCount = 1;
+        	        	
+        	timeInterval = Math.round(10000 / troblCount);
+        	if (timeInterval > 1500)
+        		timeInterval = 1500;        	
+//    		var sHtml = setMdtRatio(data.Oper);
+//    		var eHtml = setMdtInfo(data.Trobl);
+//    		var mdtOption = setMdtMap(data.Map);
+        		
+        	var sHtml = setMdtRatio(data_Oper);
+    		var eHtml = setMdtInfo(data_Trobl);
+    		var mdtOption = setMdtMap(data_Map);
+    		
+    		
+    		$('#idTable_mdt  *').remove();
+    		$('#idTable_mdt').append(sHtml);
+    		
+    		$('#idTable_inform  *').remove();
+    		$('#idTable_inform').append(eHtml);
+    		
+    		refresh();
+    		myChart.setOption(mdtOption);
+    		
+    		$( "#idDiv" ).fadeIn( "fast", function() {    			
+    			ChangeRow();	
+    		});
+    		
+//			setTimeout($.proxy(function () {
+//				ChangeRow();			
+//				}, this), 1000);
+        },
+        error: function(req)
+        {
+            
+        }
+    });
+};
+
+function setDeptforMap(){
+	require('echarts/util/mapData/params').params.kyeongbuk = {
+	    getGeoJson: function (callback) {
+	        $.getJSON('/js/echarts/source/geoJson/kyeongbuk_geo.json', callback);
+	    }
+	};    
+	
+	require('echarts/util/mapData/params').params.kangwon = {
+	    getGeoJson: function (callback) {
+	        $.getJSON('/js/echarts/source/geoJson/kangwon_geo.json', callback);
+	    }
+	}; 
+	
+	require('echarts/util/mapData/params').params.kyeongnam = {
+	    getGeoJson: function (callback) {
+	        $.getJSON('/js/echarts/source/geoJson/kyeongnam_geo.json', callback);
+	    }
+	};    
+	
+	require('echarts/util/mapData/params').params.kyeonggi = {
+	    getGeoJson: function (callback) {
+	        $.getJSON('/js/echarts/source/geoJson/kyeonggi_geo.json', callback);
+	    }
+	}; 
+	
+//	require('echarts/util/mapData/params').params.chungcheong = {
+//	    getGeoJson: function (callback) {
+//	        $.getJSON('/js/echarts/source/geoJson/chungcheong_geo.json', callback);
+//	    }
+//	};    
+	
+	require('echarts/util/mapData/params').params.chungbuk = {
+	    getGeoJson: function (callback) {
+	        $.getJSON('/js/echarts/source/geoJson/chungbuk_geo.json', callback);
+	    }
+	}; 
+	
+	require('echarts/util/mapData/params').params.chungnam = {
+	    getGeoJson: function (callback) {
+	        $.getJSON('/js/echarts/source/geoJson/chungnam_geo.json', callback);
+	    }
+	}; 
+	
+	require('echarts/util/mapData/params').params.kangwon = {
+	    getGeoJson: function (callback) {
+	        $.getJSON('/js/echarts/source/geoJson/kangwon_geo.json', callback);
+	    }
+	}; 
+	
+	require('echarts/util/mapData/params').params.jeonbuk = {
+	    getGeoJson: function (callback) {
+	        $.getJSON('/js/echarts/source/geoJson/jeonbuk_geo.json', callback);
+	    }
+	};    
+	
+	require('echarts/util/mapData/params').params.jeonnam = {
+	    getGeoJson: function (callback) {
+	        $.getJSON('/js/echarts/source/geoJson/jeonnam_geo.json', callback);
+	    }
+	}; 
+}
+
+function setMdtRatio(data){
+	var sHtml = '';
+	sHtml += '<table class="tblWgt tp01" summary="수신율별로 금일과 전일의 운행차량 댓수를 보여 준다.">';
+	sHtml += '<caption>수신율별 운행차량</caption>';
+	sHtml += '<colgroup>';
+	sHtml += '	<col width="*" />';
+	sHtml += '	<col width="60" />';
+	sHtml += '	<col width="70" />';
+	sHtml += '</colgroup>';
+	sHtml += '<thead>';
+	sHtml += '	<tr>';
+	sHtml += '		<th scope="col">수신율</th>';
+	sHtml += '		<th scope="col" colspan="2">운행차량</th>';
+	sHtml += '	</tr>';
+	sHtml += '</thead>';
+	sHtml += '<tbody>';
+	sHtml += '	<tr class="tpG">';
+	sHtml += '		<th scope="row" rowspan="2">95% 이상</th>';
+	sHtml += '		<td class="day">금일</td>';
+	if (data == null)
+		sHtml += '		<td>0</td>';
+	else
+		sHtml += '		<td>'+data.nrmltToday+'</td>';
+	sHtml += '	</tr>';
+	sHtml += '	<tr class="tpG">';
+	sHtml += '		<td class="day">전일</td>';
+	if (data == null)
+		sHtml += '		<td>0</td>';
+	else
+		sHtml += '		<td>'+data.nrmltBfrt+'</td>';
+	sHtml += '	</tr>';
+	sHtml += '	<tr class="tpY">';
+	sHtml += '		<th scope="row" rowspan="2">85~94%</th>';
+	sHtml += '		<td class="day">금일</td>';
+	if (data == null)
+		sHtml += '		<td>0</td>';
+	else
+		sHtml += '		<td>'+data.warnToday+'</td>';
+	sHtml += '	</tr>';
+	sHtml += '	<tr class="tpY">';
+	sHtml += '		<td class="day">전일</td>';
+	if (data == null)
+		sHtml += '		<td>0</td>';
+	else
+		sHtml += '		<td>'+data.warnBfrt+'</td>';
+	sHtml += '	</tr>';
+	sHtml += '	<tr class="tpR">';
+	sHtml += '		<th scope="row" rowspan="2">85% 이하</th>';
+	sHtml += '		<td class="day">금일</td>';
+	if (data == null)
+		sHtml += '		<td>0</td>';
+	else
+		sHtml += '		<td>'+data.troblToday+'</td>';
+	sHtml += '	</tr>';
+	sHtml += '	<tr class="tpR">';
+	sHtml += '		<td class="day">전일</td>';
+	if (data == null)
+		sHtml += '		<td>0</td>';
+	else
+		sHtml += '		<td>'+data.troblBfrt+'</td>';
+	sHtml += '	</tr>';
+	sHtml += '</tbody>';
+	sHtml += '</table>'; 
+
+	return sHtml;
+}
+
+function setMdtInfo(data){
+	var eHtml = '';
+	var eStyle= 'display:none;height:0px;';
+	var count = 0;
+	$.each(data, function(index){
+		$( "#idDiv" ).fadeOut( "fast", function() {});
+		count++;
+		if (count>5)
+			eHtml += '<ul id="ul'+count+'" style="height:37px;width:295px;'+eStyle+'">';	
+		else
+			eHtml += '<ul id="ul'+count+'" style="height:37px;width:295px;">';
+		eHtml += '<li class="leftPos" >'+data[index].mdtId+'</li>';	
+		eHtml += '<li class="middlePos">'+data[index].deptNm+'</li>';	
+//		eHtml += '<li class="middlePos">'+data[index].mdtOpert+'</li>';	
+		eHtml += '<li class="rightPos" >'+data[index].mdtLastLc+'</li>';	
+		eHtml += '</ul>';
+		
+	});  
+	var idx = count+1;
+	if (count < 5){
+		for (idx;idx<=5;idx++){
+			eHtml += '<ul id="u'+idx+'" style="height:37px;width:295px;">';	
+			eHtml += '<li class="leftPos" ></li>';	
+			eHtml += '<li class="middlePos"></li>';	
+//			eHtml += '<li class="middlePos"></li>';	
+			eHtml += '<li class="rightPos" ></li>';	
+			eHtml += '</ul>';
+			count++;
+		}		
+	}	
+	MaxListCount = count;
+	CurrentListIdx = 0; 
+	
+	return eHtml;
+}
+
+function setMdtMap(data){
+	var option = Options;
+	
+	var geo_coord = {};
+	var data_line = [];
+	var data_point = [];
+	var oldDept = '';
+	
+	$.each(data, function(index){
+		if (oldDept != data[index].jisaNm){
+			geo_coord[data[index].jisaNm] = [data[index].jisaLon,data[index].jisaLat];
+			oldDept = data[index].jisaNm;	    				
+		}
+		geo_coord[data[index].mdtId] = [data[index].lon,data[index].lat];
+			    			
+		var linesubdata = [];
+		
+		var subObj1 = {};
+		var subObj2 = {};
+
+		subObj1.name = data[index].jisaNm;
+		linesubdata.push(subObj1);
+		subObj2.name = data[index].mdtId;
+		subObj2.value = data[index].recptnRatio;
+		linesubdata.push(subObj2);
+		
+		data_line.push(linesubdata);
+		
+		
+		var subObj3 = {};
+		subObj3.name = data[index].mdtId;
+		subObj3.value = data[index].recptnRatio;
+		
+		data_point.push(subObj3);	    	
+	});
+	
+	option.title.text = DeptName;
+	option.series[0].mapType = DeptJson;
+	option.series[0].geoCoord = geo_coord;
+	option.series[1].mapType = DeptJson;
+	option.series[1].markLine.data = data_line;
+	option.series[1].markPoint.data = data_point;
+	
+	return option;
+}
+
+var mapData = [];
+var mapError = [];
+var mapInfo = [];
+function createData(){
+	mapData.push({deptCode:'2', deptNm:'강원본부',recptnRatio:'97',mdtId:'1',lon:'127.78435',lat:'37.8344',jisaCode:'1',jisaNm:'강원본부',jisaLon:'127.952',jisaLat:'37.3997'});
+	mapData.push({deptCode:'2', deptNm:'강원본부',recptnRatio:'60',mdtId:'2',lon:'127.772',lat:'37.77582',jisaCode:'1',jisaNm:'강원본부',jisaLon:'127.952',jisaLat:'37.3997'});
+	mapData.push({deptCode:'2', deptNm:'강원본부',recptnRatio:'94',mdtId:'3',lon:'127.93786',lat:'37.75012',jisaCode:'1',jisaNm:'강원본부',jisaLon:'127.952',jisaLat:'37.3997'});
+	mapData.push({deptCode:'2', deptNm:'강원본부',recptnRatio:'87',mdtId:'4',lon:'128.05499',lat:'37.25046',jisaCode:'1',jisaNm:'강원본부',jisaLon:'127.952',jisaLat:'37.3997'});
+	mapData.push({deptCode:'2', deptNm:'강원본부',recptnRatio:'99',mdtId:'5',lon:'128.28849',lat:'37.52998',jisaCode:'1',jisaNm:'강원본부',jisaLon:'127.952',jisaLat:'37.3997'});
+	mapData.push({deptCode:'2', deptNm:'강원본부',recptnRatio:'100',mdtId:'6',lon:'127.81889',lat:'37.29945',jisaCode:'1',jisaNm:'강원본부',jisaLon:'127.952',jisaLat:'37.3997'});
+	mapData.push({deptCode:'2', deptNm:'강원본부',recptnRatio:'92',mdtId:'7',lon:'128.63288',lat:'38.05511',jisaCode:'1',jisaNm:'강원본부',jisaLon:'127.952',jisaLat:'37.3997'});
+	mapData.push({deptCode:'2', deptNm:'강원본부',recptnRatio:'98',mdtId:'8',lon:'129.09559',lat:'37.51279',jisaCode:'1',jisaNm:'강원본부',jisaLon:'127.952',jisaLat:'37.3997'});
+	mapData.push({deptCode:'7', deptNm:'경북본부',recptnRatio:'100',mdtId:'1',lon:'128.83462',lat:'35.97419',jisaCode:'2',jisaNm:'경북본부',jisaLon:'128.5377',jisaLat:'35.935'});
+	mapData.push({deptCode:'7', deptNm:'경북본부',recptnRatio:'100',mdtId:'2',lon:'128.2002',lat:'36.46152',jisaCode:'2',jisaNm:'경북본부',jisaLon:'128.5377',jisaLat:'35.935'});
+	mapData.push({deptCode:'7', deptNm:'경북본부',recptnRatio:'99',mdtId:'3',lon:'128.5815',lat:'36.39009',jisaCode:'2',jisaNm:'경북본부',jisaLon:'128.5377',jisaLat:'35.935'});
+	mapData.push({deptCode:'7', deptNm:'경북본부',recptnRatio:'96',mdtId:'4',lon:'128.2094',lat:'36.15858',jisaCode:'2',jisaNm:'경북본부',jisaLon:'128.5377',jisaLat:'35.935'});
+	mapData.push({deptCode:'7', deptNm:'경북본부',recptnRatio:'93',mdtId:'5',lon:'128.26951',lat:'35.70858',jisaCode:'2',jisaNm:'경북본부',jisaLon:'128.5377',jisaLat:'35.935'});
+	mapData.push({deptCode:'7', deptNm:'경북본부',recptnRatio:'87',mdtId:'6',lon:'129.1972',lat:'35.76343',jisaCode:'2',jisaNm:'경북본부',jisaLon:'128.5377',jisaLat:'35.935'});
+	mapData.push({deptCode:'7', deptNm:'경북본부',recptnRatio:'88',mdtId:'7',lon:'128.32778',lat:'36.13466',jisaCode:'2',jisaNm:'경북본부',jisaLon:'128.5377',jisaLat:'35.935'});
+	mapData.push({deptCode:'7', deptNm:'경북본부',recptnRatio:'85',mdtId:'8',lon:'128.54018',lat:'36.83183',jisaCode:'2',jisaNm:'경북본부',jisaLon:'128.5377',jisaLat:'35.935'});
+	mapData.push({deptCode:'8', deptNm:'경남본부',recptnRatio:'89',mdtId:'1',lon:'127.80468',lat:'34.99374',jisaCode:'3',jisaNm:'경남본부',jisaLon:'128.701',jisaLat:'35.2847'});
+	mapData.push({deptCode:'8', deptNm:'경남본부',recptnRatio:'85',mdtId:'2',lon:'129.24762',lat:'35.37666',jisaCode:'3',jisaNm:'경남본부',jisaLon:'128.701',jisaLat:'35.2847'});
+	mapData.push({deptCode:'8', deptNm:'경남본부',recptnRatio:'100',mdtId:'3',lon:'128.79437',lat:'35.52824',jisaCode:'3',jisaNm:'경남본부',jisaLon:'128.701',jisaLat:'35.2847'});
+	mapData.push({deptCode:'8', deptNm:'경남본부',recptnRatio:'100',mdtId:'4',lon:'128.47853',lat:'35.5355',jisaCode:'3',jisaNm:'경남본부',jisaLon:'128.701',jisaLat:'35.2847'});
+	mapData.push({deptCode:'8', deptNm:'경남본부',recptnRatio:'100',mdtId:'5',lon:'127.78407',lat:'35.54252',jisaCode:'3',jisaNm:'경남본부',jisaLon:'128.701',jisaLat:'35.2847'});
+	mapData.push({deptCode:'8', deptNm:'경남본부',recptnRatio:'92',mdtId:'6',lon:'127.93987',lat:'35.31391',jisaCode:'3',jisaNm:'경남본부',jisaLon:'128.701',jisaLat:'35.2847'});
+	mapData.push({deptCode:'8', deptNm:'경남본부',recptnRatio:'99',mdtId:'7',lon:'128.97768',lat:'35.22815',jisaCode:'3',jisaNm:'경남본부',jisaLon:'128.701',jisaLat:'35.2847'});
+	mapData.push({deptCode:'8', deptNm:'경남본부',recptnRatio:'98',mdtId:'8',lon:'128.49881',lat:'35.52565',jisaCode:'3',jisaNm:'경남본부',jisaLon:'128.701',jisaLat:'35.2847'});
+	mapData.push({deptCode:'1', deptNm:'경기본부',recptnRatio:'96',mdtId:'1',lon:'127.0584',lat:'37.44299',jisaCode:'4',jisaNm:'경기본부',jisaLon:'127.0899',jisaLat:'37.3377'});
+	mapData.push({deptCode:'1', deptNm:'경기본부',recptnRatio:'85',mdtId:'2',lon:'126.96043',lat:'37.70414',jisaCode:'4',jisaNm:'경기본부',jisaLon:'127.0899',jisaLat:'37.3377'});
+	mapData.push({deptCode:'1', deptNm:'경기본부',recptnRatio:'91',mdtId:'3',lon:'126.78397',lat:'37.17498',jisaCode:'4',jisaNm:'경기본부',jisaLon:'127.0899',jisaLat:'37.3377'});
+	mapData.push({deptCode:'1', deptNm:'경기본부',recptnRatio:'99',mdtId:'4',lon:'127.30974',lat:'37.40035',jisaCode:'4',jisaNm:'경기본부',jisaLon:'127.0899',jisaLat:'37.3377'});
+	mapData.push({deptCode:'1', deptNm:'경기본부',recptnRatio:'100',mdtId:'5',lon:'126.88094',lat:'37.23807',jisaCode:'4',jisaNm:'경기본부',jisaLon:'127.0899',jisaLat:'37.3377'});
+	mapData.push({deptCode:'1', deptNm:'경기본부',recptnRatio:'100',mdtId:'6',lon:'127.09533',lat:'37.20978',jisaCode:'4',jisaNm:'경기본부',jisaLon:'127.0899',jisaLat:'37.3377'});
+	mapData.push({deptCode:'1', deptNm:'경기본부',recptnRatio:'96',mdtId:'7',lon:'127.20536',lat:'37.25853',jisaCode:'4',jisaNm:'경기본부',jisaLon:'127.0899',jisaLat:'37.3377'});
+	mapData.push({deptCode:'1', deptNm:'경기본부',recptnRatio:'99',mdtId:'8',lon:'127.39697',lat:'37.27234',jisaCode:'4',jisaNm:'경기본부',jisaLon:'127.0899',jisaLat:'37.3377'});
+	mapData.push({deptCode:'5', deptNm:'전북본부',recptnRatio:'99',mdtId:'1',lon:'126.79545',lat:'36.02137',jisaCode:'6',jisaNm:'전북본부',jisaLon:'127.0525',jisaLat:'35.87375'});
+	mapData.push({deptCode:'5', deptNm:'전북본부',recptnRatio:'99',mdtId:'2',lon:'127.10459',lat:'36.06825',jisaCode:'6',jisaNm:'전북본부',jisaLon:'127.0525',jisaLat:'35.87375'});
+	mapData.push({deptCode:'5', deptNm:'전북본부',recptnRatio:'98',mdtId:'3',lon:'127.58986',lat:'35.71612',jisaCode:'6',jisaNm:'전북본부',jisaLon:'127.0525',jisaLat:'35.87375'});
+	mapData.push({deptCode:'5', deptNm:'전북본부',recptnRatio:'97',mdtId:'4',lon:'127.32562',lat:'35.4683',jisaCode:'6',jisaNm:'전북본부',jisaLon:'127.0525',jisaLat:'35.87375'});
+	mapData.push({deptCode:'5', deptNm:'전북본부',recptnRatio:'90',mdtId:'5',lon:'126.7354',lat:'35.67492',jisaCode:'6',jisaNm:'전북본부',jisaLon:'127.0525',jisaLat:'35.87375'});
+	mapData.push({deptCode:'5', deptNm:'전북본부',recptnRatio:'100',mdtId:'6',lon:'126.94533',lat:'35.67973',jisaCode:'6',jisaNm:'전북본부',jisaLon:'127.0525',jisaLat:'35.87375'});
+	mapData.push({deptCode:'5', deptNm:'전북본부',recptnRatio:'100',mdtId:'7',lon:'127.03887',lat:'35.83475',jisaCode:'6',jisaNm:'전북본부',jisaLon:'127.0525',jisaLat:'35.87375'});
+	mapData.push({deptCode:'5', deptNm:'전북본부',recptnRatio:'100',mdtId:'8',lon:'127.65111',lat:'35.97228',jisaCode:'6',jisaNm:'전북본부',jisaLon:'127.0525',jisaLat:'35.87375'});
+	mapData.push({deptCode:'6', deptNm:'전남본부',recptnRatio:'97',mdtId:'1',lon:'126.53429',lat:'35.26376',jisaCode:'7',jisaNm:'전남본부',jisaLon:'126.84892',jisaLat:'35.15426'});
+	mapData.push({deptCode:'6', deptNm:'전남본부',recptnRatio:'98',mdtId:'2',lon:'126.56336',lat:'34.73755',jisaCode:'7',jisaNm:'전남본부',jisaLon:'126.84892',jisaLat:'35.15426'});
+	mapData.push({deptCode:'6', deptNm:'전남본부',recptnRatio:'100',mdtId:'3',lon:'127.03037',lat:'35.24643',jisaCode:'7',jisaNm:'전남본부',jisaLon:'126.84892',jisaLat:'35.15426'});
+	mapData.push({deptCode:'6', deptNm:'전남본부',recptnRatio:'100',mdtId:'4',lon:'127.50678',lat:'35.03026',jisaCode:'7',jisaNm:'전남본부',jisaLon:'126.84892',jisaLat:'35.15426'});
+	mapData.push({deptCode:'6', deptNm:'전남본부',recptnRatio:'100',mdtId:'5',lon:'126.81837',lat:'35.24088',jisaCode:'7',jisaNm:'전남본부',jisaLon:'126.84892',jisaLat:'35.15426'});
+	mapData.push({deptCode:'6', deptNm:'전남본부',recptnRatio:'96',mdtId:'6',lon:'126.5033',lat:'34.95342',jisaCode:'7',jisaNm:'전남본부',jisaLon:'126.84892',jisaLat:'35.15426'});
+	mapData.push({deptCode:'6', deptNm:'전남본부',recptnRatio:'100',mdtId:'7',lon:'126.87595',lat:'35.61039',jisaCode:'7',jisaNm:'전남본부',jisaLon:'126.84892',jisaLat:'35.15426'});
+	mapData.push({deptCode:'6', deptNm:'전남본부',recptnRatio:'97',mdtId:'8',lon:'127.11012',lat:'34.81393',jisaCode:'7',jisaNm:'전남본부',jisaLon:'126.84892',jisaLat:'35.15426'});
+	mapData.push({deptCode:'3', deptNm:'충북본부',recptnRatio:'99',mdtId:'1',lon:'127.47514',lat:'36.87794',jisaCode:'3',jisaNm:'충북본부',jisaLon:'127.5374',jisaLat:'36.91169'});
+	mapData.push({deptCode:'3', deptNm:'충북본부',recptnRatio:'89',mdtId:'2',lon:'127.8107',lat:'37.03434',jisaCode:'3',jisaNm:'충북본부',jisaLon:'127.5374',jisaLat:'36.91169'});
+	mapData.push({deptCode:'3', deptNm:'충북본부',recptnRatio:'100',mdtId:'3',lon:'127.47148',lat:'36.74748',jisaCode:'3',jisaNm:'충북본부',jisaLon:'127.5374',jisaLat:'36.91169'});
+	mapData.push({deptCode:'3', deptNm:'충북본부',recptnRatio:'97',mdtId:'4',lon:'127.86882',lat:'37.0694',jisaCode:'3',jisaNm:'충북본부',jisaLon:'127.5374',jisaLat:'36.91169'});
+	mapData.push({deptCode:'3', deptNm:'충북본부',recptnRatio:'94',mdtId:'5',lon:'127.88995',lat:'36.90707',jisaCode:'3',jisaNm:'충북본부',jisaLon:'127.5374',jisaLat:'36.91169'});
+	mapData.push({deptCode:'4', deptNm:'충남본부',recptnRatio:'100',mdtId:'1',lon:'126.59887',lat:'36.83836',jisaCode:'4',jisaNm:'충남본부',jisaLon:'126.85198',jisaLat:'36.29794'});
+	mapData.push({deptCode:'4', deptNm:'충남본부',recptnRatio:'89',mdtId:'2',lon:'126.81628',lat:'36.65295',jisaCode:'4',jisaNm:'충남본부',jisaLon:'126.85198',jisaLat:'36.29794'});
+	mapData.push({deptCode:'4', deptNm:'충남본부',recptnRatio:'100',mdtId:'3',lon:'127.04428',lat:'36.44829',jisaCode:'4',jisaNm:'충남본부',jisaLon:'126.85198',jisaLat:'36.29794'});
+	mapData.push({deptCode:'4', deptNm:'충남본부',recptnRatio:'97',mdtId:'4',lon:'126.55777',lat:'36.36513',jisaCode:'4',jisaNm:'충남본부',jisaLon:'126.85198',jisaLat:'36.29794'});
+	mapData.push({deptCode:'4', deptNm:'충남본부',recptnRatio:'95',mdtId:'5',lon:'127.05147',lat:'36.19562',jisaCode:'4',jisaNm:'충남본부',jisaLon:'126.85198',jisaLat:'36.29794'});
+	mapData.push({deptCode:'4', deptNm:'충남본부',recptnRatio:'98',mdtId:'6',lon:'127.29912',lat:'36.27498',jisaCode:'4',jisaNm:'충남본부',jisaLon:'126.85198',jisaLat:'36.29794'});
+	mapData.push({deptCode:'4', deptNm:'충남본부',recptnRatio:'93',mdtId:'7',lon:'127.40425',lat:'36.60847',jisaCode:'4',jisaNm:'충남본부',jisaLon:'126.85198',jisaLat:'36.29794'});
+	
+	mapError.push({deptCode:'1',deptNm:'수도권본부',nrmltToday:'20',warnToday:'1',troblToday:'5',nrmltBfrt:'23',warnBfrt:'1',troblBfrt:'4'});
+	mapError.push({deptCode:'2',deptNm:'강원본부',nrmltToday:'19',warnToday:'2',troblToday:'4',nrmltBfrt:'20',warnBfrt:'11',troblBfrt:'1'});
+	mapError.push({deptCode:'3',deptNm:'충북본부',nrmltToday:'19',warnToday:'5',troblToday:'4',nrmltBfrt:'23',warnBfrt:'1',troblBfrt:'2'});
+	mapError.push({deptCode:'4',deptNm:'충남본부',nrmltToday:'18',warnToday:'1',troblToday:'3',nrmltBfrt:'24',warnBfrt:'2',troblBfrt:'5'});
+	mapError.push({deptCode:'5',deptNm:'전북본부',nrmltToday:'19',warnToday:'2',troblToday:'5',nrmltBfrt:'25',warnBfrt:'2',troblBfrt:'1'});
+	mapError.push({deptCode:'6',deptNm:'전남본부',nrmltToday:'18',warnToday:'2',troblToday:'3',nrmltBfrt:'24',warnBfrt:'3',troblBfrt:'4'});
+	mapError.push({deptCode:'7',deptNm:'경북본부',nrmltToday:'18',warnToday:'2',troblToday:'4',nrmltBfrt:'20',warnBfrt:'1',troblBfrt:'5'});
+	mapError.push({deptCode:'8',deptNm:'경남본부',nrmltToday:'19',warnToday:'1',troblToday:'4',nrmltBfrt:'18',warnBfrt:'3',troblBfrt:'3'});
+
+	mapInfo.push({deptCode:'1',deptNm:'인천지사',mdtId:'경기33가1234',mdtOpert:'',mdtLastLc:'AVMS(구)'});
+	mapInfo.push({deptCode:'1',deptNm:'시흥지사',mdtId:'경기33허0974',mdtOpert:'',mdtLastLc:'AVMS(구)'});
+	mapInfo.push({deptCode:'1',deptNm:'군포지사',mdtId:'경기23허0842',mdtOpert:'',mdtLastLc:'AVMS(구)'});
+	mapInfo.push({deptCode:'1',deptNm:'화성지사',mdtId:'경기23허0444',mdtOpert:'',mdtLastLc:'AVMS(신)'});
+	mapInfo.push({deptCode:'1',deptNm:'수원지사',mdtId:'경기11허2345',mdtOpert:'',mdtLastLc:'A2000S'});
+//	mapInfo.push({deptCode:'1',deptNm:'경기광주지사',mdtId:'경기12능3242',mdtOpert:'',mdtLastLc:'AVMS(신)'});
+//	mapInfo.push({deptCode:'1',deptNm:'동서울지사',mdtId:'서울32너2345',mdtOpert:'',mdtLastLc:'AVMS(신)'});
+//	mapInfo.push({deptCode:'1',deptNm:'동서울지사',mdtId:'서울92마2098',mdtOpert:'',mdtLastLc:'AVMS(구)'});
+//	mapInfo.push({deptCode:'1',deptNm:'화성지사',mdtId:'경기23나1023',mdtOpert:'',mdtLastLc:'AVMS(구)'});
+//	mapInfo.push({deptCode:'2',deptNm:'원주지사',mdtId:'원주21가1244',mdtOpert:'',mdtLastLc:'AVMS(구)'});
+	mapInfo.push({deptCode:'2',deptNm:'원주지사',mdtId:'원주21가1253',mdtOpert:'',mdtLastLc:'A3000S'});
+	mapInfo.push({deptCode:'2',deptNm:'대관령지사',mdtId:'강원03가3814',mdtOpert:'',mdtLastLc:'AVMS(신)'});
+	mapInfo.push({deptCode:'2',deptNm:'춘천지사',mdtId:'춘천48허1948',mdtOpert:'',mdtLastLc:'AVMS(구)'});
+	mapInfo.push({deptCode:'2',deptNm:'강릉지사',mdtId:'강릉12머2947',mdtOpert:'',mdtLastLc:'AVMS(구)'});
+	mapInfo.push({deptCode:'3',deptNm:'진천지사',mdtId:'29가1244',mdtOpert:'',mdtLastLc:'AVMS(신)'});
+	mapInfo.push({deptCode:'3',deptNm:'제천지사',mdtId:'42다2849',mdtOpert:'',mdtLastLc:'AVMS(구)'});
+	mapInfo.push({deptCode:'3',deptNm:'충주지사',mdtId:'충북10나3451',mdtOpert:'',mdtLastLc:'AVMS(신)'});
+	mapInfo.push({deptCode:'3',deptNm:'엄정지사',mdtId:'42다2849',mdtOpert:'',mdtLastLc:'AVMS(구)'});	
+	mapInfo.push({deptCode:'4',deptNm:'천안지사',mdtId:'천안50노3174',mdtOpert:'',mdtLastLc:'AVMS(구)'});
+	mapInfo.push({deptCode:'4',deptNm:'천안지사',mdtId:'천안50노3436',mdtOpert:'',mdtLastLc:'A2000S'});
+	mapInfo.push({deptCode:'4',deptNm:'대전지사',mdtId:'대전40노2390',mdtOpert:'',mdtLastLc:'AVMS(구)'});
+//	mapInfo.push({deptCode:'4',deptNm:'영동지사',mdtId:'대전32호4978',mdtOpert:'',mdtLastLc:'AVMS(구)'});
+//	mapInfo.push({deptCode:'4',deptNm:'공주지사',mdtId:'대전11타9482',mdtOpert:'',mdtLastLc:'AVMS(신)'});
+//	mapInfo.push({deptCode:'4',deptNm:'부여지사',mdtId:'충남54남3983',mdtOpert:'',mdtLastLc:'AVMS(신)'});
+	mapInfo.push({deptCode:'8',deptNm:'울산지사',mdtId:'경남49너3817',mdtOpert:'',mdtLastLc:'AVMS(구)'});
+//	mapInfo.push({deptCode:'8',deptNm:'울산지사',mdtId:'경남29나1234',mdtOpert:'',mdtLastLc:'AVMS(구)'});
+//	mapInfo.push({deptCode:'8',deptNm:'울산지사',mdtId:'경남13구3348',mdtOpert:'',mdtLastLc:'A2000S'});
+	mapInfo.push({deptCode:'8',deptNm:'양산지사',mdtId:'부산53라3918',mdtOpert:'',mdtLastLc:'AVMS(구)'});
+//	mapInfo.push({deptCode:'8',deptNm:'양산지사',mdtId:'부산10자1955',mdtOpert:'',mdtLastLc:'A3000S'});
+//	mapInfo.push({deptCode:'8',deptNm:'양산지사',mdtId:'부산01더0932',mdtOpert:'',mdtLastLc:'AVMS(신)'});
+//	mapInfo.push({deptCode:'8',deptNm:'양산지사',mdtId:'부산23바3918',mdtOpert:'',mdtLastLc:'A2000S'});	
+	mapInfo.push({deptCode:'8',deptNm:'창원지사',mdtId:'부산79카4920',mdtOpert:'',mdtLastLc:'AVMS(구)'});
+//	mapInfo.push({deptCode:'8',deptNm:'창원지사',mdtId:'부산11파1057',mdtOpert:'',mdtLastLc:'AVMS(구)'});
+	mapInfo.push({deptCode:'8',deptNm:'진주지사',mdtId:'부산80러3486',mdtOpert:'',mdtLastLc:'AVMS(구)'});
+//	mapInfo.push({deptCode:'8',deptNm:'산청지사',mdtId:'부산23구3945',mdtOpert:'',mdtLastLc:'A2000S'});
+//	mapInfo.push({deptCode:'8',deptNm:'경주지사',mdtId:'부산11저3857',mdtOpert:'',mdtLastLc:'AVMS(구)'});
+//	mapInfo.push({deptCode:'8',deptNm:'경주지사',mdtId:'부산34지5924',mdtOpert:'',mdtLastLc:'AVMS(신)'});
+//	mapInfo.push({deptCode:'8',deptNm:'경주지사',mdtId:'부산20사7868',mdtOpert:'',mdtLastLc:'AVMS(신)'});
+	mapInfo.push({deptCode:'7',deptNm:'구미지사',mdtId:'대구12나1259',mdtOpert:'',mdtLastLc:'AVMS(구)'});
+//	mapInfo.push({deptCode:'7',deptNm:'구미지사',mdtId:'대구23다2350',mdtOpert:'',mdtLastLc:'AVMS(구)'});
+//	mapInfo.push({deptCode:'7',deptNm:'대구지사',mdtId:'대구45라6985',mdtOpert:'',mdtLastLc:'AVMS(구)'});
+	mapInfo.push({deptCode:'7',deptNm:'대구지사',mdtId:'대구67마5068',mdtOpert:'',mdtLastLc:'AVMS(구)'});
+	mapInfo.push({deptCode:'7',deptNm:'대구지사',mdtId:'대구98자2853',mdtOpert:'',mdtLastLc:'A2000S'});
+	mapInfo.push({deptCode:'7',deptNm:'군위지사',mdtId:'대구10하3494',mdtOpert:'',mdtLastLc:'AVMS(구)'});
+//	mapInfo.push({deptCode:'7',deptNm:'군위지사',mdtId:'대구42아3095',mdtOpert:'',mdtLastLc:'AVMS(구)'});
+//	mapInfo.push({deptCode:'7',deptNm:'군위지사',mdtId:'대구11호2845',mdtOpert:'',mdtLastLc:'AVMS(신)'});
+	mapInfo.push({deptCode:'6',deptNm:'광주지사',mdtId:'광주07타3815',mdtOpert:'',mdtLastLc:'A3000S'});
+	mapInfo.push({deptCode:'6',deptNm:'담양지사',mdtId:'전남18사2305',mdtOpert:'',mdtLastLc:'AVMS(구)'});
+//	mapInfo.push({deptCode:'6',deptNm:'담양지사',mdtId:'전남10자2019',mdtOpert:'',mdtLastLc:'AVMS(구)'});
+//	mapInfo.push({deptCode:'6',deptNm:'순천지사',mdtId:'전남11타2057',mdtOpert:'',mdtLastLc:'AVMS(구)'});
+//	mapInfo.push({deptCode:'6',deptNm:'순천지사',mdtId:'전남76차1112',mdtOpert:'',mdtLastLc:'AVMS(구)'});
+	mapInfo.push({deptCode:'6',deptNm:'순천지사',mdtId:'전남11가2058',mdtOpert:'',mdtLastLc:'A2000S'});
+	mapInfo.push({deptCode:'5',deptNm:'전주지사',mdtId:'전남08차3523',mdtOpert:'',mdtLastLc:'AVMS(신)'});
+	mapInfo.push({deptCode:'5',deptNm:'부안지사',mdtId:'전북09사3825',mdtOpert:'',mdtLastLc:'AVMS(구)'});
+	mapInfo.push({deptCode:'5',deptNm:'무주지사',mdtId:'전북11라4058',mdtOpert:'',mdtLastLc:'A3000S'});
+//	mapInfo.push({deptCode:'5',deptNm:'무주지사',mdtId:'전북10바2305',mdtOpert:'',mdtLastLc:'AVMS(구)'});
+	mapInfo.push({deptCode:'5',deptNm:'무주지사',mdtId:'전북60차3057',mdtOpert:'',mdtLastLc:'AVMS(구)'});
+	mapInfo.push({deptCode:'5',deptNm:'논산지사',mdtId:'전북10하3957',mdtOpert:'',mdtLastLc:'AVMS(신)'});
+//	mapInfo.push({deptCode:'5',deptNm:'논산지사',mdtId:'전북10파8864',mdtOpert:'',mdtLastLc:'AVMS(구)'});
+}

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="bucInstNasUseDiskDAO">
+
+    <typeAlias  alias="egovMap"   type="egovframework.rte.psl.dataaccess.util.EgovMap"  />
+    <typeAlias  alias="bucCollectEsmVO"  type="egovframework.com.sdtic.bucrs.service.BucCollectEsmVO" />
+
+    <insert id="bucInstNasUseDiskDAO.bucEsm241InsertCollectDataAjax" parameterClass="bucCollectEsmVO">
+      	<![CDATA[
+        /*ESM241 NAS USEDISK 수입데이터 입력 */
+        INSERT INTO IOC_SDTIC_BUC_USEDISK_ESM
+        (
+            ESM_USEDISK_SEQ,
+            ESM_GUBUN,        
+            HOSTNAME,      
+            OBJ_NAME,    
+            RSCTYPE_ID,  
+            RSC_KEY_NAME,    
+            USE_DISK_VALUE,
+            COLLECT_DATE,
+            CRE_DATE
+        )
+        VALUES
+        (
+            ESM_USEDISK_SEQ.NEXTVAL,
+            'ESM241',
+            #hostName#,
+            #obj_name#,
+            #rsctype_id#,
+            #rsc_key_name#,
+            #resultvalue_double#,
+            #collect_date#,
+            TO_CHAR(sysdate, 'YYYYMMDDhh24mmss')
+        )  
+       ]]>
+     </insert>
+     
+     <insert id="bucInstNasUseDiskDAO.bucEsm246InsertCollectDataAjax" parameterClass="bucCollectEsmVO">
+        <![CDATA[
+        /*ESM246 NAS USEDISK 수입데이터 입력 */
+        INSERT INTO IOC_SDTIC_BUC_USEDISK_ESM
+        (
+            ESM_USEDISK_SEQ,
+            ESM_GUBUN,        
+            HOSTNAME,      
+            OBJ_NAME,    
+            RSCTYPE_ID,  
+            RSC_KEY_NAME,    
+            USE_DISK_VALUE,
+            COLLECT_DATE,
+            CRE_DATE
+        )
+        VALUES
+        (
+            ESM_USEDISK_SEQ.NEXTVAL,
+            'ESM246',
+            #hostName#,
+            #obj_name#,
+            #rsctype_id#,
+            #rsc_key_name#,
+            #resultvalue_double#,
+            #collect_date#,
+            TO_CHAR(sysdate, 'YYYYMMDDhh24mmss')
+        )  
+       ]]>
+     </insert>
+
+</sqlMap>

@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="bucMntmng">
+
+    <typeAlias  alias="egovMap"   type="egovframework.rte.psl.dataaccess.util.EgovMap"  />
+    <typeAlias  alias="bucMntmngVO"  type="egovframework.com.sdtic.bucrs.service.BucMntmngVO" />
+
+    <select id="bucMntmngDAO.bucMntmngAccmltConectrAjax" parameterClass="bucMntmngVO" resultClass="bucMntmngVO">
+        /* bucMntmngAccmltConectrAjax 조회 */
+        SELECT
+             TEMP1     /* 템프1        */
+            ,TEMP2     /* 템프2        */
+            ,TEMP3     /* 템프3        */
+            ,TEMP4     /* 템프4        */
+        FROM TEMPTABLE
+    </select>
+    
+    <select id="bucMntmngDAO.bucMntmngRtAjax" parameterClass="bucMntmngVO" resultClass="bucMntmngVO">
+        /* bucMntmngRtAjax 조회 */
+		select   
+            BUC_MNTMNG 
+		from BUC_ACCMLT_CONECTR
+    </select>
+
+	<!-- 비즈니스 유지관리  고장처리율 쿼리-->
+    <select id="bucMntmngDAO.bucMntmngProfitToPlanAjax" parameterClass="bucMntmngVO" resultClass="bucMntmngVO">
+        /* bucMntmngProfitToPlanAjax 조회 */
+        /* 공통코드 리스트 조회 */
+        <isEmpty property="bonbu_gubun">
+	    select 
+	    	bonbu, bonbucode, sum(t_data1) as ts_data, sum(t_data2) as tp_data
+	       ,sum(g_data1) as gs_data, sum(g_data2) as gp_data
+	       ,sum(a_data1) as as_data, sum(a_data2) as ap_data
+		from T_MNTMNGPROFITTOPLAN
+		group by bonbu, bonbucode
+		order by bonbucode
+		</isEmpty>
+		<isNotEmpty property="bonbu_gubun">
+		select 
+			jisa as bonbu, jisacode as bonbucode
+		    ,sum(t_data1) as ts_data, sum(t_data2) as tp_data
+		    ,sum(g_data1) as gs_data, sum(g_data2) as gp_data
+		    ,sum(a_data1) as as_data, sum(a_data2) as ap_data
+		from T_MNTMNGPROFITTOPLAN
+		where bonbucode = #bonbu_gubun#
+		group by jisa , jisacode
+		order by jisacode
+		</isNotEmpty>	
+    </select>
+    
+    
+	<!-- 비즈니스 유지관리 고장처리율(본부전체) --> 
+    <select id="bucMntmngDAO.bucMntmngProfitToPlanMaxAjax" parameterClass="bucMntmngVO" resultClass="bucMntmngVO">
+        /* bucMntmngProfitToPlanMaxAjax 조회 */
+        select MAX(count) as  bonbuMax
+		from (select UPPERHDQRTRSCODE, count(UPPERHDQRTRSCODE) as count
+	   		  from INSTTCODETABLE
+			  where UPPERHDQRTRSNM IS NULL
+			  group by UPPERHDQRTRSCODE
+		      
+			  UNION ALL
+			      
+			  select '' as UPPERHDQRTRSCODE, count(UPPERHDQRTRSCODE)  as count
+			  from INSTTCODETABLE
+			  where BRFFCNM IS NULL
+      		 )
+    </select> 
+    
+    
+    <!-- 비즈니스 유지관리 상단위젯 누적접속자 쿼리 -->
+    <select id="bucMntmngDAO.bucMntmngAccmltConectrdbAjax" parameterClass="bucMntmngVO" resultClass="bucMntmngVO">
+       /* bucMntmngAccmltConectrdbAjax 조회 */
+        select count(*) as cnt         
+		from T_CNKC_USER_CNNC_LOG01H1 A,
+		     T_CNKC_BSWR_SYSTM01M1 B
+		where to_char(lsttm_logn_dttm, 'yyyymmdd') = TO_CHAR(SYSDATE, 'YYYYMMDD')
+		  and A.SYSTM_CD = B.SYSTM_CD 
+		  and B.HGRN_SYSTM_CD = 'UKP'
+    </select>
+    
+   	<!-- 비즈니스 유지관리 상단위젯 공정율 쿼리 -->
+    <select id="bucMntmngDAO.bucMntmngRtdbAjax" parameterClass="bucMntmngVO" resultClass="bucMntmngVO">
+        /*bucMntmngRtdbAjax 조회 */
+		SELECT 
+		      round(SUM(A.PLAN_KM)) AS plan_km
+		      , round(SUM(E.KM)) AS c_km
+		      , case when SUM(E.KM) = 0
+		             then 0
+		             when (SUM(E.KM)/SUM(A.PLAN_KM))<![CDATA[ * ]]>100 <![CDATA[ > ]]> 100
+		             then 100
+		             else round((SUM(E.KM)/SUM(A.PLAN_KM))<![CDATA[ * ]]>100) 
+		             end complete_p   
+		  FROM  (SELECT  DISTINCT MTNOF_DPTCD /*지사코드*/
+		                ,DALY_JOB_DATES 
+		           FROM  T_EXMA_JOB_PLAN01M1 
+		         ) MAIN
+		        ,(
+		         SELECT  MTNOF_DPTCD /*지사코드*/
+		                ,DALY_JOB_DATES
+		                ,sum(abs(EDPNT_DSTNC - STPNT_DSTNC)) PLAN_KM
+		           FROM T_EXMA_FILD_JOB_PLAN01L1 
+		          WHERE DALY_JOB_DATES BETWEEN TO_CHAR(SYSDATE-7, 'YYYYMMDD') AND TO_CHAR(SYSDATE, 'YYYYMMDD')
+		            GROUP BY MTNOF_DPTCD, DALY_JOB_DATES           
+		        ) A       
+		       ,T_CNKC_INTG_DPRT01M1 D
+		       ,(
+		         SELECT MTNOF_DPTCD, DALY_JOB_DATES, SUM(ABS(EDPNT_DSTNC - STPNT_DSTNC)) KM
+		           FROM T_EXMA_JOB_CTNT01L1 
+		          WHERE DALY_JOB_DATES BETWEEN TO_CHAR(SYSDATE-7, 'YYYYMMDD') AND TO_CHAR(SYSDATE, 'YYYYMMDD')
+		          GROUP BY MTNOF_DPTCD, DALY_JOB_DATES   
+		        ) E
+		       
+		WHERE MAIN.MTNOF_DPTCD      = A.MTNOF_DPTCD
+		  AND MAIN.DALY_JOB_DATES   = A.DALY_JOB_DATES
+		  AND MAIN.MTNOF_DPTCD      = D.DPTCD
+		  AND MAIN.MTNOF_DPTCD      = E.MTNOF_DPTCD
+		  AND MAIN.DALY_JOB_DATES   = E.DALY_JOB_DATES
+    </select>
+	
+	<!-- 비즈니스 유지관리 계획대비 실적 쿼리(전일대비) -->
+    <select id="bucMntmngDAO.bucMntmngdaydbAjax" parameterClass="bucMntmngVO" resultClass="bucMntmngVO">
+		/* 유지관리 계획 대비 실적 (본부별)전일대비 */
+		/* bucMntmngdaydbAjax 조회 */
+		SELECT 
+			  D.IMDT_HGRN_DPTCD as bonbu_cd
+		      , (SELECT KOR_DPTNM FROM V_CNKC_INTG_DPRT01C1 WHERE INTG_DPTCD = D.IMDT_HGRN_DPTCD) as bonbu
+		      , MAIN.DALY_JOB_DATES
+		      , DECODE(MAIN.DALY_JOB_DATES, TO_CHAR(SYSDATE, 'YYYYMMDD'), 'T', 'Y') as gubun_date
+		      , round(SUM(A.PLAN_KM)) AS PLAN_KM
+		      , SUM(B.PLAN_WORKER_CNT) AS PLAN_WORKER_CNT
+		      , SUM(C.PLAN_EQP_CNT) AS PLAN_EQP_CNT
+		      , round(SUM(E.KM)) AS C_KM
+		      , SUM(F.WORKER_CNT) AS WORKER_CNT
+		      , SUM(G.EQP_CNT) AS EQP_CNT
+		  FROM  (SELECT  DISTINCT MTNOF_DPTCD /*지사코드*/
+		                ,DALY_JOB_DATES 
+		           FROM  T_EXMA_JOB_PLAN01M1 
+		         ) MAIN
+		        ,(
+		         SELECT  MTNOF_DPTCD /*지사코드*/
+		                ,DALY_JOB_DATES
+		                ,sum(abs(EDPNT_DSTNC - STPNT_DSTNC)) PLAN_KM
+		           FROM T_EXMA_FILD_JOB_PLAN01L1 
+		          WHERE DALY_JOB_DATES BETWEEN TO_CHAR(SYSDATE-1, 'YYYYMMDD') AND TO_CHAR(SYSDATE, 'YYYYMMDD')
+		            GROUP BY MTNOF_DPTCD, DALY_JOB_DATES           
+		        ) A
+		       ,(
+		         SELECT MTNOF_DPTCD, DALY_JOB_DATES, COUNT(*) PLAN_WORKER_CNT
+		           FROM T_EXMA_MOBZE_NMPR_PLAN01L1 
+		          WHERE DALY_JOB_DATES BETWEEN TO_CHAR(SYSDATE-1, 'YYYYMMDD') AND TO_CHAR(SYSDATE, 'YYYYMMDD')
+		          GROUP BY MTNOF_DPTCD, DALY_JOB_DATES   
+		        ) B
+		       ,(
+		         SELECT MTNOF_DPTCD, DALY_JOB_DATES, COUNT(*) PLAN_EQP_CNT
+		           FROM T_EXMA_MOBZE_EQPM_PLAN01L1 
+		          WHERE DALY_JOB_DATES BETWEEN TO_CHAR(SYSDATE-1, 'YYYYMMDD') AND TO_CHAR(SYSDATE, 'YYYYMMDD')
+		          GROUP BY MTNOF_DPTCD, DALY_JOB_DATES   
+		        ) C
+		       ,V_CNKC_INTG_DPRT01C1 D
+		       ,(
+		         SELECT MTNOF_DPTCD, DALY_JOB_DATES, SUM(ABS(EDPNT_DSTNC - STPNT_DSTNC)) KM
+		           FROM T_EXMA_JOB_CTNT01L1 
+		          WHERE DALY_JOB_DATES BETWEEN TO_CHAR(SYSDATE-1, 'YYYYMMDD') AND TO_CHAR(SYSDATE, 'YYYYMMDD')
+		          GROUP BY MTNOF_DPTCD, DALY_JOB_DATES   
+		        ) E
+		       ,(
+		         SELECT MTNOF_DPTCD, DALY_JOB_DATES, COUNT(*) WORKER_CNT
+		           FROM T_EXMA_MOBZE_NMPR01L1 
+		          WHERE DALY_JOB_DATES BETWEEN TO_CHAR(SYSDATE-1, 'YYYYMMDD') AND TO_CHAR(SYSDATE, 'YYYYMMDD')
+		          GROUP BY MTNOF_DPTCD, DALY_JOB_DATES   
+		        ) F
+		       ,(
+		         SELECT MTNOF_DPTCD, DALY_JOB_DATES, COUNT(*) EQP_CNT
+		           FROM T_EXMA_MOBZE_EQPM01L1 
+		          WHERE DALY_JOB_DATES BETWEEN TO_CHAR(SYSDATE-1, 'YYYYMMDD') AND TO_CHAR(SYSDATE, 'YYYYMMDD')
+		          GROUP BY MTNOF_DPTCD, DALY_JOB_DATES   
+		        ) G
+		WHERE MAIN.MTNOF_DPTCD      = A.MTNOF_DPTCD
+		  AND MAIN.DALY_JOB_DATES   = A.DALY_JOB_DATES
+		  AND MAIN.MTNOF_DPTCD      = B.MTNOF_DPTCD
+		  AND MAIN.DALY_JOB_DATES   = B.DALY_JOB_DATES
+		  AND MAIN.MTNOF_DPTCD      = C.MTNOF_DPTCD
+		  AND MAIN.DALY_JOB_DATES   = C.DALY_JOB_DATES
+		  AND MAIN.MTNOF_DPTCD      = D.INTG_DPTCD
+		  AND MAIN.MTNOF_DPTCD      = E.MTNOF_DPTCD
+		  AND MAIN.DALY_JOB_DATES   = E.DALY_JOB_DATES
+		  AND MAIN.MTNOF_DPTCD      = F.MTNOF_DPTCD
+		  AND MAIN.DALY_JOB_DATES   = F.DALY_JOB_DATES
+		  AND MAIN.MTNOF_DPTCD      = G.MTNOF_DPTCD
+		  AND MAIN.DALY_JOB_DATES   = G.DALY_JOB_DATES
+		GROUP BY D.IMDT_HGRN_DPTCD,       MAIN.DALY_JOB_DATES
+		ORDER BY 1, 3
+	</select>
+    
+    <!-- 비즈니스 유지관리 고장처리율(본부별) -->
+     <select id="bucMntmngDAO.bucMntmngProfitToPlanbonbuAjax" parameterClass="bucMntmngVO" resultClass="bucMntmngVO">
+        /* bucMntmngProfitToPlanbonbuAjax 조회(본부) */
+       SELECT 	
+       			<isEmpty property="use_cd">
+       			(SELECT KOR_DPTNM
+		        	  FROM V_CNKC_INTG_DPRT01C1
+		         
+		          WHERE INTG_DPTCD= A.IMDT_HGRN_DPTCD ) AS KOR_DPTNM
+		        </isEmpty>
+		        <isNotEmpty property="use_cd">
+		        (SELECT KOR_DPTNM
+		          FROM V_CNKC_INTG_DPRT01C1
+		        WHERE INTG_DPTCD= A.INTG_DPTCD ) AS KOR_DPTNM
+		        </isNotEmpty>
+		       	,NVL(SUM(B.ACPT),0) AS ACPT
+		       	,NVL(SUM(B.RCVR),0) AS RCVR
+		       ,decode(NVL(SUM(B.RCVR),0),0,0,round(SUM(B.RCVR)/SUM(B.ACPT)*100,0)) as c_percent
+		FROM V_CNKC_INTG_DPRT01C1 A
+		    ,(SELECT A.BLNG_DPTCD      /*소속부서*/ ,
+		           COUNT(A.DLLG_SQNO)  AS  /*고장등록 */  ACPT,
+		           COUNT(B.DLLG_SQNO)  AS /*고장복구*/  RCVR
+		    FROM    T_AFME_BRDW_ACPT01M1 /*고장접수*/ A,
+		            T_AFME_BRDW_RCVR01M1 /*고장복구*/ B
+		    WHERE  A.DLLG_SQNO = B.DLLG_SQNO(+)
+		      AND  (A.BRDW_CLSS_CD != '10' OR A.BRDW_CLSS_CD IS NULL )
+		     AND TO_char(A.OCRN_DTTM,'YYYYMMDD')   BETWEEN  TO_char(sysdate,'YYYYMM') || '01' AND TO_char(sysdate,'YYYYMM') || '31'
+		    GROUP BY A.BLNG_DPTCD) B
+		WHERE A.INTG_DPTCD = B.BLNG_DPTCD(+)
+		  AND A.PRAF_USE_YN = 'Y'
+		  AND A.INST_CLSFC_CD = '4'
+		  <isEmpty property="use_cd">
+		  GROUP BY A.IMDT_HGRN_DPTCD
+		  </isEmpty>
+		  <isNotEmpty property="use_cd">
+		  AND A.IMDT_HGRN_DPTCD = #use_cd#
+		  GROUP BY A.INTG_DPTCD
+		  </isNotEmpty>
+		
+    </select>
+    
+     <!-- <select id="bucMntmngDAO.bucMntmngProfitToPlanjisaAjax" parameterClass="bucMntmngVO" resultClass="bucMntmngVO">
+        /* bucMntmngProfitToPlanjisaAjax 조회(지사) */
+       /* 지사 고장수리율 */
+		SELECT (SELECT KOR_DPTNM
+		          FROM V_CNKC_INTG_DPRT01C1
+		        WHERE INTG_DPTCD= A.INTG_DPTCD ) AS KOR_DPTNM
+		       ,NVL(SUM(B.ACPT),0) AS ACPT
+		       ,NVL(SUM(B.RCVR),0) AS RCVR
+		       ,decode(NVL(SUM(B.RCVR),0),0,0,round(SUM(B.RCVR)/SUM(B.ACPT)*100,0)) as c_percent
+		FROM V_CNKC_INTG_DPRT01C1 A
+		    ,(SELECT A.BLNG_DPTCD      /*소속부서*/ ,
+		           COUNT(A.DLLG_SQNO)  AS  /*고장등록 */  ACPT,
+		           COUNT(B.DLLG_SQNO)  AS /*고장복구*/  RCVR
+		    FROM    T_AFME_BRDW_ACPT01M1 /*고장접수*/ A,
+		            T_AFME_BRDW_RCVR01M1 /*고장복구*/ B
+		    WHERE  A.DLLG_SQNO = B.DLLG_SQNO(+)
+		      AND  (A.BRDW_CLSS_CD != '10' OR A.BRDW_CLSS_CD IS NULL )
+		      AND A.OCRN_DTTM   BETWEEN  TO_DATE('20170901','YYYYMMDD') AND TO_DATE('20170920','YYYYMMDD')
+		    GROUP BY A.BLNG_DPTCD) B
+		WHERE A.INTG_DPTCD = B.BLNG_DPTCD(+)
+		  AND A.PRAF_USE_YN = 'Y'
+		  AND A.INST_CLSFC_CD = '4'
+		  
+		GROUP BY A.INTG_DPTCD
+    </select> -->
+
+</sqlMap>

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="bucFclts">
+
+    <typeAlias  alias="egovMap"   type="egovframework.rte.psl.dataaccess.util.EgovMap"  />
+    <typeAlias  alias="bucFcltsVO"  type="egovframework.com.sdtic.bucrs.service.BucFcltsVO" />
+	
+	<!-- 비즈니스 시설물 상단위젯 공정율 쿼리 -->
+   <select id="bucFcltsCtlDAO.bucFcltsRtAjax" parameterClass="bucFcltsVO" resultClass="bucFcltsVO">
+        /* bucFcltsRtAjax 조회 */
+		  SELECT round(((SUM(AA.TOT) - SUM(BB.COUNTDATA))/SUM(AA.TOT))*100,0) as rate
+			FROM 
+			     (SELECT COUNT(*) TOT, 'PLTWTR' AS CCLTS_NM
+			      FROM IOC_SDTIC_PLTWTR_TOT_MHRLS A
+			      UNION ALL
+			      SELECT COUNT(*) TOT, 'ELCTY'  AS CCLTS_NM
+			      FROM IOC_SDTIC_ELCTY_FCLTS_TOT B
+			      UNION ALL
+			      SELECT COUNT(*) TOT, 'LGHT'  AS CCLTS_NM
+			      FROM IOC_SDTIC_LGHT_FCLTS_TOT  C
+			      UNION ALL
+			      SELECT COUNT(*) TOT, 'TUNNEL'  AS CCLTS_NM
+			      FROM IOC_SDTIC_TUNNEL_TOT_MHRLS D) AA
+			
+			    ,(SELECT count(*) COUNTDATA, 'PLTWTR' AS CCLTS_NM
+			      FROM IOC_SDTIC_PLTWTR_TROBL
+			      WHERE to_char(DEV_TIME,'YYYYMMDD') =  sysdate
+			      UNION ALL
+			      SELECT count(*) COUNTDATA, 'ELCTY' AS CCLTS_NM
+			      FROM IOC_SDTIC_ELCTY_FCLTS_TROBL
+			      WHERE to_char(REGDATE,'YYYYMMDD') = sysdate
+			      UNION ALL
+			      SELECT count(*) COUNTDATA, 'LGHT' AS CCLTS_NM
+			      FROM IOC_SDTIC_LGHT_FCLTS_TROBL
+			      WHERE to_char(REGDATE,'YYYYMMDD') = sysdate
+			      UNION ALL
+			      SELECT count(*) COUNTDATA, 'TUNNEL' AS CCLTS_NM
+			      FROM IOC_SDTIC_TUNNEL_TROBL
+			      WHERE to_char(LOG_TIME,'YYYYMMDD') = sysdate )BB
+			WHERE AA.CCLTS_NM = BB.CCLTS_NM
+    </select>
+    
+    <!-- 비즈니스 시설물 이관율 쿼리 -->
+    <select id="bucFcltsCtlDAO.bucFcltsDataTransferdbAjax" parameterClass="bucFcltsVO" resultClass="bucFcltsVO">
+	    select 
+		     fcltscd
+		    ,fcltstable_kr as title
+		    ,round(inp_rate,0) as rate
+		from IOC_SDTIC_EXMA_TAB_INP_RATE
+		where to_char(inst_date,'yyyymmdd') = to_char(sysdate, 'yyyymmdd')
+		order by fcltscd  
+	</select>
+	
+	<!-- 비즈니스 시설물 34종 이관율 쿼리 -->
+	<select id="bucFcltsCtlDAO.bucFclts34EscalationRatedbAjax" parameterClass="bucFcltsVO" resultClass="bucFcltsVO">
+	    select 
+		     fcltstable_kr as title
+		    ,round(inp_rate,0) as rate
+		from IOC_SDTIC_EXMA_TAB_INP_RATE
+		where to_char(inst_date,'yyyymmdd') = to_char(sysdate, 'yyyymmdd')
+		order by fcltscd  
+	</select>
+</sqlMap>

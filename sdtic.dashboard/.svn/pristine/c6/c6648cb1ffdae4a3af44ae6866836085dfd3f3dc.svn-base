@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="fecMain">
+
+    <typeAlias  alias="egovMap"   type="egovframework.rte.psl.dataaccess.util.EgovMap"  />
+    <typeAlias  alias="fecMainVO"  type="egovframework.com.sdtic.fecrs.service.fecMainVO" />
+    <typeAlias  alias="FecSearchVO"  type="egovframework.com.sdtic.fecrs.service.FecSearchVO" />
+    <typeAlias  alias="FecMDTOperVO"  type="egovframework.com.sdtic.fecrs.service.FecMDTOperVO" />
+	<typeAlias  alias="FecMainMapVO"  type="egovframework.com.sdtic.fecrs.service.FecMainMapVO" />
+
+    <select id="fecMainDAO.fecMainCodeListAjax" parameterClass="fecMainVO" resultClass="fecMainVO">
+        /* 공통코드 리스트 조회 */
+        SELECT
+             CODE_GRP_ID     /* 코드그룹        */
+            ,CODE_ID         /* 코드아이디      */
+            ,CODE_NAME       /* 코드이름        */
+            ,REGIST_DATE     /* 등록일자        */
+            ,REGIST_ID       /* 등록자아이디    */
+            ,UPDT_DATE       /* 수정일자        */
+            ,UPDT_ID         /* 수정자아이디    */
+            ,USE_AT          /* 사용여부        */
+        FROM INC_CODE        /* 공통코드 테이블 */
+    </select>
+    
+    <select id="FecMdtoperDAO.fecMdtoperLv1Ajax" parameterClass="FecSearchVO" resultClass="FecMDTOperVO">  
+	    select dept_code as deptCode, dept_nm as deptNm , nrmlt_today as nrmltToday, warn_today as warnToday,
+	           trobl_today as troblToday, nrmlt_bfrt as nrmltBfrt, warn_bfrt as warnBfrt, trobl_bfrt as troblBfrt
+		from   fec_mdt_oper
+		where dept_code = #deptCode#      
+    </select>  
+    
+    <select id="FecMdtoperDAO.fecMdttroblLv1Ajax" parameterClass="FecSearchVO" resultClass="FecMDTOperVO">  
+	    select dept_code as deptCode, dept_nm as deptNm , mdt_id as mdtId, mdt_opert as mdtOpert, mdt_last_lc as mdtLastLc
+		from   fec_mdt_trobl
+		where dept_code = #deptCode#      
+    </select> 
+    
+    <select id="FecMdtoperDAO.fecMdtmapLv1Ajax" parameterClass="FecSearchVO" resultClass="FecMDTOperVO">  
+	    select dept_code as deptCode, dept_nm as deptNm , recptn_ratio as recptnRatio, lon as lon, lat as lat, 
+	    jisa_code as jisaCode, jisa_nm as jisaNm, jisa_lon as jisaLon, jisa_lat as jisaLat, mdt_id as mdtId
+		from   fec_mdt_lc
+		where dept_code = #deptCode#      
+    </select> 
+    
+    <select id="FecMainmapDAO.fecMainmapLv1Ajax" parameterClass="FecSearchVO" resultClass="FecMainMapVO">  
+	    select  dept_code as deptCode, dept_nm as deptNm , fclty_code as fcltyCode,  fclty_name as fcltyName, trobl , lon, lat
+		from fec_fclty_map
+		where trobl = 1
+		and fclty_code = #facCode# 
+    </select> 
+
+    
+</sqlMap>

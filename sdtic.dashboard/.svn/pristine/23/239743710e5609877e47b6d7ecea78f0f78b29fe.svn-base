@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="bucBnsty">
+
+    <typeAlias  alias="egovMap"   type="egovframework.rte.psl.dataaccess.util.EgovMap"  />
+    <typeAlias  alias="bucBnstyVO"  type="egovframework.com.sdtic.bucrs.service.BucBnstyVO" />
+
+    <select id="bucBnstyDAO.bucBnstyAccmltConectrAjax" parameterClass="bucBnstyVO" resultClass="bucBnstyVO">
+        /* bucBnstyAccmltConectrAjax 조회 */
+        SELECT
+             TEMP1     /* 템프1        */
+            ,TEMP2     /* 템프2        */
+            ,TEMP3     /* 템프3        */
+            ,TEMP4     /* 템프4        */
+        FROM TEMPTABLE
+    </select>
+    
+    <select id="bucBnstyDAO.bucBnstyRtAjax" parameterClass="bucBnstyVO" resultClass="bucBnstyVO">
+        select 
+	       BUC_BNSTY
+        from BUC_ACCMLT_CONECTR
+    </select>
+
+</sqlMap>

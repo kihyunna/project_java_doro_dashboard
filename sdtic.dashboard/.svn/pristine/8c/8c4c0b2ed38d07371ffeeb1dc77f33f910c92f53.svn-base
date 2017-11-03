@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="bucFclts">
+
+    <typeAlias  alias="egovMap"   type="egovframework.rte.psl.dataaccess.util.EgovMap"  />
+    <typeAlias  alias="bucFcltsVO"  type="egovframework.com.sdtic.bucrs.service.BucFcltsVO" />
+
+    <select id="bucFcltsDAO.bucFcltsAccmltConectrAjax" parameterClass="bucFcltsVO" resultClass="bucFcltsVO">
+		/* bucFcltsAccmltConectrAjax 조회 */
+		 SELECT COUNT (*) AS connnector
+		   FROM T_CNKC_USER_CNNC_LOG01H1 A, T_CNKC_BSWR_SYSTM01M1 B
+		   WHERE TO_CHAR (lsttm_logn_dttm, 'yyyymmdd') = TO_CHAR (SYSDATE, 'yyyymmdd')
+		   AND A.systm_cd = B.systm_cd
+	       AND B.HGRN_SYSTM_CD = 'FCL'
+    </select>
+
+        
+    
+    <!-- 비즈니스 시설물 고장 top20 쿼리 -->
+    <select id="bucFcltsDAO.bucFcltsBrokenfercilitytop" parameterClass="bucFcltsVO" resultClass="bucFcltsVO">
+        
+    </select>
+    
+     <!-- 비즈니스 시설물 고장평균처리일수 쿼리 -->
+    <select id="bucFcltsDAO.bucFcltsBrokenproavgday" parameterClass="bucFcltsVO" resultClass="bucFcltsVO">
+    </select>
+    
+        <!-- 비즈니스 시설물 고장평균처리일수 쿼리(본부) -->
+    <select id="bucFcltsDAO.bucFcltsBrokenproavgdaybonbuAjax" parameterClass="bucFcltsVO" resultClass="bucFcltsVO">
+        /* bucFcltsBrokenproavgdaybonbuAjax 조회 */
+        SELECT 
+            AA.HDQR_CD                                            /*본부*/
+            ,(select 
+            	  KOR_ABRVN
+        	  from V_CNKC_INTG_DPRT01C1 
+          		where INTG_DPTCD = AA.HDQR_CD) as HDQR_NM
+            ,count(*) as BROKEN_COUNT
+            ,TO_CHAR(avg(trunc(to_date(to_char(AA.ISPC_PLAN_DTTM,'YYYYMMDD'),'yyyymmdd')) - trunc(to_date(CC.ISPC_DATES,'yyyymmdd'))),'FM999990.0') avgDTTM
+            ,avg(trunc(to_date(to_char(AA.ISPC_PLAN_DTTM,'YYYYMMDD'),'yyyymmdd')) - trunc(to_date(CC.ISPC_DATES,'yyyymmdd'))) avgDTTM2
+	     FROM T_STMA_ISPC_PLAN01M1 AA
+	          ,T_STMA_BRDG01M1 BB
+	          ,T_STMA_BRDG_ISPC01M1 CC
+	     WHERE AA.FCLTS_INTG_ID = BB.FCLTS_INTG_ID(+)
+	       AND AA.FCLTS_INTG_ID = CC.FCLTS_INTG_ID
+	       AND AA.ISPC_NO = CC.ISPC_NO
+	       AND TO_CHAR(AA.ISPC_PLAN_DTTM,'YYYYMMDD') BETWEEN TO_CHAR(SYSDATE - 30,'YYYYMMDD') and TO_CHAR(SYSDATE,'YYYYMMDD')
+	       AND CC.ISPC_DATES IS NOT NULL
+	   GROUP BY AA.HDQR_CD
+	   order by avgDTTM2 asc
+	   
+    </select>
+    
+    <!-- 비즈니스 시설물 고장평균처리일수 쿼리(지사) -->
+    <select id="bucFcltsDAO.bucFcltsBrokenproavgdayjisaAjax" parameterClass="bucFcltsVO" resultClass="bucFcltsVO">
+	      /* bucFcltsBrokenproavgdayjisaAjax 조회 */
+	      SELECT 
+            AA.MTNOF_CD as MTNOF_CD                                        /*지사*/
+             ,(select KOR_ABRVN
+                   from V_CNKC_INTG_DPRT01C1
+                   where INTG_DPTCD = AA.MTNOF_CD) as HDQR_NM
+            ,count(*) as BROKEN_COUNT
+            ,TO_CHAR(avg(trunc(to_date(to_char(AA.ISPC_PLAN_DTTM,'YYYYMMDD'),'yyyymmdd')) - trunc(to_date(CC.ISPC_DATES,'yyyymmdd'))),'FM999990.0') avgDTTM
+            ,avg(trunc(to_date(to_char(AA.ISPC_PLAN_DTTM,'YYYYMMDD'),'yyyymmdd')) - trunc(to_date(CC.ISPC_DATES,'yyyymmdd'))) avgDTTM2
+          FROM T_STMA_ISPC_PLAN01M1 AA
+              ,T_STMA_BRDG01M1 BB
+              ,T_STMA_BRDG_ISPC01M1 CC
+         WHERE AA.FCLTS_INTG_ID = BB.FCLTS_INTG_ID(+)
+           AND AA.FCLTS_INTG_ID = CC.FCLTS_INTG_ID
+           AND AA.ISPC_NO = CC.ISPC_NO
+           AND TO_CHAR(AA.ISPC_PLAN_DTTM,'YYYYMMDD') BETWEEN TO_CHAR(SYSDATE - 30,'YYYYMMDD') and TO_CHAR(SYSDATE,'YYYYMMDD')
+           AND AA.HDQR_CD = #use_cd# 
+           AND CC.ISPC_DATES IS NOT NULL
+       GROUP BY AA.MTNOF_CD
+       order by avgDTTM2 asc
+    </select>
+    
+    <!-- 비즈니스 시설물 고장건수 top20 쿼리 -->
+    <select id="bucFcltsDAO.bucFcltsBrokenfercilitytopdbAjax" parameterClass="bucFcltsVO" resultClass="bucFcltsVO">
+    	SELECT *
+		FROM
+		(SELECT (SELECT KOR_DPTNM
+		          FROM V_CNKC_INTG_DPRT01C1
+		        WHERE INTG_DPTCD= A.IMDT_HGRN_DPTCD ) AS bonbu_nm
+		        ,(SELECT KOR_DPTNM
+		          FROM V_CNKC_INTG_DPRT01C1
+		        WHERE INTG_DPTCD= A.INTG_DPTCD ) AS jisa_nm
+		       ,NVL((SELECT INSR_KOR_NM
+		          FROM T_AFME_INSR_LST01M1
+		        WHERE IFCM_INSR_CLSFC_ID = B.INSR_NO),'기타') AS INSR_KOR_NM
+		       ,NVL(SUM(B.ACPT),0) AS ACPT		       
+		FROM V_CNKC_INTG_DPRT01C1 A
+		    ,(SELECT A.BLNG_DPTCD      /*소속부서*/ 
+		            ,C.INSR_NO
+		           ,COUNT(A.DLLG_SQNO)  AS  /*고장등록 */  ACPT
+		           ,COUNT(B.DLLG_SQNO)  AS /*고장복구*/  RCVR
+		    FROM    T_AFME_BRDW_ACPT01M1 /*고장접수*/ A,
+		            T_AFME_BRDW_RCVR01M1 /*고장복구*/ B,
+		            T_AFME_BRDW_ACPT_INSR01M1 /*고장접수기기*/ C
+		    WHERE  A.DLLG_SQNO = B.DLLG_SQNO(+)
+		      AND  A.DLLG_SQNO = C.DLLG_SQNO(+)
+		      AND  (A.BRDW_CLSS_CD != '10' OR A.BRDW_CLSS_CD IS NULL )
+		      <isEqual property = "period" compareValue = "1">
+		      AND TO_CHAR(A.OCRN_DTTM, 'YYYYMMDD')   BETWEEN  TO_CHAR(SYSDATE - 30,'YYYYMMDD') AND TO_CHAR(SYSDATE,'YYYYMMDD')
+		      </isEqual>
+		      <isEqual property = "period" compareValue = "2">
+		      AND TO_CHAR(A.OCRN_DTTM, 'YYYYMMDD')   BETWEEN  TO_CHAR(SYSDATE - 90,'YYYYMMDD') AND TO_CHAR(SYSDATE,'YYYYMMDD')
+		      </isEqual>
+		      <isEqual property = "period" compareValue = "3">
+		      AND TO_CHAR(A.OCRN_DTTM, 'YYYYMMDD')   BETWEEN  TO_CHAR(SYSDATE - 180,'YYYYMMDD') AND TO_CHAR(SYSDATE,'YYYYMMDD')
+		      </isEqual>
+    		  <isEqual property = "period" compareValue = "4">
+		      AND TO_CHAR(A.OCRN_DTTM, 'YYYYMMDD')   BETWEEN  TO_CHAR(SYSDATE - 365,'YYYYMMDD') AND TO_CHAR(SYSDATE,'YYYYMMDD')
+		      </isEqual>
+		    GROUP BY A.BLNG_DPTCD, C.INSR_NO) B
+		WHERE A.INTG_DPTCD = B.BLNG_DPTCD(+)
+		  AND A.PRAF_USE_YN = 'Y'
+		  AND A.INST_CLSFC_CD = '4'
+  	      <isNotEmpty property = "headquerter">
+ 	      	AND A.IMDT_HGRN_DPTCD = #headquerter# 	      	      	  	      	
+	      </isNotEmpty>	   
+	      <isNotEmpty property = "branches">
+	      	AND A.INTG_DPTCD = #branches#
+	      </isNotEmpty>  
+		GROUP BY A.IMDT_HGRN_DPTCD ,A.INTG_DPTCD ,B.INSR_NO
+		ORDER BY ACPT DESC)
+		WHERE ROWNUM <![CDATA[<= ]]> 20
+    </select>
+</sqlMap>

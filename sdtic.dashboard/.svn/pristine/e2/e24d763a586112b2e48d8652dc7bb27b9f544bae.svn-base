@@ -1,0 +1,265 @@
+package egovframework.com.sdtic.main.web;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import egovframework.com.cmm.EgovMessageSource;
+import egovframework.com.sdtic.fecrs.service.FecMDTOperVO;
+import egovframework.com.sdtic.fecrs.service.FecMainMapVO;
+import egovframework.com.sdtic.fecrs.service.FecSearchVO;
+import egovframework.com.sdtic.fecrs.service.FecTunnelDetailVO;
+import egovframework.com.sdtic.fecrs.service.FecSptMapVO;
+import egovframework.com.sdtic.fecrs.service.fecEventVO;
+import egovframework.com.sdtic.fecrs.service.fecMainService;
+import egovframework.com.sdtic.fecrs.service.fecMainVO;
+import egovframework.com.sdtic.fecrs.service.mainSptIOTVO;
+
+//import flexjson.JSONSerializer;
+
+/**
+ * @Class Name : MainFecController.java
+ * @Description : MainFecController Class
+ * @Modification Information
+ * @
+ * @ 수정일          수정자                       수정내용
+ * @ -----------   ---------   -------------------------------
+ * @ 2017. 06. 01    jkheo                        최초생성
+ *
+ * @author
+ * @since
+ * @version 1.0
+ * @see
+ *
+ */
+@Controller
+public class MainFecController {
+	
+	/** fecMainService      */  @Resource(name = "fecMainService")      private     fecMainService          fecMainService;
+    
+	/******************* S : 메인 대시보드 현장 센서 위젯 ************************/
+
+    /**
+    * 메인 대시보드 현장 센서
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @RequestMapping(value = "/mainSptSensorView.do")
+    public String mainSptSensorView(  @ModelAttribute("fecMainVO") fecMainVO fecMainVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+
+        String returnValue = "";
+        returnValue = "egovframework/sdtic/main/mainSptSensorView";
+        return returnValue;
+    }
+    /******************* E : 메인 대시보드 현장 센서 위젯 ************************/
+    
+    /******************* S : 메인 대시보드 현장 센서 데이터 ************************/
+
+    /**
+    * 메인 대시보드 현장 센서 데이터
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @RequestMapping(value = "/mainSptSensor.do")
+    public @ResponseBody ModelAndView mainSptSensor(  @ModelAttribute("FecSearchVO") FecSearchVO fecSearchVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+		ModelAndView modelAndView = new ModelAndView();
+        Map          resultMap    = new HashMap();
+
+        //MDT
+        List<HashMap<String, String>> mdtList = fecMainService.mainSptSensorMdt();
+        //터널, 전기, 사면, 오수, cctv
+        List<HashMap<String, String>> List = fecMainService.mainSptSensor();
+       
+        resultMap.put("mdt", mdtList);
+        resultMap.put("data", List);
+        
+        modelAndView.addAllObjects(resultMap);
+        modelAndView.setViewName("jsonView");
+        return modelAndView;
+    }
+    /******************* E : 메인 대시보드 현장 센서 데이터 ************************/
+    
+    
+    /******************* S : 메인 대시보드 IOT 위젯 ************************/
+
+    /**
+    * 메인 대시보드 IOT
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @RequestMapping(value = "/mainSptIOTView.do")
+    public String mainSptIOTV(  @ModelAttribute("fecMainVO") fecMainVO fecMainVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+
+        String returnValue = "";
+        returnValue = "egovframework/sdtic/main/mainSptIOTView";
+        return returnValue;
+    }
+    /******************* E : 메인 대시보드 IOT ************************/
+    /******************* S : 메인 대시보드 IOT Ajax 데이터 ************************/
+
+    /**
+    * 전력사용량 현황 Ajax 데이터
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @RequestMapping(value = "/mainSptIOT.do")
+    public @ResponseBody ModelAndView mainSptIOT(  @ModelAttribute("FecSearchVO") FecSearchVO fecSearchVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+		ModelAndView modelAndView = new ModelAndView();
+        Map          resultMap    = new HashMap();
+
+        
+        List<mainSptIOTVO> mainSptIOTVO = fecMainService.mainSptIOTAjax(fecSearchVO);
+        
+        resultMap.put("data", mainSptIOTVO);
+        
+        modelAndView.addAllObjects(resultMap);
+        modelAndView.setViewName("jsonView");
+        return modelAndView;
+    }
+    /******************* E : 메인 대시보드 IOT Ajax 데이터 ************************/
+    /******************* S : 메인 Map 위젯 ************************/
+
+    /**
+    * 메인 대시보드 IOT
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @RequestMapping(value = "/FecSptMap.do")
+    public String FecSptMap(  @ModelAttribute("fecMainVO") fecMainVO fecMainVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+
+        String returnValue = "";
+        returnValue = "egovframework/sdtic/main/FecSptMap";
+        return returnValue;
+    }
+    /******************* E : 메인 대시보드 IOT ************************/
+    /******************* S : 메인 대시보드 본부별 현황 위젯 ************************/
+
+    /**
+    * 터널상세 위젯
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @RequestMapping(value = "/fec/fecSptMapView.do")
+    public String fecSptMap(  @ModelAttribute("fecMainVO") fecMainVO fecMainVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+
+        String returnValue = "";
+        returnValue = "egovframework/sdtic/main/FecSptMap";
+        return returnValue;
+    }
+    /******************* E : 메인 대시보드 본부별 현황 위젯 ************************/
+
+    /******************* S : 메인 대시보드 본부별 현황 Ajax 데이터 ************************/
+
+    /**
+    * 터널상세 Ajax 데이터
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @RequestMapping(value = "/fec/FecSptMap.do")
+    public @ResponseBody ModelAndView FecSptMap(  @ModelAttribute("FecSearchVO") FecSearchVO fecSearchVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+		ModelAndView modelAndView = new ModelAndView();
+        Map          resultMap    = new HashMap();
+
+        
+        List<FecSptMapVO> fecSptMapVO= fecMainService.fecSptMapAjax(fecSearchVO);
+        //MDT
+        List<FecSptMapVO> mdtVO= fecMainService.fecSptMapMdtAjax(fecSearchVO);
+        
+        resultMap.put("data", fecSptMapVO);
+        resultMap.put("mdt", mdtVO);
+        
+        modelAndView.addAllObjects(resultMap);
+        modelAndView.setViewName("jsonView");
+        return modelAndView;
+    }
+    /******************* E : 메인 대시보드 본부별 현황 Ajax 데이터 ************************/
+}
+
+
+
+

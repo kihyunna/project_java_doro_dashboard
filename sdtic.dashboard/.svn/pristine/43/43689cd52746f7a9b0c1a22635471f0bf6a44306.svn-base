@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="bucDsgn">
+
+    <typeAlias  alias="egovMap"   type="egovframework.rte.psl.dataaccess.util.EgovMap"  />
+    <typeAlias  alias="bucDsgnVO"  type="egovframework.com.sdtic.bucrs.service.BucDsgnVO" />
+
+   <!-- <select id="bucDsgnDAO.bucDsgnAccmltConectrAjax" parameterClass="bucDsgnVO" resultClass="bucDsgnVO">
+        /* bucDsgnAccmltConectrAjax 조회 */
+        SELECT
+             TEMP1     /* 템프1        */
+            ,TEMP2     /* 템프2        */
+            ,TEMP3     /* 템프3        */
+            ,TEMP4     /* 템프4        */
+        FROM TEMPTABLE
+    </select>  --> 
+    
+    <select id="bucDsgnDAO.bucDsgnAccmltConectrAjax" parameterClass="bucDsgnVO" resultClass="bucDsgnVO">
+	   /* bucDsgnAccmltConectrAjax 조회 */
+	    select   
+	    	count(*) as connnector
+		from T_CNKC_USER_CNNC_LOG01H1 A,
+		     T_CNKC_BSWR_SYSTM01M1 B
+		where to_char(lsttm_logn_dttm, 'yyyymmdd') = to_char(sysdate, 'yyyymmdd')
+		  and A.systm_cd = B.systm_cd 
+		  and B.HGRN_SYSTM_CD = 'DSG'
+    </select>
+    
+	<select id="bucDsgnDAO.bucDsgnRtAjax" parameterClass="bucDsgnVO" resultClass="bucDsgnVO">
+    	/* bucDsgnRtAjax 조회 */
+    	select 
+    	 	round((sum(AA.count)/sum(BB.count))*100,0) as deliverydata
+		from(
+		    	select 
+		    		decode(A.DSGNG_BOOK_BIZ_STEP_CD,'C5','시공단계','C9','준공단계','D5','기본설계','D9','실시설계','M5','유지관리','M9','도로현황관리') as data1
+		    		, count(*) as count
+		    	from T_EXDA_CNTC_BIZ01M1 A,
+		         	T_EXDA_CNTC_BIZ01P1 B
+		    	where A.CNTC_BIZ_MGMT_NO = B.CNTC_BIZ_MGMT_NO
+		      	and to_char(add_months(to_date(CONCAT(A.CNTC_BIZ_YEAR,substr(replace(A.BIZ_CMCN_DATES,'/',''),3,4)),'YYYYMMDD'),3),'yyyymmdd')<![CDATA[ >= ]]> CMCN_BOOK_DLGD_DATES
+		    	group by decode(A.DSGNG_BOOK_BIZ_STEP_CD,'C5','시공단계','C9','준공단계','D5','기본설계','D9','실시설계','M5','유지관리','M9','도로현황관리')
+		    	) AA,
+		    	(select decode(DSGNG_BOOK_BIZ_STEP_CD,'C5','시공단계','C9','준공단계','D5','기본설계','D9','실시설계','M5','유지관리','M9','도로현황관리') as data1,
+		                 count(*) as count
+		         from T_EXDA_CNTC_BIZ01M1
+		         group by decode(DSGNG_BOOK_BIZ_STEP_CD,'C5','시공단계','C9','준공단계','D5','기본설계','D9','실시설계','M5','유지관리','M9','도로현황관리')
+		
+		    	)BB
+		where AA.data1 = BB.data1
+	</select>
+    
+    <!-- 비즈니스 설계 설계도서 남품현황 쿼리 -->
+    <select id="bucDsgnDAO.bucDsgnBookdeliverdbAjax" parameterClass="bucDsgnVO" resultClass="bucDsgnVO">
+		/* bucDsgnBookdeliverdbAjax 조회 */
+		select AA.data1 as category, AA.count, BB.count, round((AA.count/BB.count)*100,0) as percentage
+		from(
+		    select decode(A.DSGNG_BOOK_BIZ_STEP_CD,'C5','시공단계','C9','준공단계','D5','기본설계','D9','실시설계','M5','유지관리','M9','도로현황관리') as data1, count(*) as count
+		    from T_EXDA_CNTC_BIZ01M1 A,
+		         T_EXDA_CNTC_BIZ01P1 B
+		    where A.CNTC_BIZ_MGMT_NO = B.CNTC_BIZ_MGMT_NO
+		      and to_char(add_months(to_date(CONCAT(A.CNTC_BIZ_YEAR,substr(replace(A.BIZ_CMCN_DATES,'/',''),3,4)),'YYYYMMDD'),3),'yyyymmdd') >= CMCN_BOOK_DLGD_DATES
+		    group by decode(A.DSGNG_BOOK_BIZ_STEP_CD,'C5','시공단계','C9','준공단계','D5','기본설계','D9','실시설계','M5','유지관리','M9','도로현황관리')
+		    ) AA,
+		    (select decode(DSGNG_BOOK_BIZ_STEP_CD,'C5','시공단계','C9','준공단계','D5','기본설계','D9','실시설계','M5','유지관리','M9','도로현황관리') as data1,
+		                 count(*) as count
+		         from T_EXDA_CNTC_BIZ01M1
+		         group by decode(DSGNG_BOOK_BIZ_STEP_CD,'C5','시공단계','C9','준공단계','D5','기본설계','D9','실시설계','M5','유지관리','M9','도로현황관리')
+		
+		    )BB
+		where AA.data1 = BB.data1
+    </select>
+
+</sqlMap>

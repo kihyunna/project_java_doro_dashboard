@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="bucCmmn">
+
+    <typeAlias  alias="egovMap"   type="egovframework.rte.psl.dataaccess.util.EgovMap"  />
+    <typeAlias  alias="bucCmmnVO"  type="egovframework.com.sdtic.bucrs.service.BucCmmnVO" />
+   
+   
+   <!-- 비즈니스 메인 헬프데스크 쿼리 -->
+   <select id="bucHiportalDAO.bucCmmnHelpdeskdbAjax" parameterClass="bucCmmnVO" resultClass="bucCmmnVO">
+        /* bucCmmnHelpdeskdbAjax 조회 */
+      SELECT fir_category_id, fir_category_nm,   
+	         sum(CNT0) as total, (sum(CNT1)+sum(CNT2) + sum(CNT3)) as un_processing ,(sum(CNT4)+sum(CNT5)) as completion 
+	  FROM (SELECT fir_category_id, fir_category_nm, 
+	               sec_category_id, sec_category_nm,
+	               category_id,     category_nm,
+	               1 AS CNT0,
+	              (CASE WHEN  proc_cond = 'R'                                           THEN 1 ELSE 0 END) AS CNT1,
+	              (CASE WHEN (proc_cond = 'RC' and SYSDATE <![CDATA[ <= ]]> exp_complete_dt         ) THEN 1 ELSE 0 END) AS CNT2,
+	              (CASE WHEN (proc_cond = 'RC' and SYSDATE <![CDATA[ > ]]>  exp_complete_dt         ) THEN 1 ELSE 0 END) AS CNT3,
+	              (CASE WHEN (proc_cond = 'E'  and real_complete_dt <![CDATA[ <= ]]> exp_complete_dt) THEN 1 ELSE 0 END) AS CNT4,
+	              (CASE WHEN (proc_cond = 'E'  and real_complete_dt <![CDATA[ > ]]>  exp_complete_dt) THEN 1 ELSE 0 END) AS CNT5
+	         FROM ITSM_SR_REQUESTS_T a 
+	        WHERE proc_cond in ('R','RC','E')
+	           AND ((SUBSTR(category_id,1,4) IN ('RC17', 'RC18', 'RC19', 'RC20')) or (SUBSTR(category_id,1,6) IN ('RC2124','RC2125')))
+	           AND TO_CHAR(reg_dt, 'YYYYMM') = TO_CHAR(sysdate, 'YYYYMM')
+	       ) TB
+	 GROUP BY fir_category_id, fir_category_nm
+	 ORDER BY fir_category_id
+
+    </select>
+</sqlMap>

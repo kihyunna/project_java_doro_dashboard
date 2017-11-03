@@ -1,0 +1,1745 @@
+package egovframework.com.sdtic.fecrs.web;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import egovframework.com.cmm.EgovMessageSource;
+import egovframework.com.sdtic.fecrs.service.FecBrineVO;
+import egovframework.com.sdtic.fecrs.service.FecElctyLampVO;
+import egovframework.com.sdtic.fecrs.service.FecElctyTollgateVO;
+import egovframework.com.sdtic.fecrs.service.FecElctyTunnelVO;
+import egovframework.com.sdtic.fecrs.service.FecMDTOperVO;
+import egovframework.com.sdtic.fecrs.service.FecPltwtrProcessVO;
+import egovframework.com.sdtic.fecrs.service.FecPwrerUsgqtyVO;
+import egovframework.com.sdtic.fecrs.service.FecSearchVO;
+import egovframework.com.sdtic.fecrs.service.FecSlopeVO;
+import egovframework.com.sdtic.fecrs.service.FecTunnelDetailVO;
+import egovframework.com.sdtic.fecrs.service.fecEventVO;
+import egovframework.com.sdtic.fecrs.service.fecMainService;
+import egovframework.com.sdtic.fecrs.service.fecMainVO;
+
+
+//import flexjson.JSONSerializer;
+
+/**
+ * @Class Name : fecMainController.java
+ * @Description : fecMainController Class
+ * @Modification Information
+ * @
+ * @ 수정일          수정자                       수정내용
+ * @ -----------   ---------   -------------------------------
+ * @ 2017. 06. 01    jkheo                        최초생성
+ *
+ * @author
+ * @since
+ * @version 1.0
+ * @see
+ *
+ */
+@Controller
+public class fecMainController {
+
+    /** fecMainService      */  @Resource(name = "fecMainService")      private     fecMainService          fecMainService;
+    /** EgovMessageSource   */  @Resource(name = "egovMessageSource")   private     EgovMessageSource       egovMessageSource;
+	private FecSearchVO fecSearchVO;
+
+    /******************* S :현장장비 매인 위젯 ************************/
+
+    /**
+    * 현장장비 매인 위젯
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @RequestMapping(value = "fec/fecMain.do")
+    public String Main(     @ModelAttribute("fecMainVO") fecMainVO fecMainVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+
+        String returnValue = "";
+        returnValue = "egovframework/sdtic/fecrs/FecMain";
+        return returnValue;
+    }
+    /******************* E : 현장장비 매인 위젯 ************************/
+
+    /******************* S :현장설비 메인맵 1레벨 위젯 ************************/
+
+    /**
+    * 현장설비 메인맵 위젯
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @RequestMapping(value = "/fecMainMapLv1View.do")
+    public String fecMainMapLv1View(     @ModelAttribute("fecMainVO") fecMainVO fecMainVO,
+    						@RequestParam(value="sabun", required=false) String sabun,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+
+        String returnValue = "";
+        returnValue = "egovframework/sdtic/fecrs/FecMainMapLv1View";
+        return returnValue;
+    }
+    /******************* E : 현장설비 메인맵 1레벨 위젯 ************************/  
+    
+    /******************* S :현장설비 메인맵 2레벨 위젯 ************************/
+
+    /**
+    * 현장설비 메인맵 위젯
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @RequestMapping(value = "/fecMainMapLv2View.do")
+    public String fecMainMapLv2View(     @ModelAttribute("fecMainVO") fecMainVO fecMainVO,
+    						@RequestParam(value="sabun", required=false) String sabun,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+
+        String returnValue = "";
+        
+        // sabun으로 본사, 본부, 지사 등급 가져오기
+        	
+        	
+        	
+        	
+        	
+        	
+        	
+        
+        // 본사
+        String bHrml = "";
+        bHrml += "<option value='N01795' selected>수도권본부</option>";
+        bHrml += "<option value='N01796' >강원본부</option>";
+        bHrml += "<option value='N02723' >충북본부</option>";
+        bHrml += "<option value='N01797' >대전충남본부</option>";
+        bHrml += "<option value='N01798' >전북본부</option>";
+        bHrml += "<option value='N01799' >광주전남본부</option>";
+        bHrml += "<option value='N01800' >대구경북본부</option>";
+        bHrml += "<option value='N01801' >부산경남본부</option>";
+        
+        model.addAttribute("bonbuoption", bHrml);
+        
+        String jHrml = "";
+        jHrml += "<option value='N00218' selected>인천지사</option>";
+        jHrml += "<option value='N00221' >시흥지사</option>";
+        jHrml += "<option value='N00225' >군포지사</option>";
+        jHrml += "<option value='N00234' >화성지사</option>";
+        jHrml += "<option value='N00242' >수원지사</option>";
+        jHrml += "<option value='N00255' >동서울지사</option>";
+        jHrml += "<option value='N00260' >이천지사</option>";
+        jHrml += "<option value='N02241' >경기광주지사</option>";
+        model.addAttribute("jisaoption", jHrml);
+        
+        // 본부
+        	
+        	
+        	
+        	
+        
+        	
+        	
+        	
+        //지사
+        model.addAttribute("jisacode", "N00218");
+	
+        returnValue = "egovframework/sdtic/fecrs/FecMainMapLv2View";
+        return returnValue;
+    }
+    /******************* E : 현장설비 메인맵 2레벨 위젯 ************************/
+
+    /******************* S : 현장설비 메인맵 1레벨 전국 현장 설비 아이콘 표시 ************************/
+
+    /**
+    * MDT 운영 Ajax 데이터 
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @RequestMapping(value = "/fecMainMapLv1.do")    
+    public @ResponseBody ModelAndView fecMainMapLv1(  @ModelAttribute("FecSearchVO") FecSearchVO fecSearchVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+		ModelAndView modelAndView = new ModelAndView();
+        Map          resultMap    = new HashMap();
+     
+//        List<FecMainMapVO> fecMainMapList= fecMainService.fecMainMapLv1Ajax(fecSearchVO);
+//        fecSearchVO.setFacCode("3");
+//        List<FecMainMapVO> fecMainMapList1= fecMainService.fecMainMapLv1Ajax(fecSearchVO);  
+//        fecSearchVO.setFacCode("4");
+//        List<FecMainMapVO> fecMainMapList2= fecMainService.fecMainMapLv1Ajax(fecSearchVO);  
+//        
+//        resultMap.put("Fac", fecMainMapList);
+//        resultMap.put("Fac1", fecMainMapList1);
+//        resultMap.put("Fac2", fecMainMapList2);
+        modelAndView.addAllObjects(resultMap);
+        modelAndView.setViewName("jsonView");
+        return modelAndView;
+    
+    }
+    /******************* E : 현장설비 메인맵 1레벨 전국 현장 설비 아이콘 표시  ************************/
+    
+    /******************* S : MDT 운영 LV1 위젯 ************************/
+
+    /**
+    * MDT 운영 위젯
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @RequestMapping(value = "/fecMDTOperLv1View.do")
+    public String fecMDTOperLv1View(     @ModelAttribute("fecMainVO") fecMainVO fecMainVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+
+        String returnValue = "";
+
+        returnValue = "egovframework/sdtic/fecrs/FecMDTOperLv1View";
+        return returnValue;
+    }
+    /******************* E : MDT 운영 LV1 위젯 ************************/
+    
+    /******************* S : MDT 운영 LV2 위젯 ************************/
+
+    /**
+    * MDT 운영 위젯
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @RequestMapping(value = "/fecMDTOperLv2View.do")
+    public String fecMDTOper02(     @ModelAttribute("fecMainVO") fecMainVO fecMainVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+
+        String returnValue = "";
+
+        returnValue = "egovframework/sdtic/fecrs/FecMDTOperLv2View";
+
+        return returnValue;
+    }
+    /******************* E : MDT 운영 LV2 위젯 ************************/
+    /******************* S : MDT 운영 장애리스트 LV2 위젯 ************************/
+
+    /**
+    * MDT 운영 위젯
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @RequestMapping(value = "/fecMDTOperTroblLv2View.do")
+    public String fecMDTOperTroblLv2View(     @ModelAttribute("fecMainVO") fecMainVO fecMainVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+
+        String returnValue = "";
+
+        returnValue = "egovframework/sdtic/fecrs/FecMDTOperTroblLv2View";
+
+        return returnValue;
+    }
+    /******************* E : MDT 운영 장애리스트 LV2 위젯 ************************/
+
+    /******************* S : MDT 운영 Ajax 데이터 ************************/
+
+    /**
+    * MDT 운영 Ajax 데이터 
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @RequestMapping(value = "/fecMDTOperLv1.do")    
+    public @ResponseBody ModelAndView fecMDTOperLv1(  @ModelAttribute("FecSearchVO") FecSearchVO fecSearchVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+		ModelAndView modelAndView = new ModelAndView();
+        Map          resultMap    = new HashMap();
+     
+//        FecMDTOperVO fecMDTOperVO= fecMainService.fecMdtoperLv1Ajax(fecSearchVO);  
+//        List<FecMDTOperVO> fecMDTOperlist= fecMainService.fecMdttroblLv1Ajax(fecSearchVO); 
+//        List<FecMDTOperVO> fecMDTMaplist= fecMainService.fecMdtmapLv1Ajax(fecSearchVO); 
+//        
+//        resultMap.put("Oper", fecMDTOperVO);
+//        resultMap.put("Trobl", fecMDTOperlist);
+//        resultMap.put("Map", fecMDTMaplist);
+        modelAndView.addAllObjects(resultMap);
+        modelAndView.setViewName("jsonView");
+        return modelAndView;
+    
+    }
+    /******************* E : MDT 운영 Ajax 데이터  ************************/
+    
+    /******************* S : MDT 운영 Ajax 데이터 ************************/
+
+    /**
+    * MDT 운영 Ajax 데이터 
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @RequestMapping(value = "/FecMDTOperTroblLv2.do")    
+    public @ResponseBody ModelAndView FecMDTOperTroblLv2(  @ModelAttribute("fecMainVO") fecMainVO fecmainVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+		ModelAndView modelAndView = new ModelAndView();
+        Map          resultMap    = new HashMap();
+
+        //UserVO data = sdticService.selectUserInfo(userVO);        
+        
+        resultMap.put("data", fecmainVO);
+        modelAndView.addAllObjects(resultMap);
+        modelAndView.setViewName("jsonView");
+        return modelAndView;
+    
+    }
+    /******************* E : MDT 운영 Ajax 데이터  ************************/
+    
+    /******************* S : MDT 운영 Ajax 데이터 ************************/
+
+    /**
+    * MDT 운영 Ajax 데이터 
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @RequestMapping(value = "/fecMDTOperLv2.do")    
+    public @ResponseBody ModelAndView fecMDTOperLv2(  @ModelAttribute("fecMainVO") fecMainVO fecmainVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+		ModelAndView modelAndView = new ModelAndView();
+        Map          resultMap    = new HashMap();
+
+        //UserVO data = sdticService.selectUserInfo(userVO);        
+        
+        resultMap.put("data", fecmainVO);
+        modelAndView.addAllObjects(resultMap);
+        modelAndView.setViewName("jsonView");
+        return modelAndView;
+    
+    }
+    /******************* E : MDT 운영 Ajax 데이터  ************************/
+    
+    /******************* S : 현장설비 가동현황(LV1) 위젯 ************************/
+
+    /**
+    * 현장설비 가동현황 위젯
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @RequestMapping(value = "/fec/fecSptEqpOprCstsLv1View.do")
+    public String fecFacilitiesoperation01(  @ModelAttribute("fecMainVO") fecMainVO fecMainVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+
+        String returnValue = "";
+        returnValue = "egovframework/sdtic/fecrs/FecSptEqpOprCstsLv1View";
+        return returnValue;
+    }
+    /******************* E : 현장설비 가동현황(LV1) 위젯 ************************/
+
+    /******************* S : 현장설비 가동현황(LV1) Ajax 데이터 ************************/
+
+    /**
+    * 현장설비 가동현황 Ajax 데이터
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @RequestMapping(value = "/fec/fecSptEqpOprCstsLv1.do")
+    public @ResponseBody ModelAndView fecSptEqpOprCstsLv1(   @ModelAttribute("FecSearchVO") FecSearchVO fecSearchVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+		ModelAndView modelAndView = new ModelAndView();
+        Map          resultMap    = new HashMap();
+
+        List<HashMap<String, String>> List = fecMainService.fecSptEqpOprCstsLv1(fecSearchVO);      
+        
+        resultMap.put("data", List);
+        modelAndView.addAllObjects(resultMap);
+        modelAndView.setViewName("jsonView");
+        return modelAndView;
+    }
+    /******************* E : 현장설비 가동현황(LV1) Ajax 데이터 ************************/
+    
+    /******************* S : 현장설비 가동현황메인 위젯 ************************/
+
+    /**
+    * 현장설비 가동현황 위젯
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @RequestMapping(value = "/fec/fecSptEqpOprCstsMainView.do")
+    public String fecSptEqpOprCstsMainView(  @ModelAttribute("fecMainVO") fecMainVO fecMainVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+
+        String returnValue = "";
+        returnValue = "egovframework/sdtic/fecrs/FecSptEqpOprCstsMainView";
+        return returnValue;
+    }
+    /******************* E : 현장설비 가동현황메인 위젯 ************************/
+
+    /******************* S : 현장설비 가동현황메인 Ajax 데이터 ************************/
+
+    /**
+    * 현장설비 가동현황 Ajax 데이터
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @RequestMapping(value = "/fec/fecSptEqpOprCstsMain.do")
+    public @ResponseBody ModelAndView fecSptEqpOprCstsMain(  @ModelAttribute("fecMainVO") fecMainVO fecmainVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+		ModelAndView modelAndView = new ModelAndView();
+        Map          resultMap    = new HashMap();
+
+        //UserVO data = sdticService.selectUserInfo(userVO);        
+        
+        resultMap.put("data", fecmainVO);
+        modelAndView.addAllObjects(resultMap);
+        modelAndView.setViewName("jsonView");
+        return modelAndView;
+    }
+    /******************* E : 현장설비 가동현황메인 Ajax 데이터 ************************/
+    
+    /******************* S : 전력사용량 현황메인 위젯 ************************/
+
+    /**
+    * 전력사용량 현황 위젯
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @RequestMapping(value = "/fec/fecPwrerUsgqtyMainView.do")
+    public String fecPwrerUsgqtyMainView(  @ModelAttribute("fecMainVO") fecMainVO fecMainVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+
+        String returnValue = "";
+        returnValue = "egovframework/sdtic/fecrs/FecPwrerUsgqtyMainView";
+        return returnValue;
+    }
+    /******************* E : 전력사용량 현황메인 위젯 ************************/
+
+    /******************* S : 전력사용량 현황메인 Ajax 데이터 ************************/
+
+    /**
+    * 전력사용량 현황 Ajax 데이터
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @RequestMapping(value = "/fec/fecPwrerUsgqtyMain.do")
+    public @ResponseBody ModelAndView fecPwrerUsgqtyMain(  @ModelAttribute("fecMainVO") fecMainVO fecmainVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+		ModelAndView modelAndView = new ModelAndView();
+        Map          resultMap    = new HashMap();
+
+        //UserVO data = sdticService.selectUserInfo(userVO);        
+        
+        resultMap.put("data", fecmainVO);
+        modelAndView.addAllObjects(resultMap);
+        modelAndView.setViewName("jsonView");
+        return modelAndView;
+    }
+    /******************* E : 전력사용량 현황메인 Ajax 데이터 ************************/
+    /******************* S : Iot플랫폼 메인 위젯 ************************/
+
+    /**
+    * 권역별 장애발생/조치 위젯
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @RequestMapping(value = "/fec/fecAreclTroblOccrrncManagtMainView.do")
+    public String fecAreclTroblOccrrncManagtMainView(  @ModelAttribute("fecMainVO") fecMainVO fecMainVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+
+        String returnValue = "";
+        returnValue = "egovframework/sdtic/fecrs/FecAreclTroblOccrrncManagtMainView";
+        return returnValue;
+    }
+    /******************* E : Iot플랫폼 메인 위젯 ************************/
+
+    /******************* S : Iot플랫폼 메인 Ajax 데이터 ************************/
+
+    /**
+    * 권역별 장애발생/조치 Ajax 데이터
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @RequestMapping(value = "/fec/fecAreclTroblOccrrncManagtMain.do")
+    public @ResponseBody ModelAndView fecAreclTroblOccrrncManagtMain(  @ModelAttribute("fecMainVO") fecMainVO fecmainVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+		ModelAndView modelAndView = new ModelAndView();
+        Map          resultMap    = new HashMap();
+
+        //UserVO data = sdticService.selectUserInfo(userVO);        
+        
+        resultMap.put("data", fecmainVO);
+        modelAndView.addAllObjects(resultMap);
+        modelAndView.setViewName("jsonView");
+        return modelAndView;
+    }
+    /******************* E : Iot플랫폼 메인 Ajax 데이터 ************************/
+
+    /******************* S : 전력사용량 현황(LV1) 위젯 ************************/
+
+    /**
+    * 전력사용량 현황 위젯
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @RequestMapping(value = "/fec/fecPwrerUsgqtyLv1View.do")
+    public String fecPwrerUsgqtyLv1View(  @ModelAttribute("fecMainVO") fecMainVO fecMainVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+
+        String returnValue = "";
+        returnValue = "egovframework/sdtic/fecrs/FecPwrerUsgqtyLv1View";
+        return returnValue;
+    }
+    /******************* E : 전력사용량 현황(LV1) 위젯 ************************/
+
+    /******************* S : 전력사용량 현황(LV1) Ajax 데이터 ************************/
+
+    /**
+    * 전력사용량 현황 Ajax 데이터
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @RequestMapping(value = "/fec/fecPwrerUsgqtyLv1.do")
+    public @ResponseBody ModelAndView fecPwrerUsgqtyLv1( @ModelAttribute("FecSearchVO") FecSearchVO fecSearchVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+		ModelAndView modelAndView = new ModelAndView();
+        Map          resultMap    = new HashMap();
+        
+        List<FecPwrerUsgqtyVO> fecPwrerUsgqtyVO= fecMainService.fecPwrerUsgqtyLv1Ajax(fecSearchVO);
+        resultMap.put("data", fecPwrerUsgqtyVO);
+        
+        modelAndView.addAllObjects(resultMap);
+        modelAndView.setViewName("jsonView");
+        return modelAndView;
+    }
+    /******************* E : 전력사용량 현황(LV1) Ajax 데이터 ************************/
+    /******************* S : 전력사용량 현황(LV2) 위젯 ************************/
+
+    /**
+    * 전력사용량 현황 위젯
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @RequestMapping(value = "/fec/fecPwrerUsgqtyLv2View.do")
+    public String fecPwrerUsgqtyLv2View(  @ModelAttribute("fecMainVO") fecMainVO fecMainVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+
+        String returnValue = "";
+        returnValue = "egovframework/sdtic/fecrs/FecPwrerUsgqtyLv2View";
+        return returnValue;
+    }
+    /******************* E : 전력사용량 현황(LV2) 위젯 ************************/
+
+    /******************* S : 전력사용량 현황(LV2) Ajax 데이터 ************************/
+
+    /**
+    * 전력사용량 현황 Ajax 데이터
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @RequestMapping(value = "/fec/fecPwrerUsgqtyLv2.do")
+    public @ResponseBody ModelAndView fecPwrerUsgqtyLv2(  @ModelAttribute("fecMainVO") fecMainVO fecmainVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+		ModelAndView modelAndView = new ModelAndView();
+        Map          resultMap    = new HashMap();
+
+        //UserVO data = sdticService.selectUserInfo(userVO);        
+        
+        resultMap.put("data", fecmainVO);
+        modelAndView.addAllObjects(resultMap);
+        modelAndView.setViewName("jsonView");
+        return modelAndView;
+    }
+    /******************* E : 전력사용량 현황(LV2) Ajax 데이터 ************************/
+    
+    /******************* S : 권역별 장애발생/조치(LV1) 현황 위젯 ************************/
+
+    /**
+    * 권역별 장애발생/조치 위젯
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @RequestMapping(value = "/fec/fecAreclTroblOccrrncManagtLv1View.do")
+    public String fecAreclTroblOccrrncManagtLv1View(  @ModelAttribute("fecMainVO") fecMainVO fecMainVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+
+        String returnValue = "";
+        returnValue = "egovframework/sdtic/fecrs/FecAreclTroblOccrrncManagtLv1View";
+        return returnValue;
+    }
+    /******************* E : 권역별 장애발생/조치(LV1) 현황 위젯 ************************/
+
+    /******************* S : 권역별 장애발생/조치(LV1) 현황 Ajax 데이터 ************************/
+
+    /**
+    * 권역별 장애발생/조치 Ajax 데이터
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @RequestMapping(value = "/fec/fecAreclTroblOccrrncManagtLv1.do")
+    public @ResponseBody ModelAndView fecAreclTroblOccrrncManagtLv1(  @ModelAttribute("FecSearchVO") FecSearchVO fecSearchVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+		ModelAndView modelAndView = new ModelAndView();
+        Map          resultMap    = new HashMap();
+
+        List<HashMap<String, String>> List = fecMainService.fecAreclTroblOccrrncManagtLv1(fecSearchVO);       
+        
+        resultMap.put("data", List);
+        modelAndView.addAllObjects(resultMap);
+        modelAndView.setViewName("jsonView");
+        return modelAndView;
+    }
+    /******************* E : 권역별 장애발생/조치 현황(LV1) Ajax 데이터 ************************/
+    /******************* S : 부문별 장애발생/조치 현황(LV2) 위젯 ************************/
+
+    /**
+    * 부문별 장애발생/조치 현황 위젯
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @RequestMapping(value = "/fec/fecPsctnTroblOccrrncManagtLv2View.do")
+    public String fecPsctnTroblOccrrncManagtLv2View(  @ModelAttribute("fecMainVO") fecMainVO fecMainVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+
+        String returnValue = "";
+        returnValue = "egovframework/sdtic/fecrs/FecPsctnTroblOccrrncManagtLv2View";
+        return returnValue;
+    }
+    /******************* E : 부문별 장애발생/조치 현황(LV2) 위젯 ************************/
+
+    /******************* S : 부문별 장애발생/조치 현황(LV2) Ajax 데이터 ************************/
+
+    /**
+    * 부문별 장애발생/조치 현황 Ajax 데이터
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @RequestMapping(value = "/fec/fecPsctnTroblOccrrncManagtLv2.do")
+    public @ResponseBody ModelAndView fecPsctnTroblOccrrncManagtLv2(  @ModelAttribute("FecSearchVO") FecSearchVO fecSearchVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+		ModelAndView modelAndView = new ModelAndView();
+        Map          resultMap    = new HashMap();
+        
+        List<HashMap<String, String>> List = fecMainService.fecPsctnTroblOccrrncManagtLv2(fecSearchVO); 
+        
+        resultMap.put("data", List);
+        modelAndView.addAllObjects(resultMap);
+        modelAndView.setViewName("jsonView");
+        return modelAndView;
+    }
+    /******************* E : 부문별 장애발생/조치 현황(LV2) Ajax 데이터 ************************/
+    
+    /******************* S : 설비 현황(LV2) 위젯 ************************/
+
+    /**
+    * 설비 현황 위젯
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @RequestMapping(value = "/fec/fecSptEqpOprCstsLv2View.do")
+    public String fecSptEqpOprCstsLv2View(  @ModelAttribute("fecMainVO") fecMainVO fecMainVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+
+        String returnValue = "";
+        returnValue = "egovframework/sdtic/fecrs/FecSptEqpOprCstsLv2View";
+        return returnValue;
+    }
+    /******************* E : 설비 현황(LV2) 위젯 ************************/
+
+    /******************* S : 설비 현황(LV2) Ajax 데이터 ************************/
+
+    /**
+    * 설비 현황 Ajax 데이터
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @RequestMapping(value = "/fec/fecSptEqpOprCstsLv2.do")
+    public @ResponseBody ModelAndView fecSptEqpOprCstsLv2(  @ModelAttribute("fecMainVO") fecMainVO fecmainVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+		ModelAndView modelAndView = new ModelAndView();
+        Map          resultMap    = new HashMap();
+
+        //UserVO data = sdticService.selectUserInfo(userVO);        
+        
+        resultMap.put("data", fecmainVO);
+        modelAndView.addAllObjects(resultMap);
+        modelAndView.setViewName("jsonView");
+        return modelAndView;
+    }
+    /******************* E : 설비 현황(LV2) Ajax 데이터 ************************/
+    
+    /******************* S : 전기_터널 (LV2) 위젯 ************************/
+
+    /**
+    * 전기_터널 위젯
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @RequestMapping(value = "/FecElctyTunnelLv2View.do")
+    public String FecElctyTunnelLv2View(  @ModelAttribute("fecMainVO") fecMainVO fecMainVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+
+        String returnValue = "";
+        returnValue = "egovframework/sdtic/fecrs/FecElctyTunnelLv2View";
+        return returnValue;
+    }
+    /******************* E : 전기_터널 (LV2) 위젯 ************************/
+
+    /******************* S : 전기_터널 (LV2) Ajax 데이터 ************************/
+
+    /**
+    * 전기 시설물 Ajax 데이터
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @RequestMapping(value = "/FecElctyTunnelLv2.do")
+    public @ResponseBody ModelAndView fecElctyFcltsLv2(  @ModelAttribute("FecSearchVO") FecSearchVO fecSearchVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+		ModelAndView modelAndView = new ModelAndView();
+        Map          resultMap    = new HashMap();
+        
+        //맥스값 가져오기    
+        String Max_seq = fecMainService.fecGetElctyTunnelLv2Seq();
+        
+        //맥스값을 fecSearchVO 에 추가
+        fecSearchVO.setSeqMax(Max_seq);
+
+        List<FecElctyTunnelVO> fecElctyTunnelVO= fecMainService.fecElctyTunnelLv2Ajax(fecSearchVO);
+        resultMap.put("Trobl", fecElctyTunnelVO);
+        
+        modelAndView.addAllObjects(resultMap);
+        modelAndView.setViewName("jsonView");
+        return modelAndView;
+    }
+    /******************* E : 전기_터널 (LV2) Ajax 데이터 ************************/
+    
+    /******************* S : 전기_영업소 (LV2) 위젯 ************************/
+
+    /**
+    * 전기_영업소 위젯
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @RequestMapping(value = "/FecElctyTollgateLv2View.do")
+    public String FecElctyTollgateLv2View(  @ModelAttribute("fecMainVO") fecMainVO fecMainVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+
+        String returnValue = "";
+        returnValue = "egovframework/sdtic/fecrs/FecElctyTollgateLv2View";
+        return returnValue;
+    }
+    /******************* E : 전기_영업소 (LV2) 위젯 ************************/
+
+    /******************* S : 전기_영업소 (LV2) Ajax 데이터 ************************/
+
+    /**
+    * 전기 영업소 Ajax 데이터
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @RequestMapping(value = "/FecElctyTollgateLv2.do")
+    public @ResponseBody ModelAndView FecElctyTollgateLv2(  @ModelAttribute("FecSearchVO") FecSearchVO fecSearchVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+		ModelAndView modelAndView = new ModelAndView();
+        Map          resultMap    = new HashMap();
+       
+        //맥스값 가져오기    
+        String Max_seq = fecMainService.fecGetElctyTollgateLv2Seq();        
+       
+        //맥스값을 fecSearchVO 에 추가
+        fecSearchVO.setSeqMax(Max_seq);
+        
+        List<FecElctyTollgateVO> fecElctyTollgateVO= fecMainService.fecElctyTollgateLv2Ajax(fecSearchVO);
+        resultMap.put("Trobl", fecElctyTollgateVO);
+        
+        modelAndView.addAllObjects(resultMap);
+        modelAndView.setViewName("jsonView");
+        return modelAndView;
+    }
+    /******************* E : 전기_영업소 (LV2) Ajax 데이터 ************************/
+    
+    /******************* S : 전기_가로등/조명탑 (LV2) 위젯 ************************/
+
+    /**
+    * 전기_가로등/조명탑 위젯
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @RequestMapping(value = "/FecElctyLampLv2View.do")
+    public String FecElctyLampLv2View(  @ModelAttribute("fecMainVO") fecMainVO fecMainVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+
+        String returnValue = "";
+        returnValue = "egovframework/sdtic/fecrs/FecElctyLampLv2View";
+        return returnValue;
+    }
+    /******************* E : 전기_가로등/조명탑 (LV2) 위젯 ************************/
+
+    /******************* S : 전기_가로등/조명탑 (LV2) Ajax 데이터 ************************/
+
+    /**
+    * 전기 가로등/조명탑 Ajax 데이터
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @RequestMapping(value = "/FecElctyLampLv2.do")
+    public @ResponseBody ModelAndView FecElctyLampLv2(  @ModelAttribute("FecSearchVO") FecSearchVO fecSearchVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+		ModelAndView modelAndView = new ModelAndView();
+        Map          resultMap    = new HashMap();
+        
+        //맥스값 가져오기    
+        String Max_seq = fecMainService.fecGetElctyLampLv2Seq();        
+       
+        //맥스값을 fecSearchVO 에 추가
+        fecSearchVO.setSeqMax(Max_seq);
+        
+        List<FecElctyLampVO> fecElctyLampVO= fecMainService.fecElctyLampLv2Ajax(fecSearchVO);
+        resultMap.put("Trobl", fecElctyLampVO);
+        
+        modelAndView.addAllObjects(resultMap);
+        modelAndView.setViewName("jsonView");
+        return modelAndView;
+    }
+    /******************* E : 전기_가로등/조명탑 (LV2) Ajax 데이터 ************************/
+    
+    /******************* S : 오수처리(LV2) 위젯 ************************/
+
+    /**
+    * 오수처리 위젯
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @RequestMapping(value = "/fec/fecPltwtrProcessLv2View.do")
+    public String fecPltwtrProcessLv2View(  @ModelAttribute("fecMainVO") fecMainVO fecMainVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+
+        String returnValue = "";
+        returnValue = "egovframework/sdtic/fecrs/FecPltwtrProcessLv2View";
+        return returnValue;
+    }
+    /******************* E : 오수처리(LV2) 위젯 ************************/
+
+    /******************* S : 오수처리(LV2) Ajax 데이터 ************************/
+
+    /**
+    * 오수처리 Ajax 데이터
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @RequestMapping(value = "/fec/fecPltwtrProcessLv2.do")
+    public @ResponseBody ModelAndView fecPltwtrProcessLv2(  @ModelAttribute("FecSearchVO") FecSearchVO fecSearchVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+		ModelAndView modelAndView = new ModelAndView();
+        Map          resultMap    = new HashMap();
+
+        //맥스값 가져오기    
+        String Max_seq = fecMainService.fecGetPltwtrProcessLv2Seq();        
+       
+        //맥스값을 fecSearchVO 에 추가
+        fecSearchVO.setSeqMax(Max_seq);     
+        
+        List<FecPltwtrProcessVO> fecPltwtrProcessVO= fecMainService.fecPltwtrProcessLv2Ajax(fecSearchVO);
+        resultMap.put("Trobl", fecPltwtrProcessVO);
+        
+        modelAndView.addAllObjects(resultMap);
+        modelAndView.setViewName("jsonView");
+        return modelAndView;
+    }
+    /******************* E : 오수처리(LV2) Ajax 데이터 ************************/
+    /******************* S : 터널상세(LV2) 위젯 ************************/
+
+    /**
+    * 터널상세 위젯
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @RequestMapping(value = "/fec/fecTunnelDetailLv2View.do")
+    public String fecTunnelDetailLv2View(  @ModelAttribute("fecMainVO") fecMainVO fecMainVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+
+        String returnValue = "";
+        returnValue = "egovframework/sdtic/fecrs/FecTunnelDetailLv2View";
+        return returnValue;
+    }
+    /******************* E : 터널상세(LV2) 위젯 ************************/
+
+    /******************* S : 터널상세(LV2) Ajax 데이터 ************************/
+
+    /**
+    * 터널상세 Ajax 데이터
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @RequestMapping(value = "/fec/fecTunnelDetailLv2.do")
+    public @ResponseBody ModelAndView fecTunnelDetailLv2(  @ModelAttribute("FecSearchVO") FecSearchVO fecSearchVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+		ModelAndView modelAndView = new ModelAndView();
+        Map          resultMap    = new HashMap();
+
+        //맥스값 가져오기    
+        String Max_seq = fecMainService.fecGetTunnelDetailLv2Seq();        
+       
+        //맥스값을 fecSearchVO 에 추가
+        fecSearchVO.setSeqMax(Max_seq);     
+        
+        List<FecTunnelDetailVO> fecTunnelDetailVO= fecMainService.fecTunnelDetailLv2Ajax(fecSearchVO);
+        resultMap.put("Trobl", fecTunnelDetailVO);
+        
+        modelAndView.addAllObjects(resultMap);
+        modelAndView.setViewName("jsonView");
+        return modelAndView;
+    }
+    /******************* E : 터널상세(LV2) Ajax 데이터 ************************/
+
+    /******************* S : 사면상세(LV2) 위젯 ************************/
+
+    /**
+    * 터널상세 위젯
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @RequestMapping(value = "/fec/fecSlopeDetailLv2View.do")
+    public String fecSlopeLv2View(  @ModelAttribute("fecMainVO") fecMainVO fecMainVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+
+        String returnValue = "";
+        returnValue = "egovframework/sdtic/fecrs/FecSlopeLv2View";
+        return returnValue;
+    }
+    /******************* E : 사면상세(LV2) 위젯 ************************/
+
+    /******************* S : 사면상세(LV2) Ajax 데이터 ************************/
+
+    /**
+    * 터널상세 Ajax 데이터
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @RequestMapping(value = "/FecSlopeLv2.do")
+    public @ResponseBody ModelAndView fecSlopeLv2(  @ModelAttribute("FecSearchVO") FecSearchVO fecSearchVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+		ModelAndView modelAndView = new ModelAndView();
+        Map          resultMap    = new HashMap();
+
+        //맥스값 가져오기    
+        String Max_seq = fecMainService.fecGetSlopeLv2Seq();        
+       
+        //맥스값을 fecSearchVO 에 추가
+        fecSearchVO.setSeqMax(Max_seq);
+        
+        List<FecSlopeVO> fecSlopeVO= fecMainService.fecSlopeLv2Ajax(fecSearchVO);
+        resultMap.put("Trobl", fecSlopeVO);
+        
+        modelAndView.addAllObjects(resultMap);
+        modelAndView.setViewName("jsonView");
+        return modelAndView;
+    }
+    /******************* E : 사면상세(LV2) Ajax 데이터 ************************/
+    /******************* S : 염수상세(LV2) 위젯 ************************/
+
+    /**
+    * 터널상세 위젯
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @RequestMapping(value = "/FecBrineLv2View.do")
+    public String fecBrineLv2View(  @ModelAttribute("fecMainVO") fecMainVO fecMainVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+
+        String returnValue = "";
+        returnValue = "egovframework/sdtic/fecrs/FecBrineLv2View";
+        return returnValue;
+    }
+    /******************* E : 염수상세(LV2) 위젯 ************************/
+
+    /******************* S : 염수상세(LV2) Ajax 데이터 ************************/
+
+    /**
+    * 터널상세 Ajax 데이터
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @RequestMapping(value = "/FecBrineLv2.do")
+    public @ResponseBody ModelAndView fecBrineLv2(  @ModelAttribute("FecSearchVO") FecSearchVO fecSearchVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+		ModelAndView modelAndView = new ModelAndView();
+        Map          resultMap    = new HashMap();
+
+        List<FecBrineVO> fecBrineVO= fecMainService.fecBrineLv2Ajax(fecSearchVO);
+        resultMap.put("Trobl", fecBrineVO);
+        
+        modelAndView.addAllObjects(resultMap);
+        modelAndView.setViewName("jsonView");
+        return modelAndView;
+    }
+    /******************* E : 염수상세(LV2) Ajax 데이터 ************************/
+    
+    /******************* S : 지사선택(LV2) 위젯 ************************/
+
+    /**
+    * 지사선택 위젯
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @RequestMapping(value = "/fec/FecDeptSearchLv2View.do")
+    public String FecDeptSearchLv2View(  @ModelAttribute("fecMainVO") fecMainVO fecMainVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+
+        String returnValue = "";
+        returnValue = "egovframework/sdtic/fecrs/FecDeptSearchLv2View";
+        return returnValue;
+    }
+    /******************* E : 지사선택(LV2) 위젯 ************************/
+
+    /******************* S : 지사선택(LV2) Ajax 데이터 ************************/
+
+    /**
+    * 지사선택 Ajax 데이터
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @RequestMapping(value = "/fec/FecDeptSearchLv2.do")
+    public @ResponseBody ModelAndView FecDeptSearchLv2(  @ModelAttribute("FecSearchVO") FecSearchVO fecSearchVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+		ModelAndView modelAndView = new ModelAndView();
+        Map          resultMap    = new HashMap();
+
+        //UserVO data = sdticService.selectUserInfo(userVO);        
+        
+//        List<FecTunnelDetailVO> fecTunnelDetailVO= fecMainService.fecTunnelDetailLv2Ajax(fecSearchVO);
+        
+//        resultMap.put("data", fecTunnelDetailVO);
+//        resultMap.put("Trobl", fecTunnelDetailVO);
+        modelAndView.addAllObjects(resultMap);
+        modelAndView.setViewName("jsonView");
+        return modelAndView;
+    }
+    /******************* E : 지사선택(LV2) Ajax 데이터 ************************/
+    
+    /******************* S : 이벤트 조회(LV2) 위젯 ************************/
+
+    /**
+    * 이벤트 조회 위젯
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @RequestMapping(value = "/FecEventListLv2View.do")
+    public String FecEventListLv2View(  @ModelAttribute("fecMainVO") fecMainVO fecMainVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+
+        String returnValue = "";
+        returnValue = "egovframework/sdtic/fecrs/FecEventListLv2View";
+        return returnValue;
+    }
+    /******************* E : 이벤트 조회(LV2) 위젯 ************************/
+
+    /******************* S : 이벤트 조회(LV2) Ajax 데이터 ************************/
+
+    /**
+    * 이벤트 조회 Ajax 데이터
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @RequestMapping(value = "/FecEventListLv2.do")
+    public @ResponseBody ModelAndView FecEventListLv2(  @ModelAttribute("FecSearchVO") FecSearchVO fecSearchVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+		ModelAndView modelAndView = new ModelAndView();
+        Map          resultMap    = new HashMap();
+
+        List<fecEventVO> List= fecMainService.FecEventListLv2(fecSearchVO);
+        
+        resultMap.put("data", List);
+
+        modelAndView.addAllObjects(resultMap);
+        modelAndView.setViewName("jsonView");
+        return modelAndView;
+    }
+    /******************* E : 이벤트 조회(LV2) Ajax 데이터 ************************/
+    /******************* S : 본부 지사 위치 좌표 Ajax 데이터 ************************/
+
+    /**
+    * 본부 지사 위치 좌표 Ajax 데이터
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @RequestMapping(value = "/fecGetDeptAjax.do")
+    public @ResponseBody ModelAndView fecGetDeptAjax(  @ModelAttribute("FecSearchVO") FecSearchVO fecSearchVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+		ModelAndView modelAndView = new ModelAndView();
+        Map          resultMap    = new HashMap();
+        
+        List<FecSearchVO> fecSearchList= fecMainService.fecGetDeptAjax(fecSearchVO);
+        
+        resultMap.put("dept", fecSearchList);
+        
+        modelAndView.addAllObjects(resultMap);
+        modelAndView.setViewName("jsonView");
+        return modelAndView;
+    }
+    /******************* E : 본부 지사 위치 좌표 Ajax 데이터 ************************/
+    
+    /******************* S : 터널 이벤트 조회 Ajax ************************/
+
+    /**
+    * 터널 이벤트 조회 Ajax 
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @RequestMapping(value = "/fecGetEventTunnelAjax.do")
+    public @ResponseBody ModelAndView fecGetEventTunnelAjax(  @ModelAttribute("FecSearchVO") FecSearchVO fecSearchVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+		ModelAndView modelAndView = new ModelAndView();
+        Map          resultMap    = new HashMap();     
+        
+        List<fecEventVO> fecEventVOList= fecMainService.fecGetEventTunnelAjax(fecSearchVO);
+        
+        resultMap.put("features", fecEventVOList);
+        modelAndView.addAllObjects(resultMap);
+        modelAndView.setViewName("jsonView");
+        return modelAndView;
+    }
+    /******************* E : 터널 이벤트 Ajax  ************************/
+    
+    /******************* S : 전기 이벤트 조회 Ajax ************************/
+
+    /**
+    * 전기 이벤트 조회 Ajax 
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @RequestMapping(value = "/fecGetEventElctsAjax.do")
+    public @ResponseBody ModelAndView fecGetEventElctsAjax(  @ModelAttribute("FecSearchVO") FecSearchVO fecSearchVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+		ModelAndView modelAndView = new ModelAndView();
+        Map          resultMap    = new HashMap();
+    
+        
+        List<fecEventVO> fecEventVOList = fecMainService.fecGetEventElctsAjax(fecSearchVO);
+        
+        resultMap.put("features", fecEventVOList);
+        modelAndView.addAllObjects(resultMap);
+        modelAndView.setViewName("jsonView");
+        return modelAndView;
+    }
+    /******************* E : 전기 이벤트 Ajax  ************************/
+    
+    /******************* S : 오수 이벤트 조회 Ajax ************************/
+
+    /**
+    * 오수 이벤트 조회 Ajax 
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @RequestMapping(value = "/fecGetEventSvarAjax.do")
+    public @ResponseBody ModelAndView fecGetEventSvarAjax(  @ModelAttribute("FecSearchVO") FecSearchVO fecSearchVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+		ModelAndView modelAndView = new ModelAndView();
+        Map          resultMap    = new HashMap();
+
+        List<fecEventVO> fecEventVOList = fecMainService.fecGetEventSvarAjax(fecSearchVO);
+        
+        resultMap.put("features", fecEventVOList);
+        modelAndView.addAllObjects(resultMap);
+        modelAndView.setViewName("jsonView");
+        return modelAndView;
+    }
+    /******************* E : 오수 이벤트 Ajax  ************************/
+    
+    /******************* S : 사면 이벤트 조회 Ajax ************************/
+
+    /**
+    * 사면 이벤트 조회 Ajax 
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @RequestMapping(value = "/fecGetEventSlopeAjax.do")
+    public @ResponseBody ModelAndView fecGetEventSlopeAjax(  @ModelAttribute("FecSearchVO") FecSearchVO fecSearchVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+		ModelAndView modelAndView = new ModelAndView();
+        Map          resultMap    = new HashMap();       
+        
+        List<fecEventVO> fecEventVOList = fecMainService.fecGetEventSlopeAjax(fecSearchVO);
+        
+        resultMap.put("features", fecEventVOList);
+        modelAndView.addAllObjects(resultMap);
+        modelAndView.setViewName("jsonView");
+        return modelAndView;
+    }
+    /******************* E : 사면 이벤트 Ajax  ************************/
+    
+    /******************* S : CCTV 이벤트 조회 Ajax ************************/
+
+    /**
+    * CCTV 이벤트 조회 Ajax 
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @RequestMapping(value = "/fecGetEventCctvAjax.do")
+    public @ResponseBody ModelAndView fecGetEventCctvAjax(  @ModelAttribute("FecSearchVO") FecSearchVO fecSearchVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+		ModelAndView modelAndView = new ModelAndView();
+        Map          resultMap    = new HashMap();       
+        
+        List<fecEventVO> fecEventVOList = fecMainService.fecGetEventCctvAjax(fecSearchVO);
+        
+        resultMap.put("features", fecEventVOList);
+        modelAndView.addAllObjects(resultMap);
+        modelAndView.setViewName("jsonView");
+        return modelAndView;
+    }
+    /******************* E : CCTV 이벤트 Ajax  ************************/
+    
+    /******************* S : MDT 이벤트 조회 Ajax ************************/
+    /**
+     * MDT 이벤트 조회 Ajax 
+     * @param request
+     * @param response
+     * @param session
+     * @param model
+     * @return
+     * @throws Exception
+     */
+     @SuppressWarnings({ "rawtypes", "unchecked" })
+     @RequestMapping(value = "/fecGetEventMdtAjax.do")
+     public @ResponseBody ModelAndView fecGetEventMdtAjax(  @ModelAttribute("FecSearchVO") FecSearchVO fecSearchVO,
+                             HttpServletRequest request,
+                             HttpServletResponse response,
+                             HttpSession session,
+                             ModelMap model
+                         ) throws Exception
+     {
+ 		ModelAndView modelAndView = new ModelAndView();
+         Map          resultMap    = new HashMap();       
+         
+         List<fecEventVO> fecEventVOList = fecMainService.fecGetEventMdtAjax(fecSearchVO);
+         
+         resultMap.put("features", fecEventVOList);
+         modelAndView.addAllObjects(resultMap);
+         modelAndView.setViewName("jsonView");
+         return modelAndView;
+     }
+     /******************* E : MDT 이벤트 Ajax  ************************/
+    
+    /******************* S : 지도 본부 선택 지사 코드 가져오기 Ajax ************************/
+
+    /**
+    * 지도 본부 선택 지사 코드 가져오기 Ajax 
+    * @param request
+    * @param response
+    * @param session
+    * @param model
+    * @return
+    * @throws Exception
+    */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @RequestMapping(value = "/fecJisaCodeAjax.do")
+    public @ResponseBody ModelAndView fecJisaCodeAjax(  @ModelAttribute("FecSearchVO") FecSearchVO fecSearchVO,
+                            HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpSession session,
+                            ModelMap model
+                        ) throws Exception
+    {
+		ModelAndView modelAndView = new ModelAndView();
+        Map          resultMap    = new HashMap();       
+        
+        List<HashMap<String, String>> mapList = fecMainService.fecJisaCodeAjax(fecSearchVO);
+    
+        resultMap.put("Jisacode", mapList);
+        modelAndView.addAllObjects(resultMap);
+        modelAndView.setViewName("jsonView");
+        return modelAndView;
+    }
+    /******************* E : 지도 본부 선택 지사 코드 가져오기 Ajax  ************************/
+   
+}
